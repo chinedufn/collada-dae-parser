@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+  </head>
+  <body>
+    <script>(function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
+var mount = document.createElement('div')
+
+var incompleteWarning = document.createElement('span')
+incompleteWarning.innerHTML = 'incomplete. work in progress'
+
+document.body.appendChild(incompleteWarning)
+document.body.appendChild(mount)
+
+var texturedBlenderDefaultCube = require('./textured-blender-fault-cube/blender-cube.js')().element
+mount.insertBefore(texturedBlenderDefaultCube, mount.children[0])
+
+},{"./textured-blender-fault-cube/blender-cube.js":2}],2:[function(require,module,exports){
+var render = require('./render/render.js')
+var document = require('global/document')
+
+module.exports = BlenderCubeCanvas
+
+function BlenderCubeCanvas () {
+  var canvas = document.createElement('canvas')
+  canvas.width = 680
+  canvas.height = 420
+
+  var gl = canvas.getContext('webgl')
+  gl.clearColor(0.0, 0.0, 0.0, 1.0)
+  gl.enable(gl.DEPTH_TEST)
+
+  var viewport = {height: canvas.height, width: canvas.width}
+  render(gl, viewport)
+
+  return {
+    element: canvas
+  }
+}
+
+},{"./render/render.js":3,"global/document":5}],3:[function(require,module,exports){
+module.exports = Render
+
+function Render (gl, viewport) {
+  gl.viewport(0, 0, viewport.width, viewport.height)
+  gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
+}
+
+},{}],4:[function(require,module,exports){
+
+},{}],5:[function(require,module,exports){
+(function (global){
+var topLevel = typeof global !== 'undefined' ? global :
+    typeof window !== 'undefined' ? window : {}
+var minDoc = require('min-document');
+
+if (typeof document !== 'undefined') {
+    module.exports = document;
+} else {
+    var doccy = topLevel['__GLOBAL_DOCUMENT_CACHE@4'];
+
+    if (!doccy) {
+        doccy = topLevel['__GLOBAL_DOCUMENT_CACHE@4'] = minDoc;
+    }
+
+    module.exports = doccy;
+}
+
+}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
+},{"min-document":4}]},{},[1]);
+</script>
+  </body>
+</html>
