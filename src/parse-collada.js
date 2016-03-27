@@ -6,7 +6,7 @@ module.exports = ParseCollada
 // Parse Normals
 // Parse Textures
 // Parse Animations
-// Clean Up Code
+// Clean Up Code / less confusing var names
 function ParseCollada (colladaXML, callback) {
   parseXML(colladaXML, function (err, result) {
     if (err) {
@@ -14,32 +14,27 @@ function ParseCollada (colladaXML, callback) {
     }
     var geometryMesh = result.COLLADA.library_geometries[0].geometry[0].mesh[0]
     var source = geometryMesh.source
-    // console.log(geometryMesh.vertices[0].input)
 
-    /* Positions, Vertices, Normals */
-
-    var accessor = source[0].technique_common[0].accessor
-    var x = accessor[0].param[0].$.name
-    var y = accessor[0].param[1].$.name
-    var z = accessor[0].param[2].$.name
-    if (x === 'X' && y === 'Y' && z === 'Z') {
-      // var accessorCount = accessor[0].$.count
-      // var accessorStride = accessor[0].$.stride
-      var source1 = source[0].float_array[0]
-      var vertexPositions = source1._.split(' ').map(Number)
-      // var vertexPositionCount = source1.$.count
-    }
+    /* Vertex Positions, UVs, Normals */
     var polylistIndices = geometryMesh.polylist[0].p[0].split(' ')
+
     var vertexPositionIndices = []
+    var vertexNormalIndices = []
     polylistIndices.forEach(function (vertexIndex, positionInArray) {
       if (positionInArray % 3 === 0) {
-        vertexPositionIndices.push(vertexIndex)
+        vertexPositionIndices.push(Number(vertexIndex))
+      } else if (positionInArray % 3 === 1) {
+        vertexNormalIndices.push(Number(vertexIndex))
       }
     })
-    vertexPositionIndices = vertexPositionIndices.map(Number)
+    var vertexPositions = source[0].float_array[0]._.split(' ').map(Number)
+    var vertexNormals = source[1].float_array[0]._.split(' ').map(Number)
+    /* End Vertex Positions, UVs, Normals */
 
     // Return our parsed collada object
     callback(null, {
+      vertexNormalIndices: vertexNormalIndices,
+      vertexNormals: vertexNormals,
       vertexPositions: vertexPositions,
       vertexPositionIndices: vertexPositionIndices
     })
