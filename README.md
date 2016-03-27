@@ -41,9 +41,11 @@ Type: `function`
 
 ```js
 function (err, parsedDaeObject) {
-  consoe.log(parsedDaeObject)
+  console.log(parsedDaeObject)
   /*
   {
+    vertexNormalIndices: [...],
+    vertexNormals: [...],
     vertexPositionIndices: [...],
     vertexPositions: [...],
     // The rest is TODO
@@ -56,7 +58,6 @@ function (err, parsedDaeObject) {
 
 - [ ] live example(s)
 - [ ] parse UVs
-- [ ] parse normals
 - [ ] parse animation data
 - [ ] text multiple .dae exports from different 3d modeling programs
 
