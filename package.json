@@ -4,6 +4,8 @@
   "description": "Parse collada .dae 3d animation files into json",
   "main": "src/parse-collada.js",
   "scripts": {
+    "demo": "budo demo/browser.js --open --live",
+    "deploy": "mkdirp example-dist && browserify demo/browser.js | htmlify > example-dist/index.html && gh-pages -d example-dist",
     "test": "standard && node test/index.js"
   },
   "repository": {
@@ -29,6 +31,13 @@
   },
   "homepage": "https://github.com/chinedufn/collada-dae-parser#readme",
   "devDependencies": {
+    "browserify": "^13.0.0",
+    "budo": "^8.1.0",
+    "gh-pages": "^0.11.0",
+    "gl-mat4": "^1.1.4",
+    "global": "^4.3.0",
+    "inline-htmlify": "^2.0.0",
+    "mkdirp": "^0.5.1",
     "standard": "^6.0.8",
     "tape": "^4.5.1"
   },
