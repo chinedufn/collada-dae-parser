@@ -48,6 +48,8 @@ function (err, parsedDaeObject) {
     vertexNormals: [...],
     vertexPositionIndices: [...],
     vertexPositions: [...],
+    vertexUVIndices: [...],
+    vertexUVs: [...]
     // The rest is TODO
   }
   */
@@ -57,7 +59,6 @@ function (err, parsedDaeObject) {
 ## TODO:
 
 - [ ] live example(s)
-- [ ] parse UVs
 - [ ] parse animation data
 - [ ] text multiple .dae exports from different 3d modeling programs
 

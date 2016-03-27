@@ -18,25 +18,31 @@ function ParseCollada (colladaXML, callback) {
     /* Vertex Positions, UVs, Normals */
     var polylistIndices = geometryMesh.polylist[0].p[0].split(' ')
 
-    var vertexPositionIndices = []
     var vertexNormalIndices = []
+    var vertexPositionIndices = []
+    var vertexUVIndices = []
     polylistIndices.forEach(function (vertexIndex, positionInArray) {
       if (positionInArray % 3 === 0) {
         vertexPositionIndices.push(Number(vertexIndex))
       } else if (positionInArray % 3 === 1) {
         vertexNormalIndices.push(Number(vertexIndex))
+      } else if (positionInArray % 3 === 2) {
+        vertexUVIndices.push(Number(vertexIndex))
       }
     })
     var vertexPositions = source[0].float_array[0]._.split(' ').map(Number)
     var vertexNormals = source[1].float_array[0]._.split(' ').map(Number)
+    var vertexUVs = source[2].float_array[0]._.split(' ').map(Number)
     /* End Vertex Positions, UVs, Normals */
 
     // Return our parsed collada object
     callback(null, {
       vertexNormalIndices: vertexNormalIndices,
       vertexNormals: vertexNormals,
+      vertexPositionIndices: vertexPositionIndices,
       vertexPositions: vertexPositions,
-      vertexPositionIndices: vertexPositionIndices
+      vertexUVIndices: vertexUVIndices,
+      vertexUVs: vertexUVs
     })
   })
 }
