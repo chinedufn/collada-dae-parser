@@ -1,0 +1,38 @@
+{
+  "name": "collada-dae-parser",
+  "version": "0.0.1",
+  "description": "Parse collada .dae 3d animation files into json",
+  "main": "src/parse-collada.js",
+  "scripts": {
+    "test": "standard && node test/index.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/chinedufn/collada-dae-parser.git"
+  },
+  "keywords": [
+    "collada",
+    "dae",
+    "parse",
+    "animation",
+    "3d",
+    "webgl",
+    "json",
+    "skeletal",
+    "skeleton",
+    "keyframe"
+  ],
+  "author": "Chinedu Francis Nwafili <frankie.nwafili@gmail.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/chinedufn/collada-dae-parser/issues"
+  },
+  "homepage": "https://github.com/chinedufn/collada-dae-parser#readme",
+  "devDependencies": {
+    "standard": "^6.0.8",
+    "tape": "^4.5.1"
+  },
+  "dependencies": {
+    "xml2js": "^0.4.16"
+  }
+}
