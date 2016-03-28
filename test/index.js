@@ -4,17 +4,30 @@ var path = require('path')
 var test = require('tape')
 
 var colladaFilePath = path.resolve(__dirname, './fixture/textured-blender-default-cube.dae')
-var colladaXML = fs.readFileSync(colladaFilePath).toString('utf8')
+var tbdcColladaXML = fs.readFileSync(colladaFilePath).toString('utf8')
 var expectedTBDC = require('./expected/textured-blender-default-cube.js')
+
+var blenderCubeAmimatedPath = path.resolve(__dirname, './fixture/animated-blender-cube.dae')
+var animatedColladaXML = fs.readFileSync(blenderCubeAmimatedPath).toString('utf8')
 
 var parseCollada = require('../')
 
 test('Parse a default blender cube with an added texture', function (t) {
   t.plan(1)
-  parseCollada(colladaXML, function (err, parsedCube) {
+  parseCollada(tbdcColladaXML, function (err, parsedCube) {
     if (err) {
       t.fail()
     }
     t.deepEqual(parsedCube, expectedTBDC)
+  })
+})
+
+test('Parse a default blender cube with an animation', function (t) {
+  t.plan(1)
+  parseCollada(animatedColladaXML, function (err, parsedAnimatedCube) {
+    if (err) {
+      t.fail()
+    }
+    t.pass()
   })
 })
