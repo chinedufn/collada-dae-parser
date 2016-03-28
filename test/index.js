@@ -9,6 +9,7 @@ var expectedTBDC = require('./expected/textured-blender-default-cube.js')
 
 var blenderCubeAmimatedPath = path.resolve(__dirname, './fixture/animated-blender-cube.dae')
 var animatedColladaXML = fs.readFileSync(blenderCubeAmimatedPath).toString('utf8')
+var expectedAnimatedCube = require('./expected/animated-blender-cube.js')
 
 var parseCollada = require('../')
 
@@ -28,6 +29,6 @@ test('Parse a default blender cube with an animation', function (t) {
     if (err) {
       t.fail()
     }
-    t.pass()
+    t.deepEqual(parsedAnimatedCube, expectedAnimatedCube)
   })
 })

@@ -22,11 +22,12 @@ function ParseCollada (colladaXML, callback) {
     var vertexPositionIndices = []
     var vertexUVIndices = []
     polylistIndices.forEach(function (vertexIndex, positionInArray) {
-      if (positionInArray % 3 === 0) {
+      if (positionInArray % source.length === 0) {
         vertexPositionIndices.push(Number(vertexIndex))
-      } else if (positionInArray % 3 === 1) {
+      } else if (positionInArray % source.length === 1) {
         vertexNormalIndices.push(Number(vertexIndex))
-      } else if (positionInArray % 3 === 2) {
+      }
+      if (source.length > 2 && positionInArray % source.length === 2) {
         vertexUVIndices.push(Number(vertexIndex))
       }
     })
@@ -63,13 +64,16 @@ function ParseCollada (colladaXML, callback) {
     /* End Animations */
 
     // Return our parsed collada object
-    callback(null, {
+    var parsedObject = {
       vertexNormalIndices: vertexNormalIndices,
       vertexNormals: vertexNormals,
       vertexPositionIndices: vertexPositionIndices,
-      vertexPositions: vertexPositions,
-      vertexUVIndices: vertexUVIndices,
-      vertexUVs: vertexUVs
-    })
+      vertexPositions: vertexPositions
+    }
+    if (source[2]) {
+      parsedObject.vertexUVIndices = vertexUVIndices
+      parsedObject.vertexUVs = vertexUVs
+    }
+    callback(null, parsedObject)
   })
 }
