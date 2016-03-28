@@ -3,9 +3,9 @@ var parseXML = require('xml2js').parseString
 module.exports = ParseCollada
 
 // TODO:
-// Parse Normals
-// Parse Textures
-// Parse Animations
+// Parse LocRotScale animations
+// Parse skeletal / skinning animations
+// Use input, accessor, and param attributes instead of hard coding lookups
 // Clean Up Code / less confusing var names
 function ParseCollada (colladaXML, callback) {
   parseXML(colladaXML, function (err, result) {
@@ -32,8 +32,35 @@ function ParseCollada (colladaXML, callback) {
     })
     var vertexPositions = source[0].float_array[0]._.split(' ').map(Number)
     var vertexNormals = source[1].float_array[0]._.split(' ').map(Number)
-    var vertexUVs = source[2].float_array[0]._.split(' ').map(Number)
+    var vertexUVs = []
+    // TODO: use input, semantics, source, offset, etc
+    if (source[2]) {
+      vertexUVs = source[2].float_array[0]._.split(' ').map(Number)
+    }
     /* End Vertex Positions, UVs, Normals */
+
+    /* Animations */
+    // var locRotScaleAnimations = {}
+    var keyframes
+    var xAnimatedPositions
+    var zAnimatedPositions
+    // TODO: Figure out how to use interpolation/intangent/outtangent
+    // Or... Do we even want to support that? Or linear only? Idk
+    // but google probably does...
+    if (result.COLLADA.library_animations) {
+      var libraryAnimations = result.COLLADA.library_animations[0].animation
+
+      // X animation
+      var xPosLibraryAnimationSource = libraryAnimations[0].source
+      keyframes = xPosLibraryAnimationSource[0].float_array[0]._.split(' ').map(Number)
+      xAnimatedPositions = xPosLibraryAnimationSource[1].float_array[0]._.split(' ').map(Number)
+
+      // Z animation
+      var zPosLibraryAnimationSource = libraryAnimations[2].source
+      zAnimatedPositions = zPosLibraryAnimationSource[1].float_array[0]._.split(' ').map(Number)
+      console.log(keyframes, xAnimatedPositions, zAnimatedPositions)
+    }
+    /* End Animations */
 
     // Return our parsed collada object
     callback(null, {
