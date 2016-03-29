@@ -1,7 +1,24 @@
 // Animated default blender cube
-// only X and Z positions are animated
+// only X and Z locations are animated
 // cube is not textured
 module.exports = {
+  keyframes: {
+    0: {
+      location: { x: 0, y: 0, z: 0 }, rotation: { x: 0, y: 0, z: 0 }, scale: { x: 0, y: 0, z: 0 }
+    },
+    '0.2083333': {
+      location: { x: 0, y: 0, z: 2 }, rotation: { x: 0, y: 0, z: 0 }, scale: { x: 0, y: 0, z: 0 }
+    },
+    '0.4166666': {
+      location: { x: 2, y: 0, z: 2 }, rotation: { x: 0, y: 0, z: 0 }, scale: { x: 0, y: 0, z: 0 }
+    },
+    '0.625': {
+      location: { x: 2, y: 0, z: 0 }, rotation: { x: 0, y: 0, z: 0 }, scale: { x: 0, y: 0, z: 0 }
+    },
+    '0.8333333': {
+      location: { x: 0, y: 0, z: 0 }, rotation: { x: 0, y: 0, z: 0 }, scale: { x: 0, y: 0, z: 0 }
+    }
+  },
   vertexNormalIndices: [
     0, 0, 0, 1, 1, 1, 2, 2, 2, 3, 3, 3, 4, 4, 4, 5, 5, 5, 6, 6, 6, 7, 7, 7, 8, 8, 8, 9, 9, 9, 10, 10, 10, 11, 11, 11
   ],
