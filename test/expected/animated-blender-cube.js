@@ -4,19 +4,19 @@
 module.exports = {
   keyframes: {
     0: {
-      location: { x: 0, y: 0, z: 0 }, rotation: { x: 0, y: 0, z: 0 }, scale: { x: 0, y: 0, z: 0 }
+      location: { x: 0, y: 0, z: 0 }, rotation: { x: 0, y: 0, z: 0 }, scale: { x: 1, y: 1, z: 1 }
     },
     '0.2083333': {
-      location: { x: 0, y: 0, z: 2 }, rotation: { x: 0, y: 0, z: 0 }, scale: { x: 0, y: 0, z: 0 }
+      location: { x: 0, y: 0, z: 2 }, rotation: { x: 0, y: 0, z: 0 }, scale: { x: 1, y: 1, z: 1 }
     },
     '0.4166666': {
-      location: { x: 2, y: 0, z: 2 }, rotation: { x: 0, y: 0, z: 0 }, scale: { x: 0, y: 0, z: 0 }
+      location: { x: 2, y: 0, z: 2 }, rotation: { x: 0, y: 0, z: 0 }, scale: { x: 1, y: 1, z: 1 }
     },
     '0.625': {
-      location: { x: 2, y: 0, z: 0 }, rotation: { x: 0, y: 0, z: 0 }, scale: { x: 0, y: 0, z: 0 }
+      location: { x: 2, y: 0, z: 0 }, rotation: { x: 0, y: 0, z: 0 }, scale: { x: 1, y: 1, z: 1 }
     },
     '0.8333333': {
-      location: { x: 0, y: 0, z: 0 }, rotation: { x: 0, y: 0, z: 0 }, scale: { x: 0, y: 0, z: 0 }
+      location: { x: 0, y: 0, z: 0 }, rotation: { x: 0, y: 0, z: 0 }, scale: { x: 1, y: 1, z: 1 }
     }
   },
   vertexNormalIndices: [
