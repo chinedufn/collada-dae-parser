@@ -1,4 +1,6 @@
 var parseXML = require('xml2js').parseString
+// TODO: better name
+var extractAnimation = require('./extract-animation.js')
 
 module.exports = ParseCollada
 
@@ -12,6 +14,7 @@ function ParseCollada (colladaXML, callback) {
     if (err) {
       console.log('error', err)
     }
+    var parsedObject = {}
     var geometryMesh = result.COLLADA.library_geometries[0].geometry[0].mesh[0]
     var source = geometryMesh.source
 
@@ -60,16 +63,16 @@ function ParseCollada (colladaXML, callback) {
       var zPosLibraryAnimationSource = libraryAnimations[2].source
       zAnimatedPositions = zPosLibraryAnimationSource[1].float_array[0]._.split(' ').map(Number)
       console.log(keyframes, xAnimatedPositions, zAnimatedPositions)
+
+      parsedObject.keyframes = extractAnimation(libraryAnimations)
     }
     /* End Animations */
 
     // Return our parsed collada object
-    var parsedObject = {
-      vertexNormalIndices: vertexNormalIndices,
-      vertexNormals: vertexNormals,
-      vertexPositionIndices: vertexPositionIndices,
-      vertexPositions: vertexPositions
-    }
+    parsedObject.vertexNormalIndices = vertexNormalIndices
+    parsedObject.vertexNormals = vertexNormals
+    parsedObject.vertexPositionIndices = vertexPositionIndices
+    parsedObject.vertexPositions = vertexPositions
     if (source[2]) {
       parsedObject.vertexUVIndices = vertexUVIndices
       parsedObject.vertexUVs = vertexUVs
