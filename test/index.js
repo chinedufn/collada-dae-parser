@@ -11,6 +11,9 @@ var blenderCubeAmimatedPath = path.resolve(__dirname, './fixture/animated-blende
 var animatedColladaXML = fs.readFileSync(blenderCubeAmimatedPath).toString('utf8')
 var expectedAnimatedCube = require('./expected/animated-blender-cube.js')
 
+var skeletonSkinnedCubesPath = path.resolve(__dirname, './fixture/two-skinned-cubes.dae')
+var skeletonSkinnedCubesXML = fs.readFileSync(skeletonSkinnedCubesPath).toString('utf8')
+
 var parseCollada = require('../')
 
 test('Parse a default blender cube with an added texture', function (t) {
@@ -30,5 +33,15 @@ test('Parse a default blender cube with an animation', function (t) {
       t.fail()
     }
     t.deepEqual(parsedAnimatedCube, expectedAnimatedCube)
+  })
+})
+
+test('Parse two blender cubes animated with bones and skinning', function (t) {
+  t.plan(1)
+  parseCollada(skeletonSkinnedCubesXML, function (err, parsedSkeletonSkinnedCubes) {
+    if (err) {
+      t.fail()
+    }
+    t.end()
   })
 })
