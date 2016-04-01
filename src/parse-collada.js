@@ -1,6 +1,7 @@
 var parseXML = require('xml2js').parseString
 // TODO: better name
 var extractAnimation = require('./extract-animation.js')
+var parseLibraryGeometries = require('./library_geometries/parse-library-geometries.js')
 
 module.exports = ParseCollada
 
@@ -11,37 +12,9 @@ module.exports = ParseCollada
 // Clean Up Code / less confusing var names
 function ParseCollada (colladaXML, callback) {
   parseXML(colladaXML, function (err, result) {
-    if (err) {
-      console.log('error', err)
-    }
+    if (err) { console.log(err) }
     var parsedObject = {}
-    var geometryMesh = result.COLLADA.library_geometries[0].geometry[0].mesh[0]
-    var source = geometryMesh.source
-
-    /* Vertex Positions, UVs, Normals */
-    var polylistIndices = geometryMesh.polylist[0].p[0].split(' ')
-
-    var vertexNormalIndices = []
-    var vertexPositionIndices = []
-    var vertexUVIndices = []
-    polylistIndices.forEach(function (vertexIndex, positionInArray) {
-      if (positionInArray % source.length === 0) {
-        vertexPositionIndices.push(Number(vertexIndex))
-      } else if (positionInArray % source.length === 1) {
-        vertexNormalIndices.push(Number(vertexIndex))
-      }
-      if (source.length > 2 && positionInArray % source.length === 2) {
-        vertexUVIndices.push(Number(vertexIndex))
-      }
-    })
-    var vertexPositions = source[0].float_array[0]._.split(' ').map(Number)
-    var vertexNormals = source[1].float_array[0]._.split(' ').map(Number)
-    var vertexUVs = []
-    // TODO: use input, semantics, source, offset, etc
-    if (source[2]) {
-      vertexUVs = source[2].float_array[0]._.split(' ').map(Number)
-    }
-    /* End Vertex Positions, UVs, Normals */
+    var parsedLibraryGeometries = parseLibraryGeometries(result.COLLADA.library_geometries)
 
     /* Animations */
     // var locRotScaleAnimations = {}
@@ -56,7 +29,7 @@ function ParseCollada (colladaXML, callback) {
 
       libraryAnimations.forEach(function (animation) {
         var animationID = animation.$.id
-          // X position animation
+        // X position animation
         if (animationID.indexOf('location_X') > -1) {
           var xPosLibraryAnimationSource = libraryAnimations[0].source
           keyframes = xPosLibraryAnimationSource[0].float_array[0]._.split(' ').map(Number)
@@ -76,13 +49,13 @@ function ParseCollada (colladaXML, callback) {
     /* End Animations */
 
     // Return our parsed collada object
-    parsedObject.vertexNormalIndices = vertexNormalIndices
-    parsedObject.vertexNormals = vertexNormals
-    parsedObject.vertexPositionIndices = vertexPositionIndices
-    parsedObject.vertexPositions = vertexPositions
-    if (source[2]) {
-      parsedObject.vertexUVIndices = vertexUVIndices
-      parsedObject.vertexUVs = vertexUVs
+    parsedObject.vertexNormalIndices = parsedLibraryGeometries.vertexNormalIndices
+    parsedObject.vertexNormals = parsedLibraryGeometries.vertexNormals
+    parsedObject.vertexPositionIndices = parsedLibraryGeometries.vertexPositionIndices
+    parsedObject.vertexPositions = parsedLibraryGeometries.vertexPositions
+    if (parsedLibraryGeometries.vertexUVs.length > 0) {
+      parsedObject.vertexUVIndices = parsedLibraryGeometries.vertexUVIndices
+      parsedObject.vertexUVs = parsedLibraryGeometries.vertexUVs
     }
     callback(null, parsedObject)
   })
