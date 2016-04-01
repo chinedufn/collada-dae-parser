@@ -42,6 +42,7 @@ test('Parse two blender cubes animated with bones and skinning', function (t) {
     if (err) {
       t.fail()
     }
+    t.ok(true)
     t.end()
   })
 })

@@ -54,14 +54,21 @@ function ParseCollada (colladaXML, callback) {
     if (result.COLLADA.library_animations) {
       var libraryAnimations = result.COLLADA.library_animations[0].animation
 
-      // X animation
-      var xPosLibraryAnimationSource = libraryAnimations[0].source
-      keyframes = xPosLibraryAnimationSource[0].float_array[0]._.split(' ').map(Number)
-      xAnimatedPositions = xPosLibraryAnimationSource[1].float_array[0]._.split(' ').map(Number)
+      libraryAnimations.forEach(function (animation) {
+        var animationID = animation.$.id
+          // X position animation
+        if (animationID.indexOf('location_X') > -1) {
+          var xPosLibraryAnimationSource = libraryAnimations[0].source
+          keyframes = xPosLibraryAnimationSource[0].float_array[0]._.split(' ').map(Number)
+          xAnimatedPositions = xPosLibraryAnimationSource[1].float_array[0]._.split(' ').map(Number)
+        }
+        // Z position animation
+        if (animationID.indexOf('location_Z') > -1) {
+          var zPosLibraryAnimationSource = libraryAnimations[2].source
+          zAnimatedPositions = zPosLibraryAnimationSource[1].float_array[0]._.split(' ').map(Number)
+        }
+      })
 
-      // Z animation
-      var zPosLibraryAnimationSource = libraryAnimations[2].source
-      zAnimatedPositions = zPosLibraryAnimationSource[1].float_array[0]._.split(' ').map(Number)
       console.log(keyframes, xAnimatedPositions, zAnimatedPositions)
 
       parsedObject.keyframes = extractAnimation(libraryAnimations)

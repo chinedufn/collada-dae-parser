@@ -10,7 +10,8 @@ var xyzMap = {
 function ExtractAnimation (libraryAnimations) {
   var allKeyframes = {
   }
-  for (var i = 0; i < 9; i++) {
+  var numAnims = Object.keys(libraryAnimations).length
+  for (var i = 0; i < numAnims; i++) {
     var animationSource = libraryAnimations[i].source
 
     var currentKeyframes = animationSource[0].float_array[0]._.split(' ').map(Number)
