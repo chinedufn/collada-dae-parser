@@ -2,6 +2,7 @@ var parseXML = require('xml2js').parseString
 // TODO: better name
 var extractAnimation = require('./extract-animation.js')
 var parseLibraryGeometries = require('./library_geometries/parse-library-geometries.js')
+var parseLibraryVisualScenes = require('./library_visual_scenes/parse-visual-scenes.js')
 
 module.exports = ParseCollada
 
@@ -20,6 +21,8 @@ function ParseCollada (colladaXML, callback) {
     if (result.COLLADA.library_animations) {
       parsedObject.keyframes = extractAnimation(result.COLLADA.library_animations[0].animation)
     }
+
+    parseLibraryVisualScenes(result.COLLADA.library_visual_scenes)
 
     // Return our parsed collada object
     parsedObject.vertexNormalIndices = parsedLibraryGeometries.vertexNormalIndices
