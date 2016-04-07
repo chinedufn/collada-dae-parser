@@ -22,7 +22,10 @@ function ParseCollada (colladaXML, callback) {
       parsedObject.keyframes = extractAnimation(result.COLLADA.library_animations[0].animation)
     }
 
-    parseLibraryVisualScenes(result.COLLADA.library_visual_scenes)
+    var joints = parseLibraryVisualScenes(result.COLLADA.library_visual_scenes)
+    if (joints.length > 0) {
+      parsedObject.joints = joints
+    }
 
     // Return our parsed collada object
     parsedObject.vertexNormalIndices = parsedLibraryGeometries.vertexNormalIndices
