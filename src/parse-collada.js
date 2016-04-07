@@ -3,6 +3,7 @@ var parseXML = require('xml2js').parseString
 var extractAnimation = require('./extract-animation.js')
 var parseLibraryGeometries = require('./library_geometries/parse-library-geometries.js')
 var parseLibraryVisualScenes = require('./library_visual_scenes/parse-visual-scenes.js')
+var parseLibraryControllers = require('./library_controllers/parse-library-controllers.js')
 
 module.exports = ParseCollada
 
@@ -25,6 +26,9 @@ function ParseCollada (colladaXML, callback) {
     var joints = parseLibraryVisualScenes(result.COLLADA.library_visual_scenes)
     if (joints.length > 0) {
       parsedObject.joints = joints
+    }
+    if (result.COLLADA.library_controllers) {
+      parseLibraryControllers(result.COLLADA.library_controllers)
     }
 
     // Return our parsed collada object
