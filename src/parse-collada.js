@@ -4,6 +4,7 @@ var extractAnimation = require('./extract-animation.js')
 var parseLibraryGeometries = require('./library_geometries/parse-library-geometries.js')
 var parseLibraryVisualScenes = require('./library_visual_scenes/parse-visual-scenes.js')
 var parseLibraryControllers = require('./library_controllers/parse-library-controllers.js')
+var parseLibraryAnimations = require('./library_animations/parse-library-animations.js')
 
 module.exports = ParseCollada
 
@@ -21,6 +22,7 @@ function ParseCollada (colladaXML, callback) {
     // TODO: Also parse interpolation/intangent/outtangent
     if (result.COLLADA.library_animations) {
       parsedObject.keyframes = extractAnimation(result.COLLADA.library_animations[0].animation)
+      parseLibraryAnimations(result.COLLADA.library_animations)
     }
 
     var joints = parseLibraryVisualScenes(result.COLLADA.library_visual_scenes)

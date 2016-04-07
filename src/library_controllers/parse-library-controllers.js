@@ -27,7 +27,7 @@ function ParseLibraryControllers (library_controllers) {
       console.log(bindPoses.slice(16 * index, 16 * index + 16))
     })
 
-    // Bind shape matrix
+    // Bind shape matrix (inverse bind matrix)
     var bindShapeMatrix = controller[0].skin[0].bind_shape_matrix[0].split(' ').map(Number)
     console.log(bindShapeMatrix)
   }
