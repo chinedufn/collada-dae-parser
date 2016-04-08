@@ -22,6 +22,9 @@ function ParseCollada (colladaXML, callback) {
     // TODO: Also parse interpolation/intangent/outtangent
     if (result.COLLADA.library_animations) {
       parsedObject.keyframes = extractAnimation(result.COLLADA.library_animations[0].animation)
+      if (Object.keys(parsedObject.keyframes).length === 0) {
+        delete parsedObject.keyframes
+      }
       parseLibraryAnimations(result.COLLADA.library_animations)
     }
 

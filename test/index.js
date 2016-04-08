@@ -13,6 +13,7 @@ var expectedAnimatedCube = require('./expected/animated-blender-cube.js')
 
 var skeletonSkinnedCubesPath = path.resolve(__dirname, './fixture/two-skinned-cubes.dae')
 var skeletonSkinnedCubesXML = fs.readFileSync(skeletonSkinnedCubesPath).toString('utf8')
+var expectedSkinnedCube = require('./expected/two-skinned-cube.js')
 
 var parseCollada = require('../')
 
@@ -42,7 +43,7 @@ test('Parse two blender cubes animated with bones and skinning', function (t) {
     if (err) {
       t.fail()
     }
-    t.ok(true)
+    t.deepEqual(parsedSkeletonSkinnedCubes, expectedSkinnedCube)
     t.end()
   })
 })
