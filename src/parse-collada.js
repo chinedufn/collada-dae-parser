@@ -25,7 +25,9 @@ function ParseCollada (colladaXML, callback) {
       if (Object.keys(parsedObject.keyframes).length === 0) {
         delete parsedObject.keyframes
       }
-      parseLibraryAnimations(result.COLLADA.library_animations)
+      if (Object.keys(parseLibraryAnimations(result.COLLADA.library_animations)).length > 0) {
+        parsedObject.keyframes = parseLibraryAnimations(result.COLLADA.library_animations)
+      }
     }
 
     var joints = parseLibraryVisualScenes(result.COLLADA.library_visual_scenes)
