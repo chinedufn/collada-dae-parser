@@ -1,3 +1,5 @@
+var transpose = require('gl-mat4/transpose')
+
 module.exports = ParseLibraryAnimations
 
 // TODO: parse interpolation
@@ -13,7 +15,10 @@ function ParseLibraryAnimations (library_animations) {
       var currentJointPoseMatrices = anim.source[1].float_array[0]._.split(' ').map(Number)
       currentKeyframes.forEach(function (_, index) {
         allKeyframes[currentKeyframes[index]] = allKeyframes[currentKeyframes[index]] || []
-        allKeyframes[currentKeyframes[index]].push(currentJointPoseMatrices.slice(16 * index, 16 * index + 16))
+        var currentJointMatrix = currentJointPoseMatrices.slice(16 * index, 16 * index + 16)
+        // Turn our row major matrix into a column major matrix. OpenGL uses column major
+        transpose(currentJointMatrix, currentJointMatrix)
+        allKeyframes[currentKeyframes[index]].push(currentJointMatrix)
       })
     }
   })

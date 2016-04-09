@@ -1,3 +1,5 @@
+var transpose = require('gl-mat4/transpose')
+
 module.exports = ParseLibraryControllers
 
 // TODO: Read  technique_commons instead of hard coding attribute locations
@@ -39,6 +41,7 @@ function ParseLibraryControllers (library_controllers) {
 
     // Bind shape matrix (inverse bind matrix)
     var bindShapeMatrix = controller[0].skin[0].bind_shape_matrix[0].split(' ').map(Number)
+    transpose(bindShapeMatrix, bindShapeMatrix)
   }
   return {
     bindShapeMatrix: bindShapeMatrix,
