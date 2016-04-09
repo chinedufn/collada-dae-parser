@@ -39,9 +39,9 @@ function ParseLibraryControllers (library_controllers) {
 
     // Bind shape matrix (inverse bind matrix)
     var bindShapeMatrix = controller[0].skin[0].bind_shape_matrix[0].split(' ').map(Number)
-    console.log(bindShapeMatrix)
   }
   return {
+    bindShapeMatrix: bindShapeMatrix,
     vertexJointWeights: parsedVertexJointWeights
   }
 }
