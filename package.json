@@ -1,6 +1,6 @@
 {
   "name": "collada-dae-parser",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "description": "Parse collada .dae 3d animation files into json",
   "main": "src/parse-collada.js",
   "scripts": {
