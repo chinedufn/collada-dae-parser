@@ -1,5 +1,7 @@
 var render = require('./render/render.js')
 var document = require('global/document')
+var loop = require('raf-loop')
+var loadModel = require('./3d-model/load-model.js')
 
 module.exports = BlenderCubeCanvas
 
@@ -13,7 +15,14 @@ function BlenderCubeCanvas () {
   gl.enable(gl.DEPTH_TEST)
 
   var viewport = {height: canvas.height, width: canvas.width}
-  render(gl, viewport)
+
+  loadModel(gl, function (err, modelData) {
+    if (err) { console.log(err) }
+
+    loop(function (dt) {
+      render(gl, viewport, modelData)
+    }).start()
+  })
 
   return {
     element: canvas
