@@ -33,7 +33,10 @@ function ParseCollada (colladaXML, callback) {
       parsedObject.joints = joints
     }
     if (result.COLLADA.library_controllers) {
-      parseLibraryControllers(result.COLLADA.library_controllers)
+      var foo = parseLibraryControllers(result.COLLADA.library_controllers)
+      if (foo.vertexJointWeights && Object.keys(foo.vertexJointWeights) .length > 0) {
+        parsedObject.vertexJointWeights = foo.vertexJointWeights
+      }
     }
 
     // Return our parsed collada object
