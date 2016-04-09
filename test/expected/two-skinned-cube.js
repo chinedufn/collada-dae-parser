@@ -7,6 +7,7 @@
 //
 // TODO: Add a gif of every model
 module.exports = {
+  bindShapeMatrix: [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1],
   vertexJointWeights: {
     // TODO: This feels wasteful / repetitive
     0: [ {'Bone': 1} ], 1: [ {'Bone': 1} ], 2: [ {'Bone': 1} ], 3: [ {'Bone': 1} ], 4: [ {'Bone': 1} ], 5: [ {'Bone': 1} ], 6: [ {'Bone': 1} ], 7: [ {'Bone': 1} ],
