@@ -28,7 +28,6 @@ function LoadModel (gl, callback) {
   dae2json(fs.readFileSync('./demo/assets/two-skinned-cubes.dae'), function (err, parsedDae) {
     if (err) { callback(err) }
 
-    console.log(parsedDae)
     var vertexPositionBuffer = gl.createBuffer()
     gl.bindBuffer(gl.ARRAY_BUFFER, vertexPositionBuffer)
     gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(parsedDae.vertexPositions), gl.STATIC_DRAW)
@@ -52,13 +51,14 @@ function LoadModel (gl, callback) {
 
     var stuff = {
       vertexPositionBuffer: vertexPositionBuffer,
-      vertexPositionIndexBuffer: vertexPositionIndexBuffer
+      vertexPositionIndexBuffer: vertexPositionIndexBuffer,
+      keyframes: parsedDae.keyframes
     }
     callback(null, stuff)
   })
 }
 
-},{"../../../":179,"fs":13}],3:[function(require,module,exports){
+},{"../../../":200,"fs":13}],3:[function(require,module,exports){
 var render = require('./render/render.js')
 var document = require('global/document')
 var loop = require('raf-loop')
@@ -83,7 +83,8 @@ function BlenderCubeCanvas () {
     if (err) { console.log(err) }
 
     loop(function (dt) {
-      render(gl, viewport, modelData, shaderObject)
+      // TODO: Animation should be separate from render
+      render(gl, viewport, modelData, shaderObject, dt)
     }).start()
   })
 
@@ -92,7 +93,7 @@ function BlenderCubeCanvas () {
   }
 }
 
-},{"./3d-model/load-model.js":2,"./render/render.js":9,"./shader/init-shader.js":10,"global/document":18,"raf-loop":136}],4:[function(require,module,exports){
+},{"./3d-model/load-model.js":2,"./render/render.js":9,"./shader/init-shader.js":10,"global/document":33,"raf-loop":157}],4:[function(require,module,exports){
 module.exports = MakeInverse
 
 function MakeInverse (m) {
@@ -293,11 +294,57 @@ var makePerspective = require('./matrix-math/make-perspective.js')
 // var makeXRotation = require('./matrix-math/make-x-rotation.js')
 var makeLookAt = require('./matrix-math/make-look-at.js')
 var makeInverse = require('./matrix-math/make-inverse.js')
+var interpolate = require('mat4-interpolate')
+var createMatrix = require('gl-mat4/create')
+
+var animationClock = 0
 
 module.exports = Render
 
 // TODO: Pass in an object instead of a bunch of params
-function Render (gl, viewport, animatedModel, shaderObject) {
+// TODO: There's a lot happening in here that should happen elsewhere (i.e. animation setup)
+// will be easier to split out once we know what we're doing
+function Render (gl, viewport, animatedModel, shaderObject, dt) {
+  var min
+  var max
+  Object.keys(animatedModel.keyframes).forEach(function (frame) {
+    if (!min && !max) {
+      min = frame
+      max = frame
+    } else {
+      min = Math.min(min, frame)
+      max = Math.max(max, frame)
+    }
+  })
+  animationClock += dt / 1000
+  var animationDuration = max - min
+  if (animationClock > animationDuration) {
+    animationClock -= animationDuration
+  }
+  // Find two closest keyframes
+  var lowestKeyframe = null
+  min = max = null
+  var minJoints
+  var maxJoints
+  Object.keys(animatedModel.keyframes).forEach(function (frame, index) {
+    frame = Number(frame)
+    if (index === 0) { lowestKeyframe = frame }
+    if (frame <= lowestKeyframe + animationClock) {
+      min = frame
+      minJoints = animatedModel.keyframes['' + frame]
+    }
+    if (frame >= lowestKeyframe + animationClock && !max) {
+      max = frame
+      maxJoints = animatedModel.keyframes['' + frame]
+    }
+  })
+
+  var percentBetweenKeyframes = (lowestKeyframe + animationClock - min) / (max - min)
+  var joint0 = createMatrix()
+  var joint1 = createMatrix()
+  interpolate(joint0, minJoints[0], maxJoints[0], percentBetweenKeyframes)
+  interpolate(joint1, minJoints[1], maxJoints[1], percentBetweenKeyframes)
+
   gl.viewport(0, 0, viewport.width, viewport.height)
   gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
 
@@ -323,6 +370,10 @@ function Render (gl, viewport, animatedModel, shaderObject) {
   gl.bindBuffer(gl.ARRAY_BUFFER, animatedModel.vertexPositionBuffer)
   gl.vertexAttribPointer(shaderObject.vertexPositionAttribute, 3, gl.FLOAT, false, 0, 0)
 
+  // Vertex weight
+  gl.uniformMatrix4fv(shaderObject.boneMatrix0, false, joint0)
+  gl.uniformMatrix4fv(shaderObject.boneMatrix1, false, joint1)
+
   gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, animatedModel.vertexPositionIndexBuffer)
 
   gl.uniformMatrix4fv(shaderObject.pMatrixUniform, false, pMatrix)
@@ -331,11 +382,12 @@ function Render (gl, viewport, animatedModel, shaderObject) {
   gl.drawElements(gl.TRIANGLES, 72, gl.UNSIGNED_SHORT, 0)
 }
 
-},{"./matrix-math/make-inverse.js":4,"./matrix-math/make-look-at.js":5,"./matrix-math/make-perspective.js":6,"./matrix-math/make-translation.js":7,"./matrix-math/multiply.js":8}],10:[function(require,module,exports){
+},{"./matrix-math/make-inverse.js":4,"./matrix-math/make-look-at.js":5,"./matrix-math/make-perspective.js":6,"./matrix-math/make-translation.js":7,"./matrix-math/multiply.js":8,"gl-mat4/create":18,"mat4-interpolate":150}],10:[function(require,module,exports){
 (function (__dirname){
 var fs = require('fs')
-var fragment = fs.readFileSync(__dirname + '/fragment.glsl').toString()
-var vertex = fs.readFileSync(__dirname + '/vertex.glsl').toString()
+var path = require('path')
+var fragment = fs.readFileSync(path.resolve(__dirname, './fragment.glsl')).toString()
+var vertex = fs.readFileSync(path.resolve(__dirname, './vertex.glsl')).toString()
 
 module.exports = InitShaders
 
@@ -364,12 +416,14 @@ function InitShaders (gl) {
     vertexPositionAttribute: vertexPositionAttribute,
     samplerUniform: gl.getUniformLocation(shaderProgram, 'uSampler'),
     pMatrixUniform: gl.getUniformLocation(shaderProgram, 'uPMatrix'),
-    mvMatrixUniform: gl.getUniformLocation(shaderProgram, 'uMVMatrix')
+    mvMatrixUniform: gl.getUniformLocation(shaderProgram, 'uMVMatrix'),
+    boneMatrix0: gl.getUniformLocation(shaderProgram, 'boneMatrix0'),
+    boneMatrix1: gl.getUniformLocation(shaderProgram, 'boneMatrix1')
   }
 }
 
 }).call(this,"/demo/textured-blender-fault-cube/shader")
-},{"fs":13}],11:[function(require,module,exports){
+},{"fs":13,"path":152}],11:[function(require,module,exports){
 'use strict'
 
 exports.toByteArray = toByteArray
@@ -1944,7 +1998,7 @@ function blitBuffer (src, dst, offset, length) {
 }
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"base64-js":11,"ieee754":19,"isarray":22}],15:[function(require,module,exports){
+},{"base64-js":11,"ieee754":34,"isarray":37}],15:[function(require,module,exports){
 (function (Buffer){
 // Copyright Joyent, Inc. and other Node contributors.
 //
@@ -2055,7 +2109,7 @@ function objectToString(o) {
 }
 
 }).call(this,{"isBuffer":require("../../is-buffer/index.js")})
-},{"../../is-buffer/index.js":21}],16:[function(require,module,exports){
+},{"../../is-buffer/index.js":36}],16:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -2356,6 +2410,346 @@ function isUndefined(arg) {
 }
 
 },{}],17:[function(require,module,exports){
+module.exports = clone;
+
+/**
+ * Creates a new mat4 initialized with values from an existing matrix
+ *
+ * @param {mat4} a matrix to clone
+ * @returns {mat4} a new 4x4 matrix
+ */
+function clone(a) {
+    var out = new Float32Array(16);
+    out[0] = a[0];
+    out[1] = a[1];
+    out[2] = a[2];
+    out[3] = a[3];
+    out[4] = a[4];
+    out[5] = a[5];
+    out[6] = a[6];
+    out[7] = a[7];
+    out[8] = a[8];
+    out[9] = a[9];
+    out[10] = a[10];
+    out[11] = a[11];
+    out[12] = a[12];
+    out[13] = a[13];
+    out[14] = a[14];
+    out[15] = a[15];
+    return out;
+};
+},{}],18:[function(require,module,exports){
+module.exports = create;
+
+/**
+ * Creates a new identity mat4
+ *
+ * @returns {mat4} a new 4x4 matrix
+ */
+function create() {
+    var out = new Float32Array(16);
+    out[0] = 1;
+    out[1] = 0;
+    out[2] = 0;
+    out[3] = 0;
+    out[4] = 0;
+    out[5] = 1;
+    out[6] = 0;
+    out[7] = 0;
+    out[8] = 0;
+    out[9] = 0;
+    out[10] = 1;
+    out[11] = 0;
+    out[12] = 0;
+    out[13] = 0;
+    out[14] = 0;
+    out[15] = 1;
+    return out;
+};
+},{}],19:[function(require,module,exports){
+module.exports = determinant;
+
+/**
+ * Calculates the determinant of a mat4
+ *
+ * @param {mat4} a the source matrix
+ * @returns {Number} determinant of a
+ */
+function determinant(a) {
+    var a00 = a[0], a01 = a[1], a02 = a[2], a03 = a[3],
+        a10 = a[4], a11 = a[5], a12 = a[6], a13 = a[7],
+        a20 = a[8], a21 = a[9], a22 = a[10], a23 = a[11],
+        a30 = a[12], a31 = a[13], a32 = a[14], a33 = a[15],
+
+        b00 = a00 * a11 - a01 * a10,
+        b01 = a00 * a12 - a02 * a10,
+        b02 = a00 * a13 - a03 * a10,
+        b03 = a01 * a12 - a02 * a11,
+        b04 = a01 * a13 - a03 * a11,
+        b05 = a02 * a13 - a03 * a12,
+        b06 = a20 * a31 - a21 * a30,
+        b07 = a20 * a32 - a22 * a30,
+        b08 = a20 * a33 - a23 * a30,
+        b09 = a21 * a32 - a22 * a31,
+        b10 = a21 * a33 - a23 * a31,
+        b11 = a22 * a33 - a23 * a32;
+
+    // Calculate the determinant
+    return b00 * b11 - b01 * b10 + b02 * b09 + b03 * b08 - b04 * b07 + b05 * b06;
+};
+},{}],20:[function(require,module,exports){
+module.exports = fromRotationTranslation;
+
+/**
+ * Creates a matrix from a quaternion rotation and vector translation
+ * This is equivalent to (but much faster than):
+ *
+ *     mat4.identity(dest);
+ *     mat4.translate(dest, vec);
+ *     var quatMat = mat4.create();
+ *     quat4.toMat4(quat, quatMat);
+ *     mat4.multiply(dest, quatMat);
+ *
+ * @param {mat4} out mat4 receiving operation result
+ * @param {quat4} q Rotation quaternion
+ * @param {vec3} v Translation vector
+ * @returns {mat4} out
+ */
+function fromRotationTranslation(out, q, v) {
+    // Quaternion math
+    var x = q[0], y = q[1], z = q[2], w = q[3],
+        x2 = x + x,
+        y2 = y + y,
+        z2 = z + z,
+
+        xx = x * x2,
+        xy = x * y2,
+        xz = x * z2,
+        yy = y * y2,
+        yz = y * z2,
+        zz = z * z2,
+        wx = w * x2,
+        wy = w * y2,
+        wz = w * z2;
+
+    out[0] = 1 - (yy + zz);
+    out[1] = xy + wz;
+    out[2] = xz - wy;
+    out[3] = 0;
+    out[4] = xy - wz;
+    out[5] = 1 - (xx + zz);
+    out[6] = yz + wx;
+    out[7] = 0;
+    out[8] = xz + wy;
+    out[9] = yz - wx;
+    out[10] = 1 - (xx + yy);
+    out[11] = 0;
+    out[12] = v[0];
+    out[13] = v[1];
+    out[14] = v[2];
+    out[15] = 1;
+    
+    return out;
+};
+},{}],21:[function(require,module,exports){
+module.exports = identity;
+
+/**
+ * Set a mat4 to the identity matrix
+ *
+ * @param {mat4} out the receiving matrix
+ * @returns {mat4} out
+ */
+function identity(out) {
+    out[0] = 1;
+    out[1] = 0;
+    out[2] = 0;
+    out[3] = 0;
+    out[4] = 0;
+    out[5] = 1;
+    out[6] = 0;
+    out[7] = 0;
+    out[8] = 0;
+    out[9] = 0;
+    out[10] = 1;
+    out[11] = 0;
+    out[12] = 0;
+    out[13] = 0;
+    out[14] = 0;
+    out[15] = 1;
+    return out;
+};
+},{}],22:[function(require,module,exports){
+module.exports = invert;
+
+/**
+ * Inverts a mat4
+ *
+ * @param {mat4} out the receiving matrix
+ * @param {mat4} a the source matrix
+ * @returns {mat4} out
+ */
+function invert(out, a) {
+    var a00 = a[0], a01 = a[1], a02 = a[2], a03 = a[3],
+        a10 = a[4], a11 = a[5], a12 = a[6], a13 = a[7],
+        a20 = a[8], a21 = a[9], a22 = a[10], a23 = a[11],
+        a30 = a[12], a31 = a[13], a32 = a[14], a33 = a[15],
+
+        b00 = a00 * a11 - a01 * a10,
+        b01 = a00 * a12 - a02 * a10,
+        b02 = a00 * a13 - a03 * a10,
+        b03 = a01 * a12 - a02 * a11,
+        b04 = a01 * a13 - a03 * a11,
+        b05 = a02 * a13 - a03 * a12,
+        b06 = a20 * a31 - a21 * a30,
+        b07 = a20 * a32 - a22 * a30,
+        b08 = a20 * a33 - a23 * a30,
+        b09 = a21 * a32 - a22 * a31,
+        b10 = a21 * a33 - a23 * a31,
+        b11 = a22 * a33 - a23 * a32,
+
+        // Calculate the determinant
+        det = b00 * b11 - b01 * b10 + b02 * b09 + b03 * b08 - b04 * b07 + b05 * b06;
+
+    if (!det) { 
+        return null; 
+    }
+    det = 1.0 / det;
+
+    out[0] = (a11 * b11 - a12 * b10 + a13 * b09) * det;
+    out[1] = (a02 * b10 - a01 * b11 - a03 * b09) * det;
+    out[2] = (a31 * b05 - a32 * b04 + a33 * b03) * det;
+    out[3] = (a22 * b04 - a21 * b05 - a23 * b03) * det;
+    out[4] = (a12 * b08 - a10 * b11 - a13 * b07) * det;
+    out[5] = (a00 * b11 - a02 * b08 + a03 * b07) * det;
+    out[6] = (a32 * b02 - a30 * b05 - a33 * b01) * det;
+    out[7] = (a20 * b05 - a22 * b02 + a23 * b01) * det;
+    out[8] = (a10 * b10 - a11 * b08 + a13 * b06) * det;
+    out[9] = (a01 * b08 - a00 * b10 - a03 * b06) * det;
+    out[10] = (a30 * b04 - a31 * b02 + a33 * b00) * det;
+    out[11] = (a21 * b02 - a20 * b04 - a23 * b00) * det;
+    out[12] = (a11 * b07 - a10 * b09 - a12 * b06) * det;
+    out[13] = (a00 * b09 - a01 * b07 + a02 * b06) * det;
+    out[14] = (a31 * b01 - a30 * b03 - a32 * b00) * det;
+    out[15] = (a20 * b03 - a21 * b01 + a22 * b00) * det;
+
+    return out;
+};
+},{}],23:[function(require,module,exports){
+module.exports = multiply;
+
+/**
+ * Multiplies two mat4's
+ *
+ * @param {mat4} out the receiving matrix
+ * @param {mat4} a the first operand
+ * @param {mat4} b the second operand
+ * @returns {mat4} out
+ */
+function multiply(out, a, b) {
+    var a00 = a[0], a01 = a[1], a02 = a[2], a03 = a[3],
+        a10 = a[4], a11 = a[5], a12 = a[6], a13 = a[7],
+        a20 = a[8], a21 = a[9], a22 = a[10], a23 = a[11],
+        a30 = a[12], a31 = a[13], a32 = a[14], a33 = a[15];
+
+    // Cache only the current line of the second matrix
+    var b0  = b[0], b1 = b[1], b2 = b[2], b3 = b[3];  
+    out[0] = b0*a00 + b1*a10 + b2*a20 + b3*a30;
+    out[1] = b0*a01 + b1*a11 + b2*a21 + b3*a31;
+    out[2] = b0*a02 + b1*a12 + b2*a22 + b3*a32;
+    out[3] = b0*a03 + b1*a13 + b2*a23 + b3*a33;
+
+    b0 = b[4]; b1 = b[5]; b2 = b[6]; b3 = b[7];
+    out[4] = b0*a00 + b1*a10 + b2*a20 + b3*a30;
+    out[5] = b0*a01 + b1*a11 + b2*a21 + b3*a31;
+    out[6] = b0*a02 + b1*a12 + b2*a22 + b3*a32;
+    out[7] = b0*a03 + b1*a13 + b2*a23 + b3*a33;
+
+    b0 = b[8]; b1 = b[9]; b2 = b[10]; b3 = b[11];
+    out[8] = b0*a00 + b1*a10 + b2*a20 + b3*a30;
+    out[9] = b0*a01 + b1*a11 + b2*a21 + b3*a31;
+    out[10] = b0*a02 + b1*a12 + b2*a22 + b3*a32;
+    out[11] = b0*a03 + b1*a13 + b2*a23 + b3*a33;
+
+    b0 = b[12]; b1 = b[13]; b2 = b[14]; b3 = b[15];
+    out[12] = b0*a00 + b1*a10 + b2*a20 + b3*a30;
+    out[13] = b0*a01 + b1*a11 + b2*a21 + b3*a31;
+    out[14] = b0*a02 + b1*a12 + b2*a22 + b3*a32;
+    out[15] = b0*a03 + b1*a13 + b2*a23 + b3*a33;
+    return out;
+};
+},{}],24:[function(require,module,exports){
+module.exports = scale;
+
+/**
+ * Scales the mat4 by the dimensions in the given vec3
+ *
+ * @param {mat4} out the receiving matrix
+ * @param {mat4} a the matrix to scale
+ * @param {vec3} v the vec3 to scale the matrix by
+ * @returns {mat4} out
+ **/
+function scale(out, a, v) {
+    var x = v[0], y = v[1], z = v[2];
+
+    out[0] = a[0] * x;
+    out[1] = a[1] * x;
+    out[2] = a[2] * x;
+    out[3] = a[3] * x;
+    out[4] = a[4] * y;
+    out[5] = a[5] * y;
+    out[6] = a[6] * y;
+    out[7] = a[7] * y;
+    out[8] = a[8] * z;
+    out[9] = a[9] * z;
+    out[10] = a[10] * z;
+    out[11] = a[11] * z;
+    out[12] = a[12];
+    out[13] = a[13];
+    out[14] = a[14];
+    out[15] = a[15];
+    return out;
+};
+},{}],25:[function(require,module,exports){
+module.exports = translate;
+
+/**
+ * Translate a mat4 by the given vector
+ *
+ * @param {mat4} out the receiving matrix
+ * @param {mat4} a the matrix to translate
+ * @param {vec3} v vector to translate by
+ * @returns {mat4} out
+ */
+function translate(out, a, v) {
+    var x = v[0], y = v[1], z = v[2],
+        a00, a01, a02, a03,
+        a10, a11, a12, a13,
+        a20, a21, a22, a23;
+
+    if (a === out) {
+        out[12] = a[0] * x + a[4] * y + a[8] * z + a[12];
+        out[13] = a[1] * x + a[5] * y + a[9] * z + a[13];
+        out[14] = a[2] * x + a[6] * y + a[10] * z + a[14];
+        out[15] = a[3] * x + a[7] * y + a[11] * z + a[15];
+    } else {
+        a00 = a[0]; a01 = a[1]; a02 = a[2]; a03 = a[3];
+        a10 = a[4]; a11 = a[5]; a12 = a[6]; a13 = a[7];
+        a20 = a[8]; a21 = a[9]; a22 = a[10]; a23 = a[11];
+
+        out[0] = a00; out[1] = a01; out[2] = a02; out[3] = a03;
+        out[4] = a10; out[5] = a11; out[6] = a12; out[7] = a13;
+        out[8] = a20; out[9] = a21; out[10] = a22; out[11] = a23;
+
+        out[12] = a00 * x + a10 * y + a20 * z + a[12];
+        out[13] = a01 * x + a11 * y + a21 * z + a[13];
+        out[14] = a02 * x + a12 * y + a22 * z + a[14];
+        out[15] = a03 * x + a13 * y + a23 * z + a[15];
+    }
+
+    return out;
+};
+},{}],26:[function(require,module,exports){
 module.exports = transpose;
 
 /**
@@ -2405,7 +2799,153 @@ function transpose(out, a) {
     
     return out;
 };
-},{}],18:[function(require,module,exports){
+},{}],27:[function(require,module,exports){
+module.exports = slerp
+
+/**
+ * Performs a spherical linear interpolation between two quat
+ *
+ * @param {quat} out the receiving quaternion
+ * @param {quat} a the first operand
+ * @param {quat} b the second operand
+ * @param {Number} t interpolation amount between the two inputs
+ * @returns {quat} out
+ */
+function slerp (out, a, b, t) {
+  // benchmarks:
+  //    http://jsperf.com/quaternion-slerp-implementations
+
+  var ax = a[0], ay = a[1], az = a[2], aw = a[3],
+    bx = b[0], by = b[1], bz = b[2], bw = b[3]
+
+  var omega, cosom, sinom, scale0, scale1
+
+  // calc cosine
+  cosom = ax * bx + ay * by + az * bz + aw * bw
+  // adjust signs (if necessary)
+  if (cosom < 0.0) {
+    cosom = -cosom
+    bx = -bx
+    by = -by
+    bz = -bz
+    bw = -bw
+  }
+  // calculate coefficients
+  if ((1.0 - cosom) > 0.000001) {
+    // standard case (slerp)
+    omega = Math.acos(cosom)
+    sinom = Math.sin(omega)
+    scale0 = Math.sin((1.0 - t) * omega) / sinom
+    scale1 = Math.sin(t * omega) / sinom
+  } else {
+    // "from" and "to" quaternions are very close
+    //  ... so we can do a linear interpolation
+    scale0 = 1.0 - t
+    scale1 = t
+  }
+  // calculate final values
+  out[0] = scale0 * ax + scale1 * bx
+  out[1] = scale0 * ay + scale1 * by
+  out[2] = scale0 * az + scale1 * bz
+  out[3] = scale0 * aw + scale1 * bw
+
+  return out
+}
+
+},{}],28:[function(require,module,exports){
+module.exports = cross;
+
+/**
+ * Computes the cross product of two vec3's
+ *
+ * @param {vec3} out the receiving vector
+ * @param {vec3} a the first operand
+ * @param {vec3} b the second operand
+ * @returns {vec3} out
+ */
+function cross(out, a, b) {
+    var ax = a[0], ay = a[1], az = a[2],
+        bx = b[0], by = b[1], bz = b[2]
+
+    out[0] = ay * bz - az * by
+    out[1] = az * bx - ax * bz
+    out[2] = ax * by - ay * bx
+    return out
+}
+},{}],29:[function(require,module,exports){
+module.exports = dot;
+
+/**
+ * Calculates the dot product of two vec3's
+ *
+ * @param {vec3} a the first operand
+ * @param {vec3} b the second operand
+ * @returns {Number} dot product of a and b
+ */
+function dot(a, b) {
+    return a[0] * b[0] + a[1] * b[1] + a[2] * b[2]
+}
+},{}],30:[function(require,module,exports){
+module.exports = length;
+
+/**
+ * Calculates the length of a vec3
+ *
+ * @param {vec3} a vector to calculate length of
+ * @returns {Number} length of a
+ */
+function length(a) {
+    var x = a[0],
+        y = a[1],
+        z = a[2]
+    return Math.sqrt(x*x + y*y + z*z)
+}
+},{}],31:[function(require,module,exports){
+module.exports = lerp;
+
+/**
+ * Performs a linear interpolation between two vec3's
+ *
+ * @param {vec3} out the receiving vector
+ * @param {vec3} a the first operand
+ * @param {vec3} b the second operand
+ * @param {Number} t interpolation amount between the two inputs
+ * @returns {vec3} out
+ */
+function lerp(out, a, b, t) {
+    var ax = a[0],
+        ay = a[1],
+        az = a[2]
+    out[0] = ax + t * (b[0] - ax)
+    out[1] = ay + t * (b[1] - ay)
+    out[2] = az + t * (b[2] - az)
+    return out
+}
+},{}],32:[function(require,module,exports){
+module.exports = normalize;
+
+/**
+ * Normalize a vec3
+ *
+ * @param {vec3} out the receiving vector
+ * @param {vec3} a vector to normalize
+ * @returns {vec3} out
+ */
+function normalize(out, a) {
+    var x = a[0],
+        y = a[1],
+        z = a[2]
+    var len = x*x + y*y + z*z
+    if (len > 0) {
+        //TODO: evaluate use of glm_invsqrt here?
+        len = 1 / Math.sqrt(len)
+        out[0] = a[0] * len
+        out[1] = a[1] * len
+        out[2] = a[2] * len
+    }
+    return out
+}
+},{}],33:[function(require,module,exports){
 (function (global){
 var topLevel = typeof global !== 'undefined' ? global :
     typeof window !== 'undefined' ? window : {}
@@ -2424,7 +2964,7 @@ if (typeof document !== 'undefined') {
 }
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"min-document":12}],19:[function(require,module,exports){
+},{"min-document":12}],34:[function(require,module,exports){
 exports.read = function (buffer, offset, isLE, mLen, nBytes) {
   var e, m
   var eLen = nBytes * 8 - mLen - 1
@@ -2510,7 +3050,7 @@ exports.write = function (buffer, value, offset, isLE, mLen, nBytes) {
   buffer[offset + i - d] |= s * 128
 }
 
-},{}],20:[function(require,module,exports){
+},{}],35:[function(require,module,exports){
 if (typeof Object.create === 'function') {
   // implementation from standard node.js 'util' module
   module.exports = function inherits(ctor, superCtor) {
@@ -2535,7 +3075,7 @@ if (typeof Object.create === 'function') {
   }
 }
 
-},{}],21:[function(require,module,exports){
+},{}],36:[function(require,module,exports){
 /**
  * Determine if an object is Buffer
  *
@@ -2554,14 +3094,14 @@ module.exports = function (obj) {
     ))
 }
 
-},{}],22:[function(require,module,exports){
+},{}],37:[function(require,module,exports){
 var toString = {}.toString;
 
 module.exports = Array.isArray || function (arr) {
   return toString.call(arr) == '[object Array]';
 };
 
-},{}],23:[function(require,module,exports){
+},{}],38:[function(require,module,exports){
 var nativeCreate = require('./_nativeCreate');
 
 /** Used for built-in method references. */
@@ -2581,7 +3121,7 @@ Hash.prototype = nativeCreate ? nativeCreate(null) : objectProto;
 
 module.exports = Hash;
 
-},{"./_nativeCreate":95}],24:[function(require,module,exports){
+},{"./_nativeCreate":110}],39:[function(require,module,exports){
 var getNative = require('./_getNative'),
     root = require('./_root');
 
@@ -2590,7 +3130,7 @@ var Map = getNative(root, 'Map');
 
 module.exports = Map;
 
-},{"./_getNative":74,"./_root":97}],25:[function(require,module,exports){
+},{"./_getNative":89,"./_root":112}],40:[function(require,module,exports){
 var mapClear = require('./_mapClear'),
     mapDelete = require('./_mapDelete'),
     mapGet = require('./_mapGet'),
@@ -2624,7 +3164,7 @@ MapCache.prototype.set = mapSet;
 
 module.exports = MapCache;
 
-},{"./_mapClear":89,"./_mapDelete":90,"./_mapGet":91,"./_mapHas":92,"./_mapSet":93}],26:[function(require,module,exports){
+},{"./_mapClear":104,"./_mapDelete":105,"./_mapGet":106,"./_mapHas":107,"./_mapSet":108}],41:[function(require,module,exports){
 var getNative = require('./_getNative'),
     root = require('./_root');
 
@@ -2633,7 +3173,7 @@ var Set = getNative(root, 'Set');
 
 module.exports = Set;
 
-},{"./_getNative":74,"./_root":97}],27:[function(require,module,exports){
+},{"./_getNative":89,"./_root":112}],42:[function(require,module,exports){
 var stackClear = require('./_stackClear'),
     stackDelete = require('./_stackDelete'),
     stackGet = require('./_stackGet'),
@@ -2667,7 +3207,7 @@ Stack.prototype.set = stackSet;
 
 module.exports = Stack;
 
-},{"./_stackClear":99,"./_stackDelete":100,"./_stackGet":101,"./_stackHas":102,"./_stackSet":103}],28:[function(require,module,exports){
+},{"./_stackClear":114,"./_stackDelete":115,"./_stackGet":116,"./_stackHas":117,"./_stackSet":118}],43:[function(require,module,exports){
 var root = require('./_root');
 
 /** Built-in value references. */
@@ -2675,7 +3215,7 @@ var Symbol = root.Symbol;
 
 module.exports = Symbol;
 
-},{"./_root":97}],29:[function(require,module,exports){
+},{"./_root":112}],44:[function(require,module,exports){
 var root = require('./_root');
 
 /** Built-in value references. */
@@ -2683,7 +3223,7 @@ var Uint8Array = root.Uint8Array;
 
 module.exports = Uint8Array;
 
-},{"./_root":97}],30:[function(require,module,exports){
+},{"./_root":112}],45:[function(require,module,exports){
 var getNative = require('./_getNative'),
     root = require('./_root');
 
@@ -2692,7 +3232,7 @@ var WeakMap = getNative(root, 'WeakMap');
 
 module.exports = WeakMap;
 
-},{"./_getNative":74,"./_root":97}],31:[function(require,module,exports){
+},{"./_getNative":89,"./_root":112}],46:[function(require,module,exports){
 /**
  * A faster alternative to `Function#apply`, this function invokes `func`
  * with the `this` binding of `thisArg` and the arguments of `args`.
@@ -2716,7 +3256,7 @@ function apply(func, thisArg, args) {
 
 module.exports = apply;
 
-},{}],32:[function(require,module,exports){
+},{}],47:[function(require,module,exports){
 /**
  * A specialized version of `_.every` for arrays without support for
  * iteratee shorthands.
@@ -2740,7 +3280,7 @@ function arrayEvery(array, predicate) {
 
 module.exports = arrayEvery;
 
-},{}],33:[function(require,module,exports){
+},{}],48:[function(require,module,exports){
 /**
  * A specialized version of `_.map` for arrays without support for iteratee
  * shorthands.
@@ -2763,7 +3303,7 @@ function arrayMap(array, iteratee) {
 
 module.exports = arrayMap;
 
-},{}],34:[function(require,module,exports){
+},{}],49:[function(require,module,exports){
 /**
  * A specialized version of `_.some` for arrays without support for iteratee
  * shorthands.
@@ -2787,7 +3327,7 @@ function arraySome(array, predicate) {
 
 module.exports = arraySome;
 
-},{}],35:[function(require,module,exports){
+},{}],50:[function(require,module,exports){
 var eq = require('./eq');
 
 /** Used for built-in method references. */
@@ -2816,7 +3356,7 @@ function assignValue(object, key, value) {
 
 module.exports = assignValue;
 
-},{"./eq":107}],36:[function(require,module,exports){
+},{"./eq":122}],51:[function(require,module,exports){
 var assocIndexOf = require('./_assocIndexOf');
 
 /** Used for built-in method references. */
@@ -2849,7 +3389,7 @@ function assocDelete(array, key) {
 
 module.exports = assocDelete;
 
-},{"./_assocIndexOf":39}],37:[function(require,module,exports){
+},{"./_assocIndexOf":54}],52:[function(require,module,exports){
 var assocIndexOf = require('./_assocIndexOf');
 
 /**
@@ -2867,7 +3407,7 @@ function assocGet(array, key) {
 
 module.exports = assocGet;
 
-},{"./_assocIndexOf":39}],38:[function(require,module,exports){
+},{"./_assocIndexOf":54}],53:[function(require,module,exports){
 var assocIndexOf = require('./_assocIndexOf');
 
 /**
@@ -2884,7 +3424,7 @@ function assocHas(array, key) {
 
 module.exports = assocHas;
 
-},{"./_assocIndexOf":39}],39:[function(require,module,exports){
+},{"./_assocIndexOf":54}],54:[function(require,module,exports){
 var eq = require('./eq');
 
 /**
@@ -2908,7 +3448,7 @@ function assocIndexOf(array, key) {
 
 module.exports = assocIndexOf;
 
-},{"./eq":107}],40:[function(require,module,exports){
+},{"./eq":122}],55:[function(require,module,exports){
 var assocIndexOf = require('./_assocIndexOf');
 
 /**
@@ -2930,7 +3470,7 @@ function assocSet(array, key, value) {
 
 module.exports = assocSet;
 
-},{"./_assocIndexOf":39}],41:[function(require,module,exports){
+},{"./_assocIndexOf":54}],56:[function(require,module,exports){
 var copyObject = require('./_copyObject'),
     keys = require('./keys');
 
@@ -2949,7 +3489,7 @@ function baseAssign(object, source) {
 
 module.exports = baseAssign;
 
-},{"./_copyObject":64,"./keys":125}],42:[function(require,module,exports){
+},{"./_copyObject":79,"./keys":140}],57:[function(require,module,exports){
 var isArray = require('./isArray'),
     stringToPath = require('./_stringToPath');
 
@@ -2966,7 +3506,7 @@ function baseCastPath(value) {
 
 module.exports = baseCastPath;
 
-},{"./_stringToPath":104,"./isArray":113}],43:[function(require,module,exports){
+},{"./_stringToPath":119,"./isArray":128}],58:[function(require,module,exports){
 var isObject = require('./isObject');
 
 /** Built-in value references. */
@@ -2986,7 +3526,7 @@ function baseCreate(proto) {
 
 module.exports = baseCreate;
 
-},{"./isObject":120}],44:[function(require,module,exports){
+},{"./isObject":135}],59:[function(require,module,exports){
 var baseForOwn = require('./_baseForOwn'),
     createBaseEach = require('./_createBaseEach');
 
@@ -3002,7 +3542,7 @@ var baseEach = createBaseEach(baseForOwn);
 
 module.exports = baseEach;
 
-},{"./_baseForOwn":47,"./_createBaseEach":67}],45:[function(require,module,exports){
+},{"./_baseForOwn":62,"./_createBaseEach":82}],60:[function(require,module,exports){
 var baseEach = require('./_baseEach');
 
 /**
@@ -3024,7 +3564,7 @@ function baseEvery(collection, predicate) {
 
 module.exports = baseEvery;
 
-},{"./_baseEach":44}],46:[function(require,module,exports){
+},{"./_baseEach":59}],61:[function(require,module,exports){
 var createBaseFor = require('./_createBaseFor');
 
 /**
@@ -3043,7 +3583,7 @@ var baseFor = createBaseFor();
 
 module.exports = baseFor;
 
-},{"./_createBaseFor":68}],47:[function(require,module,exports){
+},{"./_createBaseFor":83}],62:[function(require,module,exports){
 var baseFor = require('./_baseFor'),
     keys = require('./keys');
 
@@ -3061,7 +3601,7 @@ function baseForOwn(object, iteratee) {
 
 module.exports = baseForOwn;
 
-},{"./_baseFor":46,"./keys":125}],48:[function(require,module,exports){
+},{"./_baseFor":61,"./keys":140}],63:[function(require,module,exports){
 var baseCastPath = require('./_baseCastPath'),
     isKey = require('./_isKey');
 
@@ -3087,7 +3627,7 @@ function baseGet(object, path) {
 
 module.exports = baseGet;
 
-},{"./_baseCastPath":42,"./_isKey":85}],49:[function(require,module,exports){
+},{"./_baseCastPath":57,"./_isKey":100}],64:[function(require,module,exports){
 /** Used for built-in method references. */
 var objectProto = Object.prototype;
 
@@ -3115,7 +3655,7 @@ function baseHas(object, key) {
 
 module.exports = baseHas;
 
-},{}],50:[function(require,module,exports){
+},{}],65:[function(require,module,exports){
 /**
  * The base implementation of `_.hasIn` without support for deep paths.
  *
@@ -3130,7 +3670,7 @@ function baseHasIn(object, key) {
 
 module.exports = baseHasIn;
 
-},{}],51:[function(require,module,exports){
+},{}],66:[function(require,module,exports){
 var baseIsEqualDeep = require('./_baseIsEqualDeep'),
     isObject = require('./isObject'),
     isObjectLike = require('./isObjectLike');
@@ -3162,7 +3702,7 @@ function baseIsEqual(value, other, customizer, bitmask, stack) {
 
 module.exports = baseIsEqual;
 
-},{"./_baseIsEqualDeep":52,"./isObject":120,"./isObjectLike":121}],52:[function(require,module,exports){
+},{"./_baseIsEqualDeep":67,"./isObject":135,"./isObjectLike":136}],67:[function(require,module,exports){
 var Stack = require('./_Stack'),
     equalArrays = require('./_equalArrays'),
     equalByTag = require('./_equalByTag'),
@@ -3242,7 +3782,7 @@ function baseIsEqualDeep(object, other, equalFunc, customizer, bitmask, stack) {
 
 module.exports = baseIsEqualDeep;
 
-},{"./_Stack":27,"./_equalArrays":69,"./_equalByTag":70,"./_equalObjects":71,"./_getTag":75,"./_isHostObject":82,"./isArray":113,"./isTypedArray":124}],53:[function(require,module,exports){
+},{"./_Stack":42,"./_equalArrays":84,"./_equalByTag":85,"./_equalObjects":86,"./_getTag":90,"./_isHostObject":97,"./isArray":128,"./isTypedArray":139}],68:[function(require,module,exports){
 var Stack = require('./_Stack'),
     baseIsEqual = require('./_baseIsEqual');
 
@@ -3305,7 +3845,7 @@ function baseIsMatch(object, source, matchData, customizer) {
 
 module.exports = baseIsMatch;
 
-},{"./_Stack":27,"./_baseIsEqual":51}],54:[function(require,module,exports){
+},{"./_Stack":42,"./_baseIsEqual":66}],69:[function(require,module,exports){
 var baseMatches = require('./_baseMatches'),
     baseMatchesProperty = require('./_baseMatchesProperty'),
     identity = require('./identity'),
@@ -3337,7 +3877,7 @@ function baseIteratee(value) {
 
 module.exports = baseIteratee;
 
-},{"./_baseMatches":56,"./_baseMatchesProperty":57,"./identity":111,"./isArray":113,"./property":127}],55:[function(require,module,exports){
+},{"./_baseMatches":71,"./_baseMatchesProperty":72,"./identity":126,"./isArray":128,"./property":142}],70:[function(require,module,exports){
 /* Built-in method references for those with the same name as other `lodash` methods. */
 var nativeKeys = Object.keys;
 
@@ -3355,7 +3895,7 @@ function baseKeys(object) {
 
 module.exports = baseKeys;
 
-},{}],56:[function(require,module,exports){
+},{}],71:[function(require,module,exports){
 var baseIsMatch = require('./_baseIsMatch'),
     getMatchData = require('./_getMatchData');
 
@@ -3387,7 +3927,7 @@ function baseMatches(source) {
 
 module.exports = baseMatches;
 
-},{"./_baseIsMatch":53,"./_getMatchData":73}],57:[function(require,module,exports){
+},{"./_baseIsMatch":68,"./_getMatchData":88}],72:[function(require,module,exports){
 var baseIsEqual = require('./_baseIsEqual'),
     get = require('./get'),
     hasIn = require('./hasIn');
@@ -3415,7 +3955,7 @@ function baseMatchesProperty(path, srcValue) {
 
 module.exports = baseMatchesProperty;
 
-},{"./_baseIsEqual":51,"./get":109,"./hasIn":110}],58:[function(require,module,exports){
+},{"./_baseIsEqual":66,"./get":124,"./hasIn":125}],73:[function(require,module,exports){
 /**
  * The base implementation of `_.property` without support for deep paths.
  *
@@ -3431,7 +3971,7 @@ function baseProperty(key) {
 
 module.exports = baseProperty;
 
-},{}],59:[function(require,module,exports){
+},{}],74:[function(require,module,exports){
 var baseGet = require('./_baseGet');
 
 /**
@@ -3449,7 +3989,7 @@ function basePropertyDeep(path) {
 
 module.exports = basePropertyDeep;
 
-},{"./_baseGet":48}],60:[function(require,module,exports){
+},{"./_baseGet":63}],75:[function(require,module,exports){
 /**
  * The base implementation of `_.slice` without an iteratee call guard.
  *
@@ -3482,7 +4022,7 @@ function baseSlice(array, start, end) {
 
 module.exports = baseSlice;
 
-},{}],61:[function(require,module,exports){
+},{}],76:[function(require,module,exports){
 /**
  * The base implementation of `_.times` without support for iteratee shorthands
  * or max array length checks.
@@ -3504,7 +4044,7 @@ function baseTimes(n, iteratee) {
 
 module.exports = baseTimes;
 
-},{}],62:[function(require,module,exports){
+},{}],77:[function(require,module,exports){
 var arrayMap = require('./_arrayMap');
 
 /**
@@ -3524,7 +4064,7 @@ function baseToPairs(object, props) {
 
 module.exports = baseToPairs;
 
-},{"./_arrayMap":33}],63:[function(require,module,exports){
+},{"./_arrayMap":48}],78:[function(require,module,exports){
 /**
  * Checks if `value` is a global object.
  *
@@ -3538,7 +4078,7 @@ function checkGlobal(value) {
 
 module.exports = checkGlobal;
 
-},{}],64:[function(require,module,exports){
+},{}],79:[function(require,module,exports){
 var copyObjectWith = require('./_copyObjectWith');
 
 /**
@@ -3556,7 +4096,7 @@ function copyObject(source, props, object) {
 
 module.exports = copyObject;
 
-},{"./_copyObjectWith":65}],65:[function(require,module,exports){
+},{"./_copyObjectWith":80}],80:[function(require,module,exports){
 var assignValue = require('./_assignValue');
 
 /**
@@ -3590,7 +4130,7 @@ function copyObjectWith(source, props, object, customizer) {
 
 module.exports = copyObjectWith;
 
-},{"./_assignValue":35}],66:[function(require,module,exports){
+},{"./_assignValue":50}],81:[function(require,module,exports){
 var isIterateeCall = require('./_isIterateeCall'),
     rest = require('./rest');
 
@@ -3629,7 +4169,7 @@ function createAssigner(assigner) {
 
 module.exports = createAssigner;
 
-},{"./_isIterateeCall":84,"./rest":128}],67:[function(require,module,exports){
+},{"./_isIterateeCall":99,"./rest":143}],82:[function(require,module,exports){
 var isArrayLike = require('./isArrayLike');
 
 /**
@@ -3663,7 +4203,7 @@ function createBaseEach(eachFunc, fromRight) {
 
 module.exports = createBaseEach;
 
-},{"./isArrayLike":114}],68:[function(require,module,exports){
+},{"./isArrayLike":129}],83:[function(require,module,exports){
 /**
  * Creates a base function for methods like `_.forIn`.
  *
@@ -3690,7 +4230,7 @@ function createBaseFor(fromRight) {
 
 module.exports = createBaseFor;
 
-},{}],69:[function(require,module,exports){
+},{}],84:[function(require,module,exports){
 var arraySome = require('./_arraySome');
 
 /** Used to compose bitmasks for comparison styles. */
@@ -3764,7 +4304,7 @@ function equalArrays(array, other, equalFunc, customizer, bitmask, stack) {
 
 module.exports = equalArrays;
 
-},{"./_arraySome":34}],70:[function(require,module,exports){
+},{"./_arraySome":49}],85:[function(require,module,exports){
 var Symbol = require('./_Symbol'),
     Uint8Array = require('./_Uint8Array'),
     equalArrays = require('./_equalArrays'),
@@ -3865,7 +4405,7 @@ function equalByTag(object, other, tag, equalFunc, customizer, bitmask, stack) {
 
 module.exports = equalByTag;
 
-},{"./_Symbol":28,"./_Uint8Array":29,"./_equalArrays":69,"./_mapToArray":94,"./_setToArray":98}],71:[function(require,module,exports){
+},{"./_Symbol":43,"./_Uint8Array":44,"./_equalArrays":84,"./_mapToArray":109,"./_setToArray":113}],86:[function(require,module,exports){
 var baseHas = require('./_baseHas'),
     keys = require('./keys');
 
@@ -3949,7 +4489,7 @@ function equalObjects(object, other, equalFunc, customizer, bitmask, stack) {
 
 module.exports = equalObjects;
 
-},{"./_baseHas":49,"./keys":125}],72:[function(require,module,exports){
+},{"./_baseHas":64,"./keys":140}],87:[function(require,module,exports){
 var baseProperty = require('./_baseProperty');
 
 /**
@@ -3966,7 +4506,7 @@ var getLength = baseProperty('length');
 
 module.exports = getLength;
 
-},{"./_baseProperty":58}],73:[function(require,module,exports){
+},{"./_baseProperty":73}],88:[function(require,module,exports){
 var isStrictComparable = require('./_isStrictComparable'),
     toPairs = require('./toPairs');
 
@@ -3989,7 +4529,7 @@ function getMatchData(object) {
 
 module.exports = getMatchData;
 
-},{"./_isStrictComparable":88,"./toPairs":131}],74:[function(require,module,exports){
+},{"./_isStrictComparable":103,"./toPairs":146}],89:[function(require,module,exports){
 var isNative = require('./isNative');
 
 /**
@@ -4007,7 +4547,7 @@ function getNative(object, key) {
 
 module.exports = getNative;
 
-},{"./isNative":119}],75:[function(require,module,exports){
+},{"./isNative":134}],90:[function(require,module,exports){
 var Map = require('./_Map'),
     Set = require('./_Set'),
     WeakMap = require('./_WeakMap');
@@ -4068,7 +4608,7 @@ if ((Map && getTag(new Map) != mapTag) ||
 
 module.exports = getTag;
 
-},{"./_Map":24,"./_Set":26,"./_WeakMap":30}],76:[function(require,module,exports){
+},{"./_Map":39,"./_Set":41,"./_WeakMap":45}],91:[function(require,module,exports){
 var baseCastPath = require('./_baseCastPath'),
     isArguments = require('./isArguments'),
     isArray = require('./isArray'),
@@ -4110,7 +4650,7 @@ function hasPath(object, path, hasFunc) {
 
 module.exports = hasPath;
 
-},{"./_baseCastPath":42,"./_isIndex":83,"./_isKey":85,"./_parent":96,"./isArguments":112,"./isArray":113,"./isLength":118,"./isString":122,"./last":126}],77:[function(require,module,exports){
+},{"./_baseCastPath":57,"./_isIndex":98,"./_isKey":100,"./_parent":111,"./isArguments":127,"./isArray":128,"./isLength":133,"./isString":137,"./last":141}],92:[function(require,module,exports){
 var hashHas = require('./_hashHas');
 
 /**
@@ -4127,7 +4667,7 @@ function hashDelete(hash, key) {
 
 module.exports = hashDelete;
 
-},{"./_hashHas":79}],78:[function(require,module,exports){
+},{"./_hashHas":94}],93:[function(require,module,exports){
 var nativeCreate = require('./_nativeCreate');
 
 /** Used to stand-in for `undefined` hash values. */
@@ -4157,7 +4697,7 @@ function hashGet(hash, key) {
 
 module.exports = hashGet;
 
-},{"./_nativeCreate":95}],79:[function(require,module,exports){
+},{"./_nativeCreate":110}],94:[function(require,module,exports){
 var nativeCreate = require('./_nativeCreate');
 
 /** Used for built-in method references. */
@@ -4180,7 +4720,7 @@ function hashHas(hash, key) {
 
 module.exports = hashHas;
 
-},{"./_nativeCreate":95}],80:[function(require,module,exports){
+},{"./_nativeCreate":110}],95:[function(require,module,exports){
 var nativeCreate = require('./_nativeCreate');
 
 /** Used to stand-in for `undefined` hash values. */
@@ -4200,7 +4740,7 @@ function hashSet(hash, key, value) {
 
 module.exports = hashSet;
 
-},{"./_nativeCreate":95}],81:[function(require,module,exports){
+},{"./_nativeCreate":110}],96:[function(require,module,exports){
 var baseTimes = require('./_baseTimes'),
     isArguments = require('./isArguments'),
     isArray = require('./isArray'),
@@ -4226,7 +4766,7 @@ function indexKeys(object) {
 
 module.exports = indexKeys;
 
-},{"./_baseTimes":61,"./isArguments":112,"./isArray":113,"./isLength":118,"./isString":122}],82:[function(require,module,exports){
+},{"./_baseTimes":76,"./isArguments":127,"./isArray":128,"./isLength":133,"./isString":137}],97:[function(require,module,exports){
 /**
  * Checks if `value` is a host object in IE < 9.
  *
@@ -4248,7 +4788,7 @@ function isHostObject(value) {
 
 module.exports = isHostObject;
 
-},{}],83:[function(require,module,exports){
+},{}],98:[function(require,module,exports){
 /** Used as references for various `Number` constants. */
 var MAX_SAFE_INTEGER = 9007199254740991;
 
@@ -4271,7 +4811,7 @@ function isIndex(value, length) {
 
 module.exports = isIndex;
 
-},{}],84:[function(require,module,exports){
+},{}],99:[function(require,module,exports){
 var eq = require('./eq'),
     isArrayLike = require('./isArrayLike'),
     isIndex = require('./_isIndex'),
@@ -4301,7 +4841,7 @@ function isIterateeCall(value, index, object) {
 
 module.exports = isIterateeCall;
 
-},{"./_isIndex":83,"./eq":107,"./isArrayLike":114,"./isObject":120}],85:[function(require,module,exports){
+},{"./_isIndex":98,"./eq":122,"./isArrayLike":129,"./isObject":135}],100:[function(require,module,exports){
 var isArray = require('./isArray');
 
 /** Used to match property names within property paths. */
@@ -4327,7 +4867,7 @@ function isKey(value, object) {
 
 module.exports = isKey;
 
-},{"./isArray":113}],86:[function(require,module,exports){
+},{"./isArray":128}],101:[function(require,module,exports){
 /**
  * Checks if `value` is suitable for use as unique object key.
  *
@@ -4343,7 +4883,7 @@ function isKeyable(value) {
 
 module.exports = isKeyable;
 
-},{}],87:[function(require,module,exports){
+},{}],102:[function(require,module,exports){
 /** Used for built-in method references. */
 var objectProto = Object.prototype;
 
@@ -4363,7 +4903,7 @@ function isPrototype(value) {
 
 module.exports = isPrototype;
 
-},{}],88:[function(require,module,exports){
+},{}],103:[function(require,module,exports){
 var isObject = require('./isObject');
 
 /**
@@ -4380,7 +4920,7 @@ function isStrictComparable(value) {
 
 module.exports = isStrictComparable;
 
-},{"./isObject":120}],89:[function(require,module,exports){
+},{"./isObject":135}],104:[function(require,module,exports){
 var Hash = require('./_Hash'),
     Map = require('./_Map');
 
@@ -4401,7 +4941,7 @@ function mapClear() {
 
 module.exports = mapClear;
 
-},{"./_Hash":23,"./_Map":24}],90:[function(require,module,exports){
+},{"./_Hash":38,"./_Map":39}],105:[function(require,module,exports){
 var Map = require('./_Map'),
     assocDelete = require('./_assocDelete'),
     hashDelete = require('./_hashDelete'),
@@ -4426,7 +4966,7 @@ function mapDelete(key) {
 
 module.exports = mapDelete;
 
-},{"./_Map":24,"./_assocDelete":36,"./_hashDelete":77,"./_isKeyable":86}],91:[function(require,module,exports){
+},{"./_Map":39,"./_assocDelete":51,"./_hashDelete":92,"./_isKeyable":101}],106:[function(require,module,exports){
 var Map = require('./_Map'),
     assocGet = require('./_assocGet'),
     hashGet = require('./_hashGet'),
@@ -4451,7 +4991,7 @@ function mapGet(key) {
 
 module.exports = mapGet;
 
-},{"./_Map":24,"./_assocGet":37,"./_hashGet":78,"./_isKeyable":86}],92:[function(require,module,exports){
+},{"./_Map":39,"./_assocGet":52,"./_hashGet":93,"./_isKeyable":101}],107:[function(require,module,exports){
 var Map = require('./_Map'),
     assocHas = require('./_assocHas'),
     hashHas = require('./_hashHas'),
@@ -4476,7 +5016,7 @@ function mapHas(key) {
 
 module.exports = mapHas;
 
-},{"./_Map":24,"./_assocHas":38,"./_hashHas":79,"./_isKeyable":86}],93:[function(require,module,exports){
+},{"./_Map":39,"./_assocHas":53,"./_hashHas":94,"./_isKeyable":101}],108:[function(require,module,exports){
 var Map = require('./_Map'),
     assocSet = require('./_assocSet'),
     hashSet = require('./_hashSet'),
@@ -4506,7 +5046,7 @@ function mapSet(key, value) {
 
 module.exports = mapSet;
 
-},{"./_Map":24,"./_assocSet":40,"./_hashSet":80,"./_isKeyable":86}],94:[function(require,module,exports){
+},{"./_Map":39,"./_assocSet":55,"./_hashSet":95,"./_isKeyable":101}],109:[function(require,module,exports){
 /**
  * Converts `map` to an array.
  *
@@ -4526,7 +5066,7 @@ function mapToArray(map) {
 
 module.exports = mapToArray;
 
-},{}],95:[function(require,module,exports){
+},{}],110:[function(require,module,exports){
 var getNative = require('./_getNative');
 
 /* Built-in method references that are verified to be native. */
@@ -4534,7 +5074,7 @@ var nativeCreate = getNative(Object, 'create');
 
 module.exports = nativeCreate;
 
-},{"./_getNative":74}],96:[function(require,module,exports){
+},{"./_getNative":89}],111:[function(require,module,exports){
 var baseSlice = require('./_baseSlice'),
     get = require('./get');
 
@@ -4552,7 +5092,7 @@ function parent(object, path) {
 
 module.exports = parent;
 
-},{"./_baseSlice":60,"./get":109}],97:[function(require,module,exports){
+},{"./_baseSlice":75,"./get":124}],112:[function(require,module,exports){
 (function (global){
 var checkGlobal = require('./_checkGlobal');
 
@@ -4597,7 +5137,7 @@ var root = freeGlobal ||
 module.exports = root;
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"./_checkGlobal":63}],98:[function(require,module,exports){
+},{"./_checkGlobal":78}],113:[function(require,module,exports){
 /**
  * Converts `set` to an array.
  *
@@ -4617,7 +5157,7 @@ function setToArray(set) {
 
 module.exports = setToArray;
 
-},{}],99:[function(require,module,exports){
+},{}],114:[function(require,module,exports){
 /**
  * Removes all key-value entries from the stack.
  *
@@ -4631,7 +5171,7 @@ function stackClear() {
 
 module.exports = stackClear;
 
-},{}],100:[function(require,module,exports){
+},{}],115:[function(require,module,exports){
 var assocDelete = require('./_assocDelete');
 
 /**
@@ -4652,7 +5192,7 @@ function stackDelete(key) {
 
 module.exports = stackDelete;
 
-},{"./_assocDelete":36}],101:[function(require,module,exports){
+},{"./_assocDelete":51}],116:[function(require,module,exports){
 var assocGet = require('./_assocGet');
 
 /**
@@ -4673,7 +5213,7 @@ function stackGet(key) {
 
 module.exports = stackGet;
 
-},{"./_assocGet":37}],102:[function(require,module,exports){
+},{"./_assocGet":52}],117:[function(require,module,exports){
 var assocHas = require('./_assocHas');
 
 /**
@@ -4694,7 +5234,7 @@ function stackHas(key) {
 
 module.exports = stackHas;
 
-},{"./_assocHas":38}],103:[function(require,module,exports){
+},{"./_assocHas":53}],118:[function(require,module,exports){
 var MapCache = require('./_MapCache'),
     assocSet = require('./_assocSet');
 
@@ -4732,7 +5272,7 @@ function stackSet(key, value) {
 
 module.exports = stackSet;
 
-},{"./_MapCache":25,"./_assocSet":40}],104:[function(require,module,exports){
+},{"./_MapCache":40,"./_assocSet":55}],119:[function(require,module,exports){
 var toString = require('./toString');
 
 /** Used to match property names within property paths. */
@@ -4758,7 +5298,7 @@ function stringToPath(string) {
 
 module.exports = stringToPath;
 
-},{"./toString":132}],105:[function(require,module,exports){
+},{"./toString":147}],120:[function(require,module,exports){
 var assignValue = require('./_assignValue'),
     copyObject = require('./_copyObject'),
     createAssigner = require('./_createAssigner'),
@@ -4822,7 +5362,7 @@ var assign = createAssigner(function(object, source) {
 
 module.exports = assign;
 
-},{"./_assignValue":35,"./_copyObject":64,"./_createAssigner":66,"./_isPrototype":87,"./isArrayLike":114,"./keys":125}],106:[function(require,module,exports){
+},{"./_assignValue":50,"./_copyObject":79,"./_createAssigner":81,"./_isPrototype":102,"./isArrayLike":129,"./keys":140}],121:[function(require,module,exports){
 var baseAssign = require('./_baseAssign'),
     baseCreate = require('./_baseCreate');
 
@@ -4865,7 +5405,7 @@ function create(prototype, properties) {
 
 module.exports = create;
 
-},{"./_baseAssign":41,"./_baseCreate":43}],107:[function(require,module,exports){
+},{"./_baseAssign":56,"./_baseCreate":58}],122:[function(require,module,exports){
 /**
  * Performs a [`SameValueZero`](http://ecma-international.org/ecma-262/6.0/#sec-samevaluezero)
  * comparison between two values to determine if they are equivalent.
@@ -4902,7 +5442,7 @@ function eq(value, other) {
 
 module.exports = eq;
 
-},{}],108:[function(require,module,exports){
+},{}],123:[function(require,module,exports){
 var arrayEvery = require('./_arrayEvery'),
     baseEvery = require('./_baseEvery'),
     baseIteratee = require('./_baseIteratee'),
@@ -4953,7 +5493,7 @@ function every(collection, predicate, guard) {
 
 module.exports = every;
 
-},{"./_arrayEvery":32,"./_baseEvery":45,"./_baseIteratee":54,"./_isIterateeCall":84,"./isArray":113}],109:[function(require,module,exports){
+},{"./_arrayEvery":47,"./_baseEvery":60,"./_baseIteratee":69,"./_isIterateeCall":99,"./isArray":128}],124:[function(require,module,exports){
 var baseGet = require('./_baseGet');
 
 /**
@@ -4987,7 +5527,7 @@ function get(object, path, defaultValue) {
 
 module.exports = get;
 
-},{"./_baseGet":48}],110:[function(require,module,exports){
+},{"./_baseGet":63}],125:[function(require,module,exports){
 var baseHasIn = require('./_baseHasIn'),
     hasPath = require('./_hasPath');
 
@@ -5022,7 +5562,7 @@ function hasIn(object, path) {
 
 module.exports = hasIn;
 
-},{"./_baseHasIn":50,"./_hasPath":76}],111:[function(require,module,exports){
+},{"./_baseHasIn":65,"./_hasPath":91}],126:[function(require,module,exports){
 /**
  * This method returns the first argument given to it.
  *
@@ -5044,7 +5584,7 @@ function identity(value) {
 
 module.exports = identity;
 
-},{}],112:[function(require,module,exports){
+},{}],127:[function(require,module,exports){
 var isArrayLikeObject = require('./isArrayLikeObject');
 
 /** `Object#toString` result references. */
@@ -5089,7 +5629,7 @@ function isArguments(value) {
 
 module.exports = isArguments;
 
-},{"./isArrayLikeObject":115}],113:[function(require,module,exports){
+},{"./isArrayLikeObject":130}],128:[function(require,module,exports){
 /**
  * Checks if `value` is classified as an `Array` object.
  *
@@ -5117,7 +5657,7 @@ var isArray = Array.isArray;
 
 module.exports = isArray;
 
-},{}],114:[function(require,module,exports){
+},{}],129:[function(require,module,exports){
 var getLength = require('./_getLength'),
     isFunction = require('./isFunction'),
     isLength = require('./isLength');
@@ -5152,7 +5692,7 @@ function isArrayLike(value) {
 
 module.exports = isArrayLike;
 
-},{"./_getLength":72,"./isFunction":117,"./isLength":118}],115:[function(require,module,exports){
+},{"./_getLength":87,"./isFunction":132,"./isLength":133}],130:[function(require,module,exports){
 var isArrayLike = require('./isArrayLike'),
     isObjectLike = require('./isObjectLike');
 
@@ -5185,7 +5725,7 @@ function isArrayLikeObject(value) {
 
 module.exports = isArrayLikeObject;
 
-},{"./isArrayLike":114,"./isObjectLike":121}],116:[function(require,module,exports){
+},{"./isArrayLike":129,"./isObjectLike":136}],131:[function(require,module,exports){
 var isArguments = require('./isArguments'),
     isArray = require('./isArray'),
     isArrayLike = require('./isArrayLike'),
@@ -5241,7 +5781,7 @@ function isEmpty(value) {
 
 module.exports = isEmpty;
 
-},{"./isArguments":112,"./isArray":113,"./isArrayLike":114,"./isFunction":117,"./isString":122}],117:[function(require,module,exports){
+},{"./isArguments":127,"./isArray":128,"./isArrayLike":129,"./isFunction":132,"./isString":137}],132:[function(require,module,exports){
 var isObject = require('./isObject');
 
 /** `Object#toString` result references. */
@@ -5283,7 +5823,7 @@ function isFunction(value) {
 
 module.exports = isFunction;
 
-},{"./isObject":120}],118:[function(require,module,exports){
+},{"./isObject":135}],133:[function(require,module,exports){
 /** Used as references for various `Number` constants. */
 var MAX_SAFE_INTEGER = 9007199254740991;
 
@@ -5318,7 +5858,7 @@ function isLength(value) {
 
 module.exports = isLength;
 
-},{}],119:[function(require,module,exports){
+},{}],134:[function(require,module,exports){
 var isFunction = require('./isFunction'),
     isHostObject = require('./_isHostObject'),
     isObjectLike = require('./isObjectLike');
@@ -5373,7 +5913,7 @@ function isNative(value) {
 
 module.exports = isNative;
 
-},{"./_isHostObject":82,"./isFunction":117,"./isObjectLike":121}],120:[function(require,module,exports){
+},{"./_isHostObject":97,"./isFunction":132,"./isObjectLike":136}],135:[function(require,module,exports){
 /**
  * Checks if `value` is the [language type](https://es5.github.io/#x8) of `Object`.
  * (e.g. arrays, functions, objects, regexes, `new Number(0)`, and `new String('')`)
@@ -5404,7 +5944,7 @@ function isObject(value) {
 
 module.exports = isObject;
 
-},{}],121:[function(require,module,exports){
+},{}],136:[function(require,module,exports){
 /**
  * Checks if `value` is object-like. A value is object-like if it's not `null`
  * and has a `typeof` result of "object".
@@ -5434,7 +5974,7 @@ function isObjectLike(value) {
 
 module.exports = isObjectLike;
 
-},{}],122:[function(require,module,exports){
+},{}],137:[function(require,module,exports){
 var isArray = require('./isArray'),
     isObjectLike = require('./isObjectLike');
 
@@ -5473,7 +6013,7 @@ function isString(value) {
 
 module.exports = isString;
 
-},{"./isArray":113,"./isObjectLike":121}],123:[function(require,module,exports){
+},{"./isArray":128,"./isObjectLike":136}],138:[function(require,module,exports){
 var isObjectLike = require('./isObjectLike');
 
 /** `Object#toString` result references. */
@@ -5511,7 +6051,7 @@ function isSymbol(value) {
 
 module.exports = isSymbol;
 
-},{"./isObjectLike":121}],124:[function(require,module,exports){
+},{"./isObjectLike":136}],139:[function(require,module,exports){
 var isLength = require('./isLength'),
     isObjectLike = require('./isObjectLike');
 
@@ -5588,7 +6128,7 @@ function isTypedArray(value) {
 
 module.exports = isTypedArray;
 
-},{"./isLength":118,"./isObjectLike":121}],125:[function(require,module,exports){
+},{"./isLength":133,"./isObjectLike":136}],140:[function(require,module,exports){
 var baseHas = require('./_baseHas'),
     baseKeys = require('./_baseKeys'),
     indexKeys = require('./_indexKeys'),
@@ -5645,7 +6185,7 @@ function keys(object) {
 
 module.exports = keys;
 
-},{"./_baseHas":49,"./_baseKeys":55,"./_indexKeys":81,"./_isIndex":83,"./_isPrototype":87,"./isArrayLike":114}],126:[function(require,module,exports){
+},{"./_baseHas":64,"./_baseKeys":70,"./_indexKeys":96,"./_isIndex":98,"./_isPrototype":102,"./isArrayLike":129}],141:[function(require,module,exports){
 /**
  * Gets the last element of `array`.
  *
@@ -5666,7 +6206,7 @@ function last(array) {
 
 module.exports = last;
 
-},{}],127:[function(require,module,exports){
+},{}],142:[function(require,module,exports){
 var baseProperty = require('./_baseProperty'),
     basePropertyDeep = require('./_basePropertyDeep'),
     isKey = require('./_isKey');
@@ -5698,7 +6238,7 @@ function property(path) {
 
 module.exports = property;
 
-},{"./_baseProperty":58,"./_basePropertyDeep":59,"./_isKey":85}],128:[function(require,module,exports){
+},{"./_baseProperty":73,"./_basePropertyDeep":74,"./_isKey":100}],143:[function(require,module,exports){
 var apply = require('./_apply'),
     toInteger = require('./toInteger');
 
@@ -5761,7 +6301,7 @@ function rest(func, start) {
 
 module.exports = rest;
 
-},{"./_apply":31,"./toInteger":129}],129:[function(require,module,exports){
+},{"./_apply":46,"./toInteger":144}],144:[function(require,module,exports){
 var toNumber = require('./toNumber');
 
 /** Used as references for various `Number` constants. */
@@ -5807,7 +6347,7 @@ function toInteger(value) {
 
 module.exports = toInteger;
 
-},{"./toNumber":130}],130:[function(require,module,exports){
+},{"./toNumber":145}],145:[function(require,module,exports){
 var isFunction = require('./isFunction'),
     isObject = require('./isObject');
 
@@ -5868,7 +6408,7 @@ function toNumber(value) {
 
 module.exports = toNumber;
 
-},{"./isFunction":117,"./isObject":120}],131:[function(require,module,exports){
+},{"./isFunction":132,"./isObject":135}],146:[function(require,module,exports){
 var baseToPairs = require('./_baseToPairs'),
     keys = require('./keys');
 
@@ -5899,7 +6439,7 @@ function toPairs(object) {
 
 module.exports = toPairs;
 
-},{"./_baseToPairs":62,"./keys":125}],132:[function(require,module,exports){
+},{"./_baseToPairs":77,"./keys":140}],147:[function(require,module,exports){
 var Symbol = require('./_Symbol'),
     isSymbol = require('./isSymbol');
 
@@ -5947,7 +6487,540 @@ function toString(value) {
 
 module.exports = toString;
 
-},{"./_Symbol":28,"./isSymbol":123}],133:[function(require,module,exports){
+},{"./_Symbol":43,"./isSymbol":138}],148:[function(require,module,exports){
+/*jshint unused:true*/
+/*
+Input:  matrix      ; a 4x4 matrix
+Output: translation ; a 3 component vector
+        scale       ; a 3 component vector
+        skew        ; skew factors XY,XZ,YZ represented as a 3 component vector
+        perspective ; a 4 component vector
+        quaternion  ; a 4 component vector
+Returns false if the matrix cannot be decomposed, true if it can
+
+
+References:
+https://github.com/kamicane/matrix3d/blob/master/lib/Matrix3d.js
+https://github.com/ChromiumWebApps/chromium/blob/master/ui/gfx/transform_util.cc
+http://www.w3.org/TR/css3-transforms/#decomposing-a-3d-matrix
+*/
+
+var normalize = require('./normalize')
+
+var create = require('gl-mat4/create')
+var clone = require('gl-mat4/clone')
+var determinant = require('gl-mat4/determinant')
+var invert = require('gl-mat4/invert')
+var transpose = require('gl-mat4/transpose')
+var vec3 = {
+    length: require('gl-vec3/length'),
+    normalize: require('gl-vec3/normalize'),
+    dot: require('gl-vec3/dot'),
+    cross: require('gl-vec3/cross')
+}
+
+var tmp = create()
+var perspectiveMatrix = create()
+var tmpVec4 = [0, 0, 0, 0]
+var row = [ [0,0,0], [0,0,0], [0,0,0] ]
+var pdum3 = [0,0,0]
+
+module.exports = function decomposeMat4(matrix, translation, scale, skew, perspective, quaternion) {
+    if (!translation) translation = [0,0,0]
+    if (!scale) scale = [0,0,0]
+    if (!skew) skew = [0,0,0]
+    if (!perspective) perspective = [0,0,0,1]
+    if (!quaternion) quaternion = [0,0,0,1]
+
+    //normalize, if not possible then bail out early
+    if (!normalize(tmp, matrix))
+        return false
+
+    // perspectiveMatrix is used to solve for perspective, but it also provides
+    // an easy way to test for singularity of the upper 3x3 component.
+    clone(perspectiveMatrix, tmp)
+
+    perspectiveMatrix[3] = 0
+    perspectiveMatrix[7] = 0
+    perspectiveMatrix[11] = 0
+    perspectiveMatrix[15] = 1
+
+    // If the perspectiveMatrix is not invertible, we are also unable to
+    // decompose, so we'll bail early. Constant taken from SkMatrix44::invert.
+    if (Math.abs(determinant(perspectiveMatrix) < 1e-8))
+        return false
+
+    var a03 = tmp[3], a13 = tmp[7], a23 = tmp[11],
+            a30 = tmp[12], a31 = tmp[13], a32 = tmp[14], a33 = tmp[15]
+
+    // First, isolate perspective.
+    if (a03 !== 0 || a13 !== 0 || a23 !== 0) {
+        tmpVec4[0] = a03
+        tmpVec4[1] = a13
+        tmpVec4[2] = a23
+        tmpVec4[3] = a33
+
+        // Solve the equation by inverting perspectiveMatrix and multiplying
+        // rightHandSide by the inverse.
+        // resuing the perspectiveMatrix here since it's no longer needed
+        var ret = invert(perspectiveMatrix, perspectiveMatrix)
+        if (!ret) return false
+        transpose(perspectiveMatrix, perspectiveMatrix)
+
+        //multiply by transposed inverse perspective matrix, into perspective vec4
+        vec4multMat4(perspective, tmpVec4, perspectiveMatrix)
+    } else { 
+        //no perspective
+        perspective[0] = perspective[1] = perspective[2] = 0
+        perspective[3] = 1
+    }
+
+    // Next take care of translation
+    translation[0] = a30
+    translation[1] = a31
+    translation[2] = a32
+
+    // Now get scale and shear. 'row' is a 3 element array of 3 component vectors
+    mat3from4(row, tmp)
+
+    // Compute X scale factor and normalize first row.
+    scale[0] = vec3.length(row[0])
+    vec3.normalize(row[0], row[0])
+
+    // Compute XY shear factor and make 2nd row orthogonal to 1st.
+    skew[0] = vec3.dot(row[0], row[1])
+    combine(row[1], row[1], row[0], 1.0, -skew[0])
+
+    // Now, compute Y scale and normalize 2nd row.
+    scale[1] = vec3.length(row[1])
+    vec3.normalize(row[1], row[1])
+    skew[0] /= scale[1]
+
+    // Compute XZ and YZ shears, orthogonalize 3rd row
+    skew[1] = vec3.dot(row[0], row[2])
+    combine(row[2], row[2], row[0], 1.0, -skew[1])
+    skew[2] = vec3.dot(row[1], row[2])
+    combine(row[2], row[2], row[1], 1.0, -skew[2])
+
+    // Next, get Z scale and normalize 3rd row.
+    scale[2] = vec3.length(row[2])
+    vec3.normalize(row[2], row[2])
+    skew[1] /= scale[2]
+    skew[2] /= scale[2]
+
+
+    // At this point, the matrix (in rows) is orthonormal.
+    // Check for a coordinate system flip.  If the determinant
+    // is -1, then negate the matrix and the scaling factors.
+    vec3.cross(pdum3, row[1], row[2])
+    if (vec3.dot(row[0], pdum3) < 0) {
+        for (var i = 0; i < 3; i++) {
+            scale[i] *= -1;
+            row[i][0] *= -1
+            row[i][1] *= -1
+            row[i][2] *= -1
+        }
+    }
+
+    // Now, get the rotations out
+    quaternion[0] = 0.5 * Math.sqrt(Math.max(1 + row[0][0] - row[1][1] - row[2][2], 0))
+    quaternion[1] = 0.5 * Math.sqrt(Math.max(1 - row[0][0] + row[1][1] - row[2][2], 0))
+    quaternion[2] = 0.5 * Math.sqrt(Math.max(1 - row[0][0] - row[1][1] + row[2][2], 0))
+    quaternion[3] = 0.5 * Math.sqrt(Math.max(1 + row[0][0] + row[1][1] + row[2][2], 0))
+
+    if (row[2][1] > row[1][2])
+        quaternion[0] = -quaternion[0]
+    if (row[0][2] > row[2][0])
+        quaternion[1] = -quaternion[1]
+    if (row[1][0] > row[0][1])
+        quaternion[2] = -quaternion[2]
+    return true
+}
+
+//will be replaced by gl-vec4 eventually
+function vec4multMat4(out, a, m) {
+    var x = a[0], y = a[1], z = a[2], w = a[3];
+    out[0] = m[0] * x + m[4] * y + m[8] * z + m[12] * w;
+    out[1] = m[1] * x + m[5] * y + m[9] * z + m[13] * w;
+    out[2] = m[2] * x + m[6] * y + m[10] * z + m[14] * w;
+    out[3] = m[3] * x + m[7] * y + m[11] * z + m[15] * w;
+    return out;
+}
+
+//gets upper-left of a 4x4 matrix into a 3x3 of vectors
+function mat3from4(out, mat4x4) {
+    out[0][0] = mat4x4[0]
+    out[0][1] = mat4x4[1]
+    out[0][2] = mat4x4[2]
+    
+    out[1][0] = mat4x4[4]
+    out[1][1] = mat4x4[5]
+    out[1][2] = mat4x4[6]
+
+    out[2][0] = mat4x4[8]
+    out[2][1] = mat4x4[9]
+    out[2][2] = mat4x4[10]
+}
+
+function combine(out, a, b, scale1, scale2) {
+    out[0] = a[0] * scale1 + b[0] * scale2
+    out[1] = a[1] * scale1 + b[1] * scale2
+    out[2] = a[2] * scale1 + b[2] * scale2
+}
+},{"./normalize":149,"gl-mat4/clone":17,"gl-mat4/create":18,"gl-mat4/determinant":19,"gl-mat4/invert":22,"gl-mat4/transpose":26,"gl-vec3/cross":28,"gl-vec3/dot":29,"gl-vec3/length":30,"gl-vec3/normalize":32}],149:[function(require,module,exports){
+module.exports = function normalize(out, mat) {
+    var m44 = mat[15]
+    // Cannot normalize.
+    if (m44 === 0) 
+        return false
+    var scale = 1 / m44
+    for (var i=0; i<16; i++)
+        out[i] = mat[i] * scale
+    return true
+}
+},{}],150:[function(require,module,exports){
+var lerp = require('gl-vec3/lerp')
+
+var recompose = require('mat4-recompose')
+var decompose = require('mat4-decompose')
+var determinant = require('gl-mat4/determinant')
+var slerp = require('quat-slerp')
+
+var state0 = state()
+var state1 = state()
+var tmp = state()
+
+module.exports = interpolate
+function interpolate(out, start, end, alpha) {
+    if (determinant(start) === 0 || determinant(end) === 0)
+        return false
+
+    //decompose the start and end matrices into individual components
+    var r0 = decompose(start, state0.translate, state0.scale, state0.skew, state0.perspective, state0.quaternion)
+    var r1 = decompose(end, state1.translate, state1.scale, state1.skew, state1.perspective, state1.quaternion)
+    if (!r0 || !r1)
+        return false    
+
+
+    //now lerp/slerp the start and end components into a temporary     lerp(tmptranslate, state0.translate, state1.translate, alpha)
+    lerp(tmp.translate, state0.translate, state1.translate, alpha)
+    lerp(tmp.skew, state0.skew, state1.skew, alpha)
+    lerp(tmp.scale, state0.scale, state1.scale, alpha)
+    lerp(tmp.perspective, state0.perspective, state1.perspective, alpha)
+    slerp(tmp.quaternion, state0.quaternion, state1.quaternion, alpha)
+
+    //and recompose into our 'out' matrix
+    recompose(out, tmp.translate, tmp.scale, tmp.skew, tmp.perspective, tmp.quaternion)
+    return true
+}
+
+function state() {
+    return {
+        translate: vec3(),
+        scale: vec3(1),
+        skew: vec3(),
+        perspective: vec4(),
+        quaternion: vec4()
+    }
+}
+
+function vec3(n) {
+    return [n||0,n||0,n||0]
+}
+
+function vec4() {
+    return [0,0,0,1]
+}
+},{"gl-mat4/determinant":19,"gl-vec3/lerp":31,"mat4-decompose":148,"mat4-recompose":151,"quat-slerp":156}],151:[function(require,module,exports){
+/*
+Input:  translation ; a 3 component vector
+        scale       ; a 3 component vector
+        skew        ; skew factors XY,XZ,YZ represented as a 3 component vector
+        perspective ; a 4 component vector
+        quaternion  ; a 4 component vector
+Output: matrix      ; a 4x4 matrix
+
+From: http://www.w3.org/TR/css3-transforms/#recomposing-to-a-3d-matrix
+*/
+
+var mat4 = {
+    identity: require('gl-mat4/identity'),
+    translate: require('gl-mat4/translate'),
+    multiply: require('gl-mat4/multiply'),
+    create: require('gl-mat4/create'),
+    scale: require('gl-mat4/scale'),
+    fromRotationTranslation: require('gl-mat4/fromRotationTranslation')
+}
+
+var rotationMatrix = mat4.create()
+var temp = mat4.create()
+
+module.exports = function recomposeMat4(matrix, translation, scale, skew, perspective, quaternion) {
+    mat4.identity(matrix)
+
+    //apply translation & rotation
+    mat4.fromRotationTranslation(matrix, quaternion, translation)
+
+    //apply perspective
+    matrix[3] = perspective[0]
+    matrix[7] = perspective[1]
+    matrix[11] = perspective[2]
+    matrix[15] = perspective[3]
+        
+    // apply skew
+    // temp is a identity 4x4 matrix initially
+    mat4.identity(temp)
+
+    if (skew[2] !== 0) {
+        temp[9] = skew[2]
+        mat4.multiply(matrix, matrix, temp)
+    }
+
+    if (skew[1] !== 0) {
+        temp[9] = 0
+        temp[8] = skew[1]
+        mat4.multiply(matrix, matrix, temp)
+    }
+
+    if (skew[0] !== 0) {
+        temp[8] = 0
+        temp[4] = skew[0]
+        mat4.multiply(matrix, matrix, temp)
+    }
+
+    //apply scale
+    mat4.scale(matrix, matrix, scale)
+    return matrix
+}
+},{"gl-mat4/create":18,"gl-mat4/fromRotationTranslation":20,"gl-mat4/identity":21,"gl-mat4/multiply":23,"gl-mat4/scale":24,"gl-mat4/translate":25}],152:[function(require,module,exports){
+(function (process){
+// Copyright Joyent, Inc. and other Node contributors.
+//
+// Permission is hereby granted, free of charge, to any person obtaining a
+// copy of this software and associated documentation files (the
+// "Software"), to deal in the Software without restriction, including
+// without limitation the rights to use, copy, modify, merge, publish,
+// distribute, sublicense, and/or sell copies of the Software, and to permit
+// persons to whom the Software is furnished to do so, subject to the
+// following conditions:
+//
+// The above copyright notice and this permission notice shall be included
+// in all copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+// OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+// MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
+// NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
+// DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
+// OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
+// USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+// resolves . and .. elements in a path array with directory names there
+// must be no slashes, empty elements, or device names (c:\) in the array
+// (so also no leading and trailing slashes - it does not distinguish
+// relative and absolute paths)
+function normalizeArray(parts, allowAboveRoot) {
+  // if the path tries to go above the root, `up` ends up > 0
+  var up = 0;
+  for (var i = parts.length - 1; i >= 0; i--) {
+    var last = parts[i];
+    if (last === '.') {
+      parts.splice(i, 1);
+    } else if (last === '..') {
+      parts.splice(i, 1);
+      up++;
+    } else if (up) {
+      parts.splice(i, 1);
+      up--;
+    }
+  }
+
+  // if the path is allowed to go above the root, restore leading ..s
+  if (allowAboveRoot) {
+    for (; up--; up) {
+      parts.unshift('..');
+    }
+  }
+
+  return parts;
+}
+
+// Split a filename into [root, dir, basename, ext], unix version
+// 'root' is just a slash, or nothing.
+var splitPathRe =
+    /^(\/?|)([\s\S]*?)((?:\.{1,2}|[^\/]+?|)(\.[^.\/]*|))(?:[\/]*)$/;
+var splitPath = function(filename) {
+  return splitPathRe.exec(filename).slice(1);
+};
+
+// path.resolve([from ...], to)
+// posix version
+exports.resolve = function() {
+  var resolvedPath = '',
+      resolvedAbsolute = false;
+
+  for (var i = arguments.length - 1; i >= -1 && !resolvedAbsolute; i--) {
+    var path = (i >= 0) ? arguments[i] : process.cwd();
+
+    // Skip empty and invalid entries
+    if (typeof path !== 'string') {
+      throw new TypeError('Arguments to path.resolve must be strings');
+    } else if (!path) {
+      continue;
+    }
+
+    resolvedPath = path + '/' + resolvedPath;
+    resolvedAbsolute = path.charAt(0) === '/';
+  }
+
+  // At this point the path should be resolved to a full absolute path, but
+  // handle relative paths to be safe (might happen when process.cwd() fails)
+
+  // Normalize the path
+  resolvedPath = normalizeArray(filter(resolvedPath.split('/'), function(p) {
+    return !!p;
+  }), !resolvedAbsolute).join('/');
+
+  return ((resolvedAbsolute ? '/' : '') + resolvedPath) || '.';
+};
+
+// path.normalize(path)
+// posix version
+exports.normalize = function(path) {
+  var isAbsolute = exports.isAbsolute(path),
+      trailingSlash = substr(path, -1) === '/';
+
+  // Normalize the path
+  path = normalizeArray(filter(path.split('/'), function(p) {
+    return !!p;
+  }), !isAbsolute).join('/');
+
+  if (!path && !isAbsolute) {
+    path = '.';
+  }
+  if (path && trailingSlash) {
+    path += '/';
+  }
+
+  return (isAbsolute ? '/' : '') + path;
+};
+
+// posix version
+exports.isAbsolute = function(path) {
+  return path.charAt(0) === '/';
+};
+
+// posix version
+exports.join = function() {
+  var paths = Array.prototype.slice.call(arguments, 0);
+  return exports.normalize(filter(paths, function(p, index) {
+    if (typeof p !== 'string') {
+      throw new TypeError('Arguments to path.join must be strings');
+    }
+    return p;
+  }).join('/'));
+};
+
+
+// path.relative(from, to)
+// posix version
+exports.relative = function(from, to) {
+  from = exports.resolve(from).substr(1);
+  to = exports.resolve(to).substr(1);
+
+  function trim(arr) {
+    var start = 0;
+    for (; start < arr.length; start++) {
+      if (arr[start] !== '') break;
+    }
+
+    var end = arr.length - 1;
+    for (; end >= 0; end--) {
+      if (arr[end] !== '') break;
+    }
+
+    if (start > end) return [];
+    return arr.slice(start, end - start + 1);
+  }
+
+  var fromParts = trim(from.split('/'));
+  var toParts = trim(to.split('/'));
+
+  var length = Math.min(fromParts.length, toParts.length);
+  var samePartsLength = length;
+  for (var i = 0; i < length; i++) {
+    if (fromParts[i] !== toParts[i]) {
+      samePartsLength = i;
+      break;
+    }
+  }
+
+  var outputParts = [];
+  for (var i = samePartsLength; i < fromParts.length; i++) {
+    outputParts.push('..');
+  }
+
+  outputParts = outputParts.concat(toParts.slice(samePartsLength));
+
+  return outputParts.join('/');
+};
+
+exports.sep = '/';
+exports.delimiter = ':';
+
+exports.dirname = function(path) {
+  var result = splitPath(path),
+      root = result[0],
+      dir = result[1];
+
+  if (!root && !dir) {
+    // No dirname whatsoever
+    return '.';
+  }
+
+  if (dir) {
+    // It has a dirname, strip trailing slash
+    dir = dir.substr(0, dir.length - 1);
+  }
+
+  return root + dir;
+};
+
+
+exports.basename = function(path, ext) {
+  var f = splitPath(path)[2];
+  // TODO: make this comparison case-insensitive on windows?
+  if (ext && f.substr(-1 * ext.length) === ext) {
+    f = f.substr(0, f.length - ext.length);
+  }
+  return f;
+};
+
+
+exports.extname = function(path) {
+  return splitPath(path)[3];
+};
+
+function filter (xs, f) {
+    if (xs.filter) return xs.filter(f);
+    var res = [];
+    for (var i = 0; i < xs.length; i++) {
+        if (f(xs[i], i, xs)) res.push(xs[i]);
+    }
+    return res;
+}
+
+// String.prototype.substr - negative index don't work in IE8
+var substr = 'ab'.substr(-1) === 'b'
+    ? function (str, start, len) { return str.substr(start, len) }
+    : function (str, start, len) {
+        if (start < 0) start = str.length + start;
+        return str.substr(start, len);
+    }
+;
+
+}).call(this,require('_process'))
+},{"_process":155}],153:[function(require,module,exports){
 (function (process){
 // Generated by CoffeeScript 1.7.1
 (function() {
@@ -5983,7 +7056,7 @@ module.exports = toString;
 }).call(this);
 
 }).call(this,require('_process'))
-},{"_process":135}],134:[function(require,module,exports){
+},{"_process":155}],154:[function(require,module,exports){
 (function (process){
 'use strict';
 
@@ -6007,7 +7080,7 @@ function nextTick(fn) {
 }
 
 }).call(this,require('_process'))
-},{"_process":135}],135:[function(require,module,exports){
+},{"_process":155}],155:[function(require,module,exports){
 // shim for using process in browser
 
 var process = module.exports = {};
@@ -6100,7 +7173,9 @@ process.chdir = function (dir) {
 };
 process.umask = function() { return 0; };
 
-},{}],136:[function(require,module,exports){
+},{}],156:[function(require,module,exports){
+module.exports = require('gl-quat/slerp')
+},{"gl-quat/slerp":27}],157:[function(require,module,exports){
 var inherits = require('inherits')
 var EventEmitter = require('events').EventEmitter
 var now = require('right-now')
@@ -6145,7 +7220,7 @@ Engine.prototype.tick = function() {
     this.emit('tick', dt)
     this.last = time
 }
-},{"events":16,"inherits":20,"raf":137,"right-now":148}],137:[function(require,module,exports){
+},{"events":16,"inherits":35,"raf":158,"right-now":169}],158:[function(require,module,exports){
 (function (global){
 var now = require('performance-now')
   , root = typeof window === 'undefined' ? global : window
@@ -6221,10 +7296,10 @@ module.exports.polyfill = function() {
 }
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"performance-now":133}],138:[function(require,module,exports){
+},{"performance-now":153}],159:[function(require,module,exports){
 module.exports = require("./lib/_stream_duplex.js")
 
-},{"./lib/_stream_duplex.js":139}],139:[function(require,module,exports){
+},{"./lib/_stream_duplex.js":160}],160:[function(require,module,exports){
 // a duplex stream is just a stream that is both readable and writable.
 // Since JS doesn't have multiple prototypal inheritance, this class
 // prototypally inherits from Readable, and then parasitically from
@@ -6300,7 +7375,7 @@ function forEach(xs, f) {
     f(xs[i], i);
   }
 }
-},{"./_stream_readable":141,"./_stream_writable":143,"core-util-is":15,"inherits":20,"process-nextick-args":134}],140:[function(require,module,exports){
+},{"./_stream_readable":162,"./_stream_writable":164,"core-util-is":15,"inherits":35,"process-nextick-args":154}],161:[function(require,module,exports){
 // a passthrough stream.
 // basically just the most minimal sort of Transform stream.
 // Every written chunk gets output as-is.
@@ -6327,7 +7402,7 @@ function PassThrough(options) {
 PassThrough.prototype._transform = function (chunk, encoding, cb) {
   cb(null, chunk);
 };
-},{"./_stream_transform":142,"core-util-is":15,"inherits":20}],141:[function(require,module,exports){
+},{"./_stream_transform":163,"core-util-is":15,"inherits":35}],162:[function(require,module,exports){
 (function (process){
 'use strict';
 
@@ -7210,7 +8285,7 @@ function indexOf(xs, x) {
   return -1;
 }
 }).call(this,require('_process'))
-},{"./_stream_duplex":139,"_process":135,"buffer":14,"core-util-is":15,"events":16,"inherits":20,"isarray":22,"process-nextick-args":134,"string_decoder/":151,"util":12}],142:[function(require,module,exports){
+},{"./_stream_duplex":160,"_process":155,"buffer":14,"core-util-is":15,"events":16,"inherits":35,"isarray":37,"process-nextick-args":154,"string_decoder/":172,"util":12}],163:[function(require,module,exports){
 // a transform stream is a readable/writable stream where you do
 // something with the data.  Sometimes it's called a "filter",
 // but that's not a great name for it, since that implies a thing where
@@ -7391,7 +8466,7 @@ function done(stream, er) {
 
   return stream.push(null);
 }
-},{"./_stream_duplex":139,"core-util-is":15,"inherits":20}],143:[function(require,module,exports){
+},{"./_stream_duplex":160,"core-util-is":15,"inherits":35}],164:[function(require,module,exports){
 (function (process){
 // A bit simpler than readable streams.
 // Implement an async ._write(chunk, encoding, cb), and it'll handle all
@@ -7910,10 +8985,10 @@ function CorkedRequest(state) {
   };
 }
 }).call(this,require('_process'))
-},{"./_stream_duplex":139,"_process":135,"buffer":14,"core-util-is":15,"events":16,"inherits":20,"process-nextick-args":134,"util-deprecate":153}],144:[function(require,module,exports){
+},{"./_stream_duplex":160,"_process":155,"buffer":14,"core-util-is":15,"events":16,"inherits":35,"process-nextick-args":154,"util-deprecate":174}],165:[function(require,module,exports){
 module.exports = require("./lib/_stream_passthrough.js")
 
-},{"./lib/_stream_passthrough.js":140}],145:[function(require,module,exports){
+},{"./lib/_stream_passthrough.js":161}],166:[function(require,module,exports){
 var Stream = (function (){
   try {
     return require('st' + 'ream'); // hack to fix a circular dependency issue when used with browserify
@@ -7927,13 +9002,13 @@ exports.Duplex = require('./lib/_stream_duplex.js');
 exports.Transform = require('./lib/_stream_transform.js');
 exports.PassThrough = require('./lib/_stream_passthrough.js');
 
-},{"./lib/_stream_duplex.js":139,"./lib/_stream_passthrough.js":140,"./lib/_stream_readable.js":141,"./lib/_stream_transform.js":142,"./lib/_stream_writable.js":143}],146:[function(require,module,exports){
+},{"./lib/_stream_duplex.js":160,"./lib/_stream_passthrough.js":161,"./lib/_stream_readable.js":162,"./lib/_stream_transform.js":163,"./lib/_stream_writable.js":164}],167:[function(require,module,exports){
 module.exports = require("./lib/_stream_transform.js")
 
-},{"./lib/_stream_transform.js":142}],147:[function(require,module,exports){
+},{"./lib/_stream_transform.js":163}],168:[function(require,module,exports){
 module.exports = require("./lib/_stream_writable.js")
 
-},{"./lib/_stream_writable.js":143}],148:[function(require,module,exports){
+},{"./lib/_stream_writable.js":164}],169:[function(require,module,exports){
 (function (global){
 module.exports =
   global.performance &&
@@ -7944,7 +9019,7 @@ module.exports =
   }
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{}],149:[function(require,module,exports){
+},{}],170:[function(require,module,exports){
 (function (Buffer){
 ;(function (sax) { // wrapper for non-node envs
   sax.parser = function (strict, opt) { return new SAXParser(strict, opt) }
@@ -9524,7 +10599,7 @@ module.exports =
 })(typeof exports === 'undefined' ? this.sax = {} : exports)
 
 }).call(this,require("buffer").Buffer)
-},{"buffer":14,"stream":150,"string_decoder":151}],150:[function(require,module,exports){
+},{"buffer":14,"stream":171,"string_decoder":172}],171:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -9653,7 +10728,7 @@ Stream.prototype.pipe = function(dest, options) {
   return dest;
 };
 
-},{"events":16,"inherits":20,"readable-stream/duplex.js":138,"readable-stream/passthrough.js":144,"readable-stream/readable.js":145,"readable-stream/transform.js":146,"readable-stream/writable.js":147}],151:[function(require,module,exports){
+},{"events":16,"inherits":35,"readable-stream/duplex.js":159,"readable-stream/passthrough.js":165,"readable-stream/readable.js":166,"readable-stream/transform.js":167,"readable-stream/writable.js":168}],172:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -9876,7 +10951,7 @@ function base64DetectIncompleteChar(buffer) {
   this.charLength = this.charReceived ? 3 : 0;
 }
 
-},{"buffer":14}],152:[function(require,module,exports){
+},{"buffer":14}],173:[function(require,module,exports){
 var nextTick = require('process/browser.js').nextTick;
 var apply = Function.prototype.apply;
 var slice = Array.prototype.slice;
@@ -9953,7 +11028,7 @@ exports.setImmediate = typeof setImmediate === "function" ? setImmediate : funct
 exports.clearImmediate = typeof clearImmediate === "function" ? clearImmediate : function(id) {
   delete immediateIds[id];
 };
-},{"process/browser.js":135}],153:[function(require,module,exports){
+},{"process/browser.js":155}],174:[function(require,module,exports){
 (function (global){
 
 /**
@@ -10024,7 +11099,7 @@ function config (name) {
 }
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{}],154:[function(require,module,exports){
+},{}],175:[function(require,module,exports){
 // Generated by CoffeeScript 1.10.0
 (function() {
   "use strict";
@@ -10042,7 +11117,7 @@ function config (name) {
 
 }).call(this);
 
-},{"../lib/xml2js":156}],155:[function(require,module,exports){
+},{"../lib/xml2js":177}],176:[function(require,module,exports){
 // Generated by CoffeeScript 1.10.0
 (function() {
   "use strict";
@@ -10078,7 +11153,7 @@ function config (name) {
 
 }).call(this);
 
-},{}],156:[function(require,module,exports){
+},{}],177:[function(require,module,exports){
 // Generated by CoffeeScript 1.10.0
 (function() {
   "use strict";
@@ -10618,7 +11693,7 @@ function config (name) {
 
 }).call(this);
 
-},{"./bom":154,"./processors":155,"events":16,"sax":149,"timers":152,"xmlbuilder":173}],157:[function(require,module,exports){
+},{"./bom":175,"./processors":176,"events":16,"sax":170,"timers":173,"xmlbuilder":194}],178:[function(require,module,exports){
 // Generated by CoffeeScript 1.9.1
 (function() {
   var XMLAttribute, create;
@@ -10652,7 +11727,7 @@ function config (name) {
 
 }).call(this);
 
-},{"lodash/create":106}],158:[function(require,module,exports){
+},{"lodash/create":121}],179:[function(require,module,exports){
 // Generated by CoffeeScript 1.9.1
 (function() {
   var XMLBuilder, XMLDeclaration, XMLDocType, XMLElement, XMLStringifier;
@@ -10723,7 +11798,7 @@ function config (name) {
 
 }).call(this);
 
-},{"./XMLDeclaration":165,"./XMLDocType":166,"./XMLElement":167,"./XMLStringifier":171}],159:[function(require,module,exports){
+},{"./XMLDeclaration":186,"./XMLDocType":187,"./XMLElement":188,"./XMLStringifier":192}],180:[function(require,module,exports){
 // Generated by CoffeeScript 1.9.1
 (function() {
   var XMLCData, XMLNode, create,
@@ -10774,7 +11849,7 @@ function config (name) {
 
 }).call(this);
 
-},{"./XMLNode":168,"lodash/create":106}],160:[function(require,module,exports){
+},{"./XMLNode":189,"lodash/create":121}],181:[function(require,module,exports){
 // Generated by CoffeeScript 1.9.1
 (function() {
   var XMLComment, XMLNode, create,
@@ -10825,7 +11900,7 @@ function config (name) {
 
 }).call(this);
 
-},{"./XMLNode":168,"lodash/create":106}],161:[function(require,module,exports){
+},{"./XMLNode":189,"lodash/create":121}],182:[function(require,module,exports){
 // Generated by CoffeeScript 1.9.1
 (function() {
   var XMLDTDAttList, create;
@@ -10895,7 +11970,7 @@ function config (name) {
 
 }).call(this);
 
-},{"lodash/create":106}],162:[function(require,module,exports){
+},{"lodash/create":121}],183:[function(require,module,exports){
 // Generated by CoffeeScript 1.9.1
 (function() {
   var XMLDTDElement, create;
@@ -10943,7 +12018,7 @@ function config (name) {
 
 }).call(this);
 
-},{"lodash/create":106}],163:[function(require,module,exports){
+},{"lodash/create":121}],184:[function(require,module,exports){
 // Generated by CoffeeScript 1.9.1
 (function() {
   var XMLDTDEntity, create, isObject;
@@ -11029,7 +12104,7 @@ function config (name) {
 
 }).call(this);
 
-},{"lodash/create":106,"lodash/isObject":120}],164:[function(require,module,exports){
+},{"lodash/create":121,"lodash/isObject":135}],185:[function(require,module,exports){
 // Generated by CoffeeScript 1.9.1
 (function() {
   var XMLDTDNotation, create;
@@ -11087,7 +12162,7 @@ function config (name) {
 
 }).call(this);
 
-},{"lodash/create":106}],165:[function(require,module,exports){
+},{"lodash/create":121}],186:[function(require,module,exports){
 // Generated by CoffeeScript 1.9.1
 (function() {
   var XMLDeclaration, XMLNode, create, isObject,
@@ -11154,7 +12229,7 @@ function config (name) {
 
 }).call(this);
 
-},{"./XMLNode":168,"lodash/create":106,"lodash/isObject":120}],166:[function(require,module,exports){
+},{"./XMLNode":189,"lodash/create":121,"lodash/isObject":135}],187:[function(require,module,exports){
 // Generated by CoffeeScript 1.9.1
 (function() {
   var XMLCData, XMLComment, XMLDTDAttList, XMLDTDElement, XMLDTDEntity, XMLDTDNotation, XMLDocType, XMLProcessingInstruction, create, isObject;
@@ -11344,7 +12419,7 @@ function config (name) {
 
 }).call(this);
 
-},{"./XMLCData":159,"./XMLComment":160,"./XMLDTDAttList":161,"./XMLDTDElement":162,"./XMLDTDEntity":163,"./XMLDTDNotation":164,"./XMLProcessingInstruction":169,"lodash/create":106,"lodash/isObject":120}],167:[function(require,module,exports){
+},{"./XMLCData":180,"./XMLComment":181,"./XMLDTDAttList":182,"./XMLDTDElement":183,"./XMLDTDEntity":184,"./XMLDTDNotation":185,"./XMLProcessingInstruction":190,"lodash/create":121,"lodash/isObject":135}],188:[function(require,module,exports){
 // Generated by CoffeeScript 1.9.1
 (function() {
   var XMLAttribute, XMLElement, XMLNode, XMLProcessingInstruction, create, every, isFunction, isObject,
@@ -11558,7 +12633,7 @@ function config (name) {
 
 }).call(this);
 
-},{"./XMLAttribute":157,"./XMLNode":168,"./XMLProcessingInstruction":169,"lodash/create":106,"lodash/every":108,"lodash/isFunction":117,"lodash/isObject":120}],168:[function(require,module,exports){
+},{"./XMLAttribute":178,"./XMLNode":189,"./XMLProcessingInstruction":190,"lodash/create":121,"lodash/every":123,"lodash/isFunction":132,"lodash/isObject":135}],189:[function(require,module,exports){
 // Generated by CoffeeScript 1.9.1
 (function() {
   var XMLCData, XMLComment, XMLDeclaration, XMLDocType, XMLElement, XMLNode, XMLRaw, XMLText, isEmpty, isFunction, isObject,
@@ -11891,7 +12966,7 @@ function config (name) {
 
 }).call(this);
 
-},{"./XMLCData":159,"./XMLComment":160,"./XMLDeclaration":165,"./XMLDocType":166,"./XMLElement":167,"./XMLRaw":170,"./XMLText":172,"lodash/isEmpty":116,"lodash/isFunction":117,"lodash/isObject":120}],169:[function(require,module,exports){
+},{"./XMLCData":180,"./XMLComment":181,"./XMLDeclaration":186,"./XMLDocType":187,"./XMLElement":188,"./XMLRaw":191,"./XMLText":193,"lodash/isEmpty":131,"lodash/isFunction":132,"lodash/isObject":135}],190:[function(require,module,exports){
 // Generated by CoffeeScript 1.9.1
 (function() {
   var XMLProcessingInstruction, create;
@@ -11944,7 +13019,7 @@ function config (name) {
 
 }).call(this);
 
-},{"lodash/create":106}],170:[function(require,module,exports){
+},{"lodash/create":121}],191:[function(require,module,exports){
 // Generated by CoffeeScript 1.9.1
 (function() {
   var XMLNode, XMLRaw, create,
@@ -11995,7 +13070,7 @@ function config (name) {
 
 }).call(this);
 
-},{"./XMLNode":168,"lodash/create":106}],171:[function(require,module,exports){
+},{"./XMLNode":189,"lodash/create":121}],192:[function(require,module,exports){
 // Generated by CoffeeScript 1.9.1
 (function() {
   var XMLStringifier,
@@ -12167,7 +13242,7 @@ function config (name) {
 
 }).call(this);
 
-},{}],172:[function(require,module,exports){
+},{}],193:[function(require,module,exports){
 // Generated by CoffeeScript 1.9.1
 (function() {
   var XMLNode, XMLText, create,
@@ -12218,7 +13293,7 @@ function config (name) {
 
 }).call(this);
 
-},{"./XMLNode":168,"lodash/create":106}],173:[function(require,module,exports){
+},{"./XMLNode":189,"lodash/create":121}],194:[function(require,module,exports){
 // Generated by CoffeeScript 1.9.1
 (function() {
   var XMLBuilder, assign;
@@ -12234,7 +13309,7 @@ function config (name) {
 
 }).call(this);
 
-},{"./XMLBuilder":158,"lodash/assign":105}],174:[function(require,module,exports){
+},{"./XMLBuilder":179,"lodash/assign":120}],195:[function(require,module,exports){
 module.exports = ExtractAnimation
 
 // TODO: Don't hard code dimension detection
@@ -12281,7 +13356,7 @@ function ExtractAnimation (libraryAnimations) {
   return allKeyframes
 }
 
-},{}],175:[function(require,module,exports){
+},{}],196:[function(require,module,exports){
 var transpose = require('gl-mat4/transpose')
 
 module.exports = ParseLibraryAnimations
@@ -12310,7 +13385,7 @@ function ParseLibraryAnimations (library_animations) {
   return allKeyframes
 }
 
-},{"gl-mat4/transpose":17}],176:[function(require,module,exports){
+},{"gl-mat4/transpose":26}],197:[function(require,module,exports){
 var transpose = require('gl-mat4/transpose')
 
 module.exports = ParseLibraryControllers
@@ -12362,7 +13437,7 @@ function ParseLibraryControllers (library_controllers) {
   }
 }
 
-},{"gl-mat4/transpose":17}],177:[function(require,module,exports){
+},{"gl-mat4/transpose":26}],198:[function(require,module,exports){
 module.exports = ParseLibraryGeometries
 
 function ParseLibraryGeometries (library_geometries) {
@@ -12404,7 +13479,7 @@ function ParseLibraryGeometries (library_geometries) {
   }
 }
 
-},{}],178:[function(require,module,exports){
+},{}],199:[function(require,module,exports){
 module.exports = ParseVisualScenes
 
 // TODO: Handle child joints. Maybe depth first traversal?
@@ -12431,7 +13506,7 @@ function ParseVisualScenes (library_visual_scenes) {
   return parsedJoints
 }
 
-},{}],179:[function(require,module,exports){
+},{}],200:[function(require,module,exports){
 var parseXML = require('xml2js').parseString
 // TODO: better name
 var extractAnimation = require('./extract-animation.js')
@@ -12490,7 +13565,7 @@ function ParseCollada (colladaXML, callback) {
   })
 }
 
-},{"./extract-animation.js":174,"./library_animations/parse-library-animations.js":175,"./library_controllers/parse-library-controllers.js":176,"./library_geometries/parse-library-geometries.js":177,"./library_visual_scenes/parse-visual-scenes.js":178,"xml2js":156}]},{},[1]);
+},{"./extract-animation.js":195,"./library_animations/parse-library-animations.js":196,"./library_controllers/parse-library-controllers.js":197,"./library_geometries/parse-library-geometries.js":198,"./library_visual_scenes/parse-visual-scenes.js":199,"xml2js":177}]},{},[1]);
 </script>
   </body>
 </html>
