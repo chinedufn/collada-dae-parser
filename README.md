@@ -44,6 +44,8 @@ function (err, parsedDaeObject) {
   console.log(parsedDaeObject)
   /*
   {
+    bindShapeMatrix: [...],
+    keyframes: {...},
     vertexNormalIndices: [...],
     vertexNormals: [...],
     vertexPositionIndices: [...],
@@ -58,9 +60,10 @@ function (err, parsedDaeObject) {
 
 ## TODO:
 
-- [ ] live example(s)
-- [ ] parse animation data
-- [ ] text multiple .dae exports from different 3d modeling programs
+- [ ] parent child joint relationships (multiply joint and parent world matrix)
+- [ ] handling different coordinate systems. (ex: blender and OpenGL use different axis orientations)
+- [ ] cli
+- [ ] live example animation with child joints and multiple weights per vertex
 
 ## See Also
 
