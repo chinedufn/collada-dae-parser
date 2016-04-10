@@ -5,7 +5,7 @@
   "main": "src/parse-collada.js",
   "scripts": {
     "demo": "budo demo/browser.js --open --live --dir=demo/assets -- -t brfs",
-    "deploy": "mkdirp example-dist && browserify demo/browser.js | htmlify > example-dist/index.html && gh-pages -d example-dist",
+    "deploy": "mkdirp example-dist && browserify -t brfs demo/browser.js | htmlify > example-dist/index.html && gh-pages -d example-dist",
     "test": "standard && node test/index.js"
   },
   "repository": {
