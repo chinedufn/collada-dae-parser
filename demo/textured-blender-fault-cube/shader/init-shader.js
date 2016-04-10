@@ -1,6 +1,7 @@
 var fs = require('fs')
-var fragment = fs.readFileSync(__dirname + '/fragment.glsl').toString()
-var vertex = fs.readFileSync(__dirname + '/vertex.glsl').toString()
+var path = require('path')
+var fragment = fs.readFileSync(path.resolve(__dirname, './fragment.glsl')).toString()
+var vertex = fs.readFileSync(path.resolve(__dirname, './vertex.glsl')).toString()
 
 module.exports = InitShaders
 
