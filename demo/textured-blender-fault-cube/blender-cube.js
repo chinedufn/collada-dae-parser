@@ -22,7 +22,8 @@ function BlenderCubeCanvas () {
     if (err) { console.log(err) }
 
     loop(function (dt) {
-      render(gl, viewport, modelData, shaderObject)
+      // TODO: Animation should be separate from render
+      render(gl, viewport, modelData, shaderObject, dt)
     }).start()
   })
 

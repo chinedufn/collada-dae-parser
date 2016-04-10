@@ -9,7 +9,6 @@ function LoadModel (gl, callback) {
   dae2json(fs.readFileSync('./demo/assets/two-skinned-cubes.dae'), function (err, parsedDae) {
     if (err) { callback(err) }
 
-    console.log(parsedDae)
     var vertexPositionBuffer = gl.createBuffer()
     gl.bindBuffer(gl.ARRAY_BUFFER, vertexPositionBuffer)
     gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(parsedDae.vertexPositions), gl.STATIC_DRAW)
@@ -33,7 +32,8 @@ function LoadModel (gl, callback) {
 
     var stuff = {
       vertexPositionBuffer: vertexPositionBuffer,
-      vertexPositionIndexBuffer: vertexPositionIndexBuffer
+      vertexPositionIndexBuffer: vertexPositionIndexBuffer,
+      keyframes: parsedDae.keyframes
     }
     callback(null, stuff)
   })
