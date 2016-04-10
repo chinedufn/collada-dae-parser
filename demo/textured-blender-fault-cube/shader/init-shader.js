@@ -25,13 +25,21 @@ function InitShaders (gl) {
   var vertexPositionAttribute = gl.getAttribLocation(shaderProgram, 'aVertexPosition')
   gl.enableVertexAttribArray(vertexPositionAttribute)
 
+  var jointIndexAttribute = gl.getAttribLocation(shaderProgram, 'aJointIndex')
+  gl.enableVertexAttribArray(jointIndexAttribute)
+
+  var jointWeightAttribute = gl.getAttribLocation(shaderProgram, 'aJointWeight')
+  gl.enableVertexAttribArray(jointWeightAttribute)
+
   return {
     program: shaderProgram,
     vertexPositionAttribute: vertexPositionAttribute,
+    jointIndexAttribute: jointIndexAttribute,
+    jointWeightAttribute: jointWeightAttribute,
     samplerUniform: gl.getUniformLocation(shaderProgram, 'uSampler'),
     pMatrixUniform: gl.getUniformLocation(shaderProgram, 'uPMatrix'),
     mvMatrixUniform: gl.getUniformLocation(shaderProgram, 'uMVMatrix'),
-    boneMatrix0: gl.getUniformLocation(shaderProgram, 'boneMatrix0'),
-    boneMatrix1: gl.getUniformLocation(shaderProgram, 'boneMatrix1')
+    boneMatrix0: gl.getUniformLocation(shaderProgram, 'boneMatrices[0]'),
+    boneMatrix1: gl.getUniformLocation(shaderProgram, 'boneMatrices[1]')
   }
 }

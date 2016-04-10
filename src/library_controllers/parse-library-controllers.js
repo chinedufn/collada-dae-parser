@@ -20,20 +20,18 @@ function ParseLibraryControllers (library_controllers) {
     var weightsArray = controller[0].skin[0].source[2].float_array[0]._.split(' ').map(Number)
 
     // Every (joint,weight). Use jointWeightCounts to know how many to read per vertex
-    var parsedVertexJointWeights = {}
+    var parsedVertexJointWeights = []
     var jointsAndWeights = controller[0].skin[0].vertex_weights[0].v[0].split(' ').map(Number)
     jointWeightCounts.forEach(function (_, index) {
       var numJointWeightsToRead = jointWeightCounts[index]
-      parsedVertexJointWeights[index] = []
+      parsedVertexJointWeights[index] = {}
       for (var i = 0; i < numJointWeightsToRead; i++) {
-        // TODO: Should we index by the actual index number or the joint name?
-        var newJointWeightPair = {}
-        newJointWeightPair[joints[jointsAndWeights.shift()]] = weightsArray[jointsAndWeights.shift()]
-        parsedVertexJointWeights[index].push(newJointWeightPair)
+        parsedVertexJointWeights[index][jointsAndWeights.shift()] = weightsArray[jointsAndWeights.shift()]
       }
     })
 
     // Joint bind poses
+    // TODO: Do we need this when animating?
     var bindPoses = controller[0].skin[0].source[1].float_array[0]._.split(' ').map(Number)
     joints.forEach(function (joint, index) {
       console.log(bindPoses.slice(16 * index, 16 * index + 16))
@@ -43,6 +41,9 @@ function ParseLibraryControllers (library_controllers) {
     var bindShapeMatrix = controller[0].skin[0].bind_shape_matrix[0].split(' ').map(Number)
     transpose(bindShapeMatrix, bindShapeMatrix)
   }
+  // TODO: Should we also export the greatest number of joints for a vertex?
+  // This might allow the consumer to use a shader that expects fewer joints
+  // when skinning. i.e. mat4 vs mat3 or mat2 for weights
   return {
     bindShapeMatrix: bindShapeMatrix,
     vertexJointWeights: parsedVertexJointWeights
