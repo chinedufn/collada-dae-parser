@@ -30,6 +30,8 @@ function InitShaders (gl) {
     vertexPositionAttribute: vertexPositionAttribute,
     samplerUniform: gl.getUniformLocation(shaderProgram, 'uSampler'),
     pMatrixUniform: gl.getUniformLocation(shaderProgram, 'uPMatrix'),
-    mvMatrixUniform: gl.getUniformLocation(shaderProgram, 'uMVMatrix')
+    mvMatrixUniform: gl.getUniformLocation(shaderProgram, 'uMVMatrix'),
+    boneMatrix0: gl.getUniformLocation(shaderProgram, 'boneMatrix0'),
+    boneMatrix1: gl.getUniformLocation(shaderProgram, 'boneMatrix1')
   }
 }

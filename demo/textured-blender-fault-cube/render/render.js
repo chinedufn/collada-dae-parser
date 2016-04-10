@@ -81,6 +81,10 @@ function Render (gl, viewport, animatedModel, shaderObject, dt) {
   gl.bindBuffer(gl.ARRAY_BUFFER, animatedModel.vertexPositionBuffer)
   gl.vertexAttribPointer(shaderObject.vertexPositionAttribute, 3, gl.FLOAT, false, 0, 0)
 
+  // Vertex weight
+  gl.uniformMatrix4fv(shaderObject.boneMatrix0, false, joint0)
+  gl.uniformMatrix4fv(shaderObject.boneMatrix1, false, joint1)
+
   gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, animatedModel.vertexPositionIndexBuffer)
 
   gl.uniformMatrix4fv(shaderObject.pMatrixUniform, false, pMatrix)
