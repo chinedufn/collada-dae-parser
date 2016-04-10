@@ -5,11 +5,57 @@ var makePerspective = require('./matrix-math/make-perspective.js')
 // var makeXRotation = require('./matrix-math/make-x-rotation.js')
 var makeLookAt = require('./matrix-math/make-look-at.js')
 var makeInverse = require('./matrix-math/make-inverse.js')
+var interpolate = require('mat4-interpolate')
+var createMatrix = require('gl-mat4/create')
+
+var animationClock = 0
 
 module.exports = Render
 
 // TODO: Pass in an object instead of a bunch of params
-function Render (gl, viewport, animatedModel, shaderObject) {
+// TODO: There's a lot happening in here that should happen elsewhere (i.e. animation setup)
+// will be easier to split out once we know what we're doing
+function Render (gl, viewport, animatedModel, shaderObject, dt) {
+  var min
+  var max
+  Object.keys(animatedModel.keyframes).forEach(function (frame) {
+    if (!min && !max) {
+      min = frame
+      max = frame
+    } else {
+      min = Math.min(min, frame)
+      max = Math.max(max, frame)
+    }
+  })
+  animationClock += dt / 1000
+  var animationDuration = max - min
+  if (animationClock > animationDuration) {
+    animationClock -= animationDuration
+  }
+  // Find two closest keyframes
+  var lowestKeyframe = null
+  min = max = null
+  var minJoints
+  var maxJoints
+  Object.keys(animatedModel.keyframes).forEach(function (frame, index) {
+    frame = Number(frame)
+    if (index === 0) { lowestKeyframe = frame }
+    if (frame <= lowestKeyframe + animationClock) {
+      min = frame
+      minJoints = animatedModel.keyframes['' + frame]
+    }
+    if (frame >= lowestKeyframe + animationClock && !max) {
+      max = frame
+      maxJoints = animatedModel.keyframes['' + frame]
+    }
+  })
+
+  var percentBetweenKeyframes = (lowestKeyframe + animationClock - min) / (max - min)
+  var joint0 = createMatrix()
+  var joint1 = createMatrix()
+  interpolate(joint0, minJoints[0], maxJoints[0], percentBetweenKeyframes)
+  interpolate(joint1, minJoints[1], maxJoints[1], percentBetweenKeyframes)
+
   gl.viewport(0, 0, viewport.width, viewport.height)
   gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
 
