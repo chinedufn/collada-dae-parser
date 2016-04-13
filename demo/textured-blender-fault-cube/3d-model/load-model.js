@@ -40,7 +40,20 @@ function LoadModel (gl, callback) {
     gl.bindBuffer(gl.ARRAY_BUFFER, weightBuffer)
     gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertexJointWeights), gl.STATIC_DRAW)
 
+    // Vertex normals
+    // TODO: Comment this
+    var vertexNormals = []
+    parsedDae.vertexNormalIndices.forEach(function (index) {
+      for (var i = 0; i < 3; i++) {
+        vertexNormals.push(parsedDae.vertexNormals[index * 3 + i])
+      }
+    })
+    var vertexNormalBuffer = gl.createBuffer()
+    gl.bindBuffer(gl.ARRAY_BUFFER, vertexNormalBuffer)
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertexNormals), gl.STATIC_DRAW)
+
     var stuff = {
+      vertexNormalBuffer: vertexNormalBuffer,
       vertexPositionBuffer: vertexPositionBuffer,
       vertexPositionIndexBuffer: vertexPositionIndexBuffer,
       affectingJointIndexBuffer: affectingJointIndexBuffer,
