@@ -7,6 +7,11 @@ var makeLookAt = require('./matrix-math/make-look-at.js')
 var makeInverse = require('./matrix-math/make-inverse.js')
 var interpolate = require('mat4-interpolate')
 var createMatrix = require('gl-mat4/create')
+var vec3Normalize = require('gl-vec3/normalize')
+var vec3Scale = require('gl-vec3/scale')
+var mat3FromMat4 = require('gl-mat3/from-mat4')
+var mat3Invert = require('gl-mat3/invert')
+var mat3Transpose = require('gl-mat3/transpose')
 
 var animationClock = 0
 
@@ -35,8 +40,8 @@ function Render (gl, viewport, animatedModel, shaderObject, dt) {
   // Find two closest keyframes
   var lowestKeyframe = null
   min = max = null
-  var minJoints
-  var maxJoints
+  var minJoints = []
+  var maxJoints = []
   Object.keys(animatedModel.keyframes).forEach(function (frame, index) {
     frame = Number(frame)
     if (index === 0) { lowestKeyframe = frame }
@@ -78,15 +83,31 @@ function Render (gl, viewport, animatedModel, shaderObject, dt) {
   var modelMatrix = makeTranslation(modelPosition[0], modelPosition[1], modelPosition[2])
   modelMatrix = matrixMultiply(modelMatrix, viewMatrix)
 
+  // Vertex positions
   gl.bindBuffer(gl.ARRAY_BUFFER, animatedModel.vertexPositionBuffer)
   gl.vertexAttribPointer(shaderObject.vertexPositionAttribute, 3, gl.FLOAT, false, 0, 0)
 
-  // vertex joints and weights
+  // Vertex normals
+  gl.bindBuffer(gl.ARRAY_BUFFER, animatedModel.vertexNormalBuffer)
+  gl.vertexAttribPointer(shaderObject.vertexNormalAttribute, 3, gl.FLOAT, false, 0, 0)
+
+  // vertex joints
   gl.bindBuffer(gl.ARRAY_BUFFER, animatedModel.affectingJointIndexBuffer)
   gl.vertexAttribPointer(shaderObject.jointIndexAttribute, 1, gl.FLOAT, false, 0, 0)
 
+  // vertex joint weights
   gl.bindBuffer(gl.ARRAY_BUFFER, animatedModel.weightBuffer)
   gl.vertexAttribPointer(shaderObject.jointWeightAttribute, 1, gl.FLOAT, false, 0, 0)
+
+  // lighting
+  var lightingDirection = [-10, -5, -3]
+  var normalizedLD = []
+  vec3Normalize(normalizedLD, lightingDirection)
+  vec3Scale(normalizedLD, normalizedLD, -1)
+
+  gl.uniform3f(shaderObject.ambientColorUniform, 0.15, 0.1, 0.1)
+  gl.uniform3fv(shaderObject.lightingDirectionUniform, normalizedLD)
+  gl.uniform3f(shaderObject.directionalColorUniform, 0.1, 0.1, 0.75)
 
   // Vertex weight
   gl.uniformMatrix4fv(shaderObject.boneMatrix0, false, joint0)
@@ -96,6 +117,12 @@ function Render (gl, viewport, animatedModel, shaderObject, dt) {
 
   gl.uniformMatrix4fv(shaderObject.pMatrixUniform, false, pMatrix)
   gl.uniformMatrix4fv(shaderObject.mvMatrixUniform, false, modelMatrix)
+  // Set light uniform
+  var normalMatrix = []
+  mat3FromMat4(normalMatrix, modelMatrix)
+  mat3Invert(normalMatrix, normalMatrix)
+  mat3Transpose(normalMatrix, normalMatrix)
+  gl.uniformMatrix3fv(shaderObject.nMatrixUniform, false, normalMatrix)
 
   gl.drawElements(gl.TRIANGLES, 72, gl.UNSIGNED_SHORT, 0)
 }

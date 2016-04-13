@@ -25,6 +25,9 @@ function InitShaders (gl) {
   var vertexPositionAttribute = gl.getAttribLocation(shaderProgram, 'aVertexPosition')
   gl.enableVertexAttribArray(vertexPositionAttribute)
 
+  var vertexNormalAttribute = gl.getAttribLocation(shaderProgram, 'aVertexNormal')
+  gl.enableVertexAttribArray(vertexNormalAttribute)
+
   var jointIndexAttribute = gl.getAttribLocation(shaderProgram, 'aJointIndex')
   gl.enableVertexAttribArray(jointIndexAttribute)
 
@@ -32,8 +35,13 @@ function InitShaders (gl) {
   gl.enableVertexAttribArray(jointWeightAttribute)
 
   return {
+    ambientColorUniform: gl.getUniformLocation(shaderProgram, 'uAmbientColor'),
+    lightingDirectionUniform: gl.getUniformLocation(shaderProgram, 'uLightingDirection'),
+    directionalColorUniform: gl.getUniformLocation(shaderProgram, 'uDirectionalColor'),
+    nMatrixUniform: gl.getUniformLocation(shaderProgram, 'uNMatrix'),
     program: shaderProgram,
     vertexPositionAttribute: vertexPositionAttribute,
+    vertexNormalAttribute: vertexNormalAttribute,
     jointIndexAttribute: jointIndexAttribute,
     jointWeightAttribute: jointWeightAttribute,
     samplerUniform: gl.getUniformLocation(shaderProgram, 'uSampler'),
