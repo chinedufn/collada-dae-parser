@@ -33,6 +33,16 @@ void main (void) {
   float directionalLightWeighting = max(dot(transformedNormal, uLightingDirection), 0.0);
   vLightWeighting = uAmbientColor + uDirectionalColor * directionalLightWeighting;
 
+  // Blender uses a right handed coordinate system. We convert to left handed here
+  vec4 leftWorldSpace = jointMatrix * aJointWeight * vec4(aVertexPosition, 1.0);
+  float y = leftWorldSpace.z;
+  float z = -leftWorldSpace.y;
+  leftWorldSpace.y = y;
+  leftWorldSpace.z = z;
+
+  // TODO: Is that even world space?. Just guessing and don't have wifi...
+  vec4 leftHandedPosition = uPMatrix * uMVMatrix * leftWorldSpace;
+
   // We only have one index right now... so the weight is always 1.
-  gl_Position = uPMatrix * uMVMatrix * jointMatrix * aJointWeight * vec4(aVertexPosition, 1.0);
+  gl_Position = leftHandedPosition;
 }
