@@ -448,7 +448,7 @@ function Render (gl, viewport, animatedModel, shaderObject, dt) {
 
 var path = require('path')
 var fragment = Buffer("cHJlY2lzaW9uIG1lZGl1bXAgZmxvYXQ7Cgp2YXJ5aW5nIHZlYzMgdkxpZ2h0V2VpZ2h0aW5nOwoKdm9pZCBtYWluKHZvaWQpIHsKICAgIHZlYzMgYmFzZUNvbG9yID0gdmVjMygxLjAsIDEuMCwgMS4wKTsKICAgIGdsX0ZyYWdDb2xvciA9IHZlYzQoYmFzZUNvbG9yICogdkxpZ2h0V2VpZ2h0aW5nLCAxLjApOwp9Cg==","base64").toString()
-var vertex = Buffer("YXR0cmlidXRlIHZlYzMgYVZlcnRleFBvc2l0aW9uOwphdHRyaWJ1dGUgdmVjMyBhVmVydGV4Tm9ybWFsOwphdHRyaWJ1dGUgdmVjMiBhV2VpZ2h0OwoKYXR0cmlidXRlIGZsb2F0IGFKb2ludEluZGV4OwphdHRyaWJ1dGUgZmxvYXQgYUpvaW50V2VpZ2h0OwoKdW5pZm9ybSB2ZWMzIHVBbWJpZW50Q29sb3I7Cgp1bmlmb3JtIHZlYzMgdUxpZ2h0aW5nRGlyZWN0aW9uOwp1bmlmb3JtIHZlYzMgdURpcmVjdGlvbmFsQ29sb3I7Cgp1bmlmb3JtIG1hdDMgdU5NYXRyaXg7Cgp1bmlmb3JtIG1hdDQgdU1WTWF0cml4Owp1bmlmb3JtIG1hdDQgdVBNYXRyaXg7Cgp1bmlmb3JtIG1hdDQgYm9uZU1hdHJpY2VzWzJdOwoKdmFyeWluZyB2ZWMzIHZMaWdodFdlaWdodGluZzsKCnZvaWQgbWFpbiAodm9pZCkgewogIC8vIFNlbGVjdCBqb2ludCBtYXRyaXggZm9yIHRoaXMgdmVydGV4CiAgbWF0NCBqb2ludE1hdHJpeDsKICBpZiAoYUpvaW50SW5kZXggPCAxLjApIHsKICAgIGpvaW50TWF0cml4ID0gYm9uZU1hdHJpY2VzWzBdOwogIH0gZWxzZSBpZiAoYUpvaW50SW5kZXggPCAyLjApIHsKICAgIGpvaW50TWF0cml4ID0gYm9uZU1hdHJpY2VzWzFdOwogIH0KCiAgLy8gTGlnaHRpbmcKICB2ZWMzIHRyYW5zZm9ybWVkTm9ybWFsID0gdU5NYXRyaXggKiBhVmVydGV4Tm9ybWFsOwogIGZsb2F0IGRpcmVjdGlvbmFsTGlnaHRXZWlnaHRpbmcgPSBtYXgoZG90KHRyYW5zZm9ybWVkTm9ybWFsLCB1TGlnaHRpbmdEaXJlY3Rpb24pLCAwLjApOwogIHZMaWdodFdlaWdodGluZyA9IHVBbWJpZW50Q29sb3IgKyB1RGlyZWN0aW9uYWxDb2xvciAqIGRpcmVjdGlvbmFsTGlnaHRXZWlnaHRpbmc7CgogIC8vIFdlIG9ubHkgaGF2ZSBvbmUgaW5kZXggcmlnaHQgbm93Li4uIHNvIHRoZSB3ZWlnaHQgaXMgYWx3YXlzIDEuCiAgZ2xfUG9zaXRpb24gPSB1UE1hdHJpeCAqIHVNVk1hdHJpeCAqIGpvaW50TWF0cml4ICogYUpvaW50V2VpZ2h0ICogdmVjNChhVmVydGV4UG9zaXRpb24sIDEuMCk7Cn0K","base64").toString()
+var vertex = Buffer("YXR0cmlidXRlIHZlYzMgYVZlcnRleFBvc2l0aW9uOwphdHRyaWJ1dGUgdmVjMyBhVmVydGV4Tm9ybWFsOwphdHRyaWJ1dGUgdmVjMiBhV2VpZ2h0OwoKYXR0cmlidXRlIGZsb2F0IGFKb2ludEluZGV4OwphdHRyaWJ1dGUgZmxvYXQgYUpvaW50V2VpZ2h0OwoKdW5pZm9ybSB2ZWMzIHVBbWJpZW50Q29sb3I7Cgp1bmlmb3JtIHZlYzMgdUxpZ2h0aW5nRGlyZWN0aW9uOwp1bmlmb3JtIHZlYzMgdURpcmVjdGlvbmFsQ29sb3I7Cgp1bmlmb3JtIG1hdDMgdU5NYXRyaXg7Cgp1bmlmb3JtIG1hdDQgdU1WTWF0cml4Owp1bmlmb3JtIG1hdDQgdVBNYXRyaXg7Cgp1bmlmb3JtIG1hdDQgYm9uZU1hdHJpY2VzWzJdOwoKdmFyeWluZyB2ZWMzIHZMaWdodFdlaWdodGluZzsKCnZvaWQgbWFpbiAodm9pZCkgewogIC8vIFNlbGVjdCBqb2ludCBtYXRyaXggZm9yIHRoaXMgdmVydGV4CiAgbWF0NCBqb2ludE1hdHJpeDsKICBpZiAoYUpvaW50SW5kZXggPCAxLjApIHsKICAgIGpvaW50TWF0cml4ID0gYm9uZU1hdHJpY2VzWzBdOwogIH0gZWxzZSBpZiAoYUpvaW50SW5kZXggPCAyLjApIHsKICAgIGpvaW50TWF0cml4ID0gYm9uZU1hdHJpY2VzWzFdOwogIH0KCiAgLy8gTGlnaHRpbmcKICB2ZWMzIHRyYW5zZm9ybWVkTm9ybWFsID0gdU5NYXRyaXggKiBhVmVydGV4Tm9ybWFsOwogIGZsb2F0IGRpcmVjdGlvbmFsTGlnaHRXZWlnaHRpbmcgPSBtYXgoZG90KHRyYW5zZm9ybWVkTm9ybWFsLCB1TGlnaHRpbmdEaXJlY3Rpb24pLCAwLjApOwogIHZMaWdodFdlaWdodGluZyA9IHVBbWJpZW50Q29sb3IgKyB1RGlyZWN0aW9uYWxDb2xvciAqIGRpcmVjdGlvbmFsTGlnaHRXZWlnaHRpbmc7CgogIC8vIEJsZW5kZXIgdXNlcyBhIHJpZ2h0IGhhbmRlZCBjb29yZGluYXRlIHN5c3RlbS4gV2UgY29udmVydCB0byBsZWZ0IGhhbmRlZCBoZXJlCiAgdmVjNCBsZWZ0V29ybGRTcGFjZSA9IGpvaW50TWF0cml4ICogYUpvaW50V2VpZ2h0ICogdmVjNChhVmVydGV4UG9zaXRpb24sIDEuMCk7CiAgZmxvYXQgeSA9IGxlZnRXb3JsZFNwYWNlLno7CiAgZmxvYXQgeiA9IC1sZWZ0V29ybGRTcGFjZS55OwogIGxlZnRXb3JsZFNwYWNlLnkgPSB5OwogIGxlZnRXb3JsZFNwYWNlLnogPSB6OwoKICAvLyBUT0RPOiBJcyB0aGF0IGV2ZW4gd29ybGQgc3BhY2U/LiBKdXN0IGd1ZXNzaW5nIGFuZCBkb24ndCBoYXZlIHdpZmkuLi4KICB2ZWM0IGxlZnRIYW5kZWRQb3NpdGlvbiA9IHVQTWF0cml4ICogdU1WTWF0cml4ICogbGVmdFdvcmxkU3BhY2U7CgogIC8vIFdlIG9ubHkgaGF2ZSBvbmUgaW5kZXggcmlnaHQgbm93Li4uIHNvIHRoZSB3ZWlnaHQgaXMgYWx3YXlzIDEuCiAgZ2xfUG9zaXRpb24gPSBsZWZ0SGFuZGVkUG9zaXRpb247Cn0K","base64").toString()
 
 module.exports = InitShaders
 
@@ -13585,9 +13585,6 @@ module.exports = ParseLibraryControllers
 function ParseLibraryControllers (library_controllers) {
   var controller = library_controllers[0].controller
   if (controller) {
-    // All of our models joints
-    var joints = controller[0].skin[0].source[0].Name_array[0]._.split(' ')
-
     // Number of vertexes that need weights
     // var numVertices = controller[0].skin[0].vertex_weights[0].$.count
 
@@ -13609,12 +13606,17 @@ function ParseLibraryControllers (library_controllers) {
       }
     })
 
+    // All of our models joints
+    // var joints = controller[0].skin[0].source[0].Name_array[0]._.split(' ')
+
     // Joint bind poses
     // TODO: Do we need this when animating?
+    /*
     var bindPoses = controller[0].skin[0].source[1].float_array[0]._.split(' ').map(Number)
     joints.forEach(function (joint, index) {
       console.log(bindPoses.slice(16 * index, 16 * index + 16))
     })
+    */
 
     // Bind shape matrix (inverse bind matrix)
     var bindShapeMatrix = controller[0].skin[0].bind_shape_matrix[0].split(' ').map(Number)
@@ -13677,25 +13679,39 @@ module.exports = ParseVisualScenes
 // TODO: Handle child joints. Maybe depth first traversal?
 function ParseVisualScenes (library_visual_scenes) {
   var visualScene = library_visual_scenes[0].visual_scene[0]
-  // Check for an instance controller. If one exists we have a skeleton
-  // var joints = []
   var parsedJoints = []
+
   visualScene.node.forEach(function (node) {
+    // This is the location of all top level parent nodes
     if (node.node) {
-      node.node.forEach(function (joint) {
-        parsedJoints[joint.$.sid] = parsedJoints[joint.$.sid] || {}
-        parsedJoints[joint.$.sid].jointMatrix = joint.matrix[0]._.split(' ').map(Number)
-      })
+      // node.node is the location of all top level nodes
+      parsedJoints = parseJoints(node.node)
     }
     /*
+    // Check for an instance controller. If one exists we have a skeleton
     if (node.instance_controller) {
-      // TODO: Do I need to remove the leading `#` ?
-      joints = node.instance_controller[0].skeleton
+    // TODO: Do I need to remove the leading `#` ?
+    joints = node.instance_controller[0].skeleton
     }
     */
   })
 
   return parsedJoints
+}
+
+// Recursively parse child joints
+// TODO: factor in parent world matrix
+function parseJoints (node, accumulator) {
+  accumulator = accumulator || []
+  node.forEach(function (joint) {
+    accumulator[joint.$.sid] = accumulator[joint.$.sid] || {}
+    accumulator[joint.$.sid].jointMatrix = joint.matrix[0]._.split(' ').map(Number)
+    if (joint.node) {
+      parseJoints(joint.node, accumulator)
+    }
+  })
+
+  return accumulator
 }
 
 },{}],203:[function(require,module,exports){
