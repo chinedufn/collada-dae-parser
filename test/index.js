@@ -15,9 +15,6 @@ var skeletonSkinnedCubesPath = path.resolve(__dirname, './fixture/two-skinned-cu
 var skeletonSkinnedCubesXML = fs.readFileSync(skeletonSkinnedCubesPath).toString()
 var expectedSkinnedCube = require('./expected/two-skinned-cube.js')
 
-var threePerpendicularBonesPath = path.resolve(__dirname, './fixture/three-perpendicular-bone.dae')
-var threePerpendicularBonesXML = fs.readFileSync(threePerpendicularBonesPath).toString()
-
 var parseCollada = require('../')
 
 test('Parse a default blender cube with an added texture', function (t) {
@@ -47,15 +44,6 @@ test('Parse two blender cubes animated with bones and skinning', function (t) {
       t.fail()
     }
     t.deepEqual(parsedSkeletonSkinnedCubes, expectedSkinnedCube)
-    t.end()
-  })
-})
-
-test('Parse three bones with parent, child, child relationship', function (t) {
-  t.plan(1)
-  parseCollada(threePerpendicularBonesXML, function (err, parsedThreePerpendicularBones) {
-    if (err) { t.fail() }
-    t.ok(true)
     t.end()
   })
 })
