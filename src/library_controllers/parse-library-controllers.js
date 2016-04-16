@@ -28,16 +28,14 @@ function ParseLibraryControllers (library_controllers) {
     })
 
     // All of our models joints
-    // var joints = controller[0].skin[0].source[0].Name_array[0]._.split(' ')
+    var joints = controller[0].skin[0].source[0].Name_array[0]._.split(' ')
 
     // Joint bind poses
     // TODO: Do we need this when animating?
-    /*
     var bindPoses = controller[0].skin[0].source[1].float_array[0]._.split(' ').map(Number)
     joints.forEach(function (joint, index) {
       console.log(bindPoses.slice(16 * index, 16 * index + 16))
     })
-    */
 
     // Bind shape matrix (inverse bind matrix)
     var bindShapeMatrix = controller[0].skin[0].bind_shape_matrix[0].split(' ').map(Number)
