@@ -42,7 +42,7 @@ function Render (gl, viewport, animatedModel, shaderObject, dt) {
   min = max = null
   var minJoints = []
   var maxJoints = []
-  Object.keys(animatedModel.keyframes).forEach(function (frame, index) {
+  Object.keys(animatedModel.keyframes).sort().forEach(function (frame, index) {
     frame = Number(frame)
     if (index === 0) { lowestKeyframe = frame }
     if (frame <= lowestKeyframe + animationClock) {

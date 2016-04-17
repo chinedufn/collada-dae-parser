@@ -41,6 +41,7 @@ function ParseLibraryAnimations (library_animations, jointBindPoses, jointRelati
         allKeyframes[currentKeyframes[keyframeIndex]] = allKeyframes[currentKeyframes[keyframeIndex]] || []
 
         var currentJointMatrix = keyframeJointMatrices[currentKeyframes[keyframeIndex]][animatedJointName]
+        // require('gl-mat4/scale')(currentJointMatrix, currentJointMatrix, [4.154898, 4.154898, 4.154898])
 
         // Multiply by parent world matrix
         var parentWorldMatrix = getParentWorldMatrix(animatedJointName, currentKeyframes[keyframeIndex], jointRelationships, keyframeJointMatrices)
