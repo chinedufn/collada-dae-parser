@@ -23,9 +23,14 @@ function LoadModel (gl, callback) {
     // Handle weights (this model has only one joint/weight per vertex)
     // TODO: Should the consumer be expected to know the max # joints/weights per vertex?
     parsedDae.vertexJointWeights.forEach(function (jointsAndWeights) {
-      var jointIndex = Object.keys(jointsAndWeights)[0]
-      vertexJointAffectors.push(Number(jointIndex))
-      vertexJointWeights.push(jointsAndWeights[jointIndex])
+      // Push up to 4 bone matrices. For a real shader you might not want to
+      // waste extra space. This examples wants to be more easily editable
+      // If there are less than 4 joints, we add a fake joint with 0 weight
+      for (var i = 0; i < 4; i++) {
+        var jointIndex = Object.keys(jointsAndWeights)[i]
+        vertexJointAffectors.push(Number(jointIndex) || 0)
+        vertexJointWeights.push(jointsAndWeights[jointIndex] || 0)
+      }
     })
 
     // Joints the affect each vertex

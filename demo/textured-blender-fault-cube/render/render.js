@@ -58,8 +58,15 @@ function Render (gl, viewport, animatedModel, shaderObject, dt) {
   var percentBetweenKeyframes = (lowestKeyframe + animationClock - min) / (max - min)
   var joint0 = createMatrix()
   var joint1 = createMatrix()
+  var joint2 = createMatrix()
+  var joint3 = createMatrix()
   interpolate(joint0, minJoints[0], maxJoints[0], percentBetweenKeyframes)
   interpolate(joint1, minJoints[1], maxJoints[1], percentBetweenKeyframes)
+  // Quickly adding in support for two other matrices. The model that we're currently using doesn't have 4 bones
+  // so we're passing in two fake matrices (they've been weighted to zero). This is for easy modification with
+  // your own models. In a real shader you might not be so wasteful
+  interpolate(joint2, minJoints[2] || createMatrix(), maxJoints[2] || createMatrix(), percentBetweenKeyframes)
+  interpolate(joint3, minJoints[3] || createMatrix(), maxJoints[3] || createMatrix(), percentBetweenKeyframes)
 
   gl.viewport(0, 0, viewport.width, viewport.height)
   gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
@@ -93,11 +100,11 @@ function Render (gl, viewport, animatedModel, shaderObject, dt) {
 
   // vertex joints
   gl.bindBuffer(gl.ARRAY_BUFFER, animatedModel.affectingJointIndexBuffer)
-  gl.vertexAttribPointer(shaderObject.jointIndexAttribute, 1, gl.FLOAT, false, 0, 0)
+  gl.vertexAttribPointer(shaderObject.jointIndexAttribute, 4, gl.FLOAT, false, 0, 0)
 
   // vertex joint weights
   gl.bindBuffer(gl.ARRAY_BUFFER, animatedModel.weightBuffer)
-  gl.vertexAttribPointer(shaderObject.jointWeightAttribute, 1, gl.FLOAT, false, 0, 0)
+  gl.vertexAttribPointer(shaderObject.jointWeightAttribute, 4, gl.FLOAT, false, 0, 0)
 
   // lighting
   var lightingDirection = [-10, -5, -3]
