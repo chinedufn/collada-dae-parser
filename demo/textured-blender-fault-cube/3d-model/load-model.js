@@ -58,7 +58,8 @@ function LoadModel (gl, callback) {
       vertexPositionIndexBuffer: vertexPositionIndexBuffer,
       affectingJointIndexBuffer: affectingJointIndexBuffer,
       weightBuffer: weightBuffer,
-      keyframes: parsedDae.keyframes
+      keyframes: parsedDae.keyframes,
+      numElements: parsedDae.vertexPositionIndices.length
     }
     callback(null, stuff)
   })

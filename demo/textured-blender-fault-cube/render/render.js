@@ -124,5 +124,5 @@ function Render (gl, viewport, animatedModel, shaderObject, dt) {
   mat3Transpose(normalMatrix, normalMatrix)
   gl.uniformMatrix3fv(shaderObject.nMatrixUniform, false, normalMatrix)
 
-  gl.drawElements(gl.TRIANGLES, 72, gl.UNSIGNED_SHORT, 0)
+  gl.drawElements(gl.TRIANGLES, animatedModel.numElements, gl.UNSIGNED_SHORT, 0)
 }
