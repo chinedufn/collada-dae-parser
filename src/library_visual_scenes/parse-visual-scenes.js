@@ -25,6 +25,7 @@ function ParseVisualScenes (library_visual_scenes) {
 
 // Recursively parse child joints
 // TODO: factor in parent world matrix
+// TODO: Facilitate depth first traversal?
 function parseJoints (node, parentJointName, accumulator) {
   accumulator = accumulator || []
   node.forEach(function (joint) {

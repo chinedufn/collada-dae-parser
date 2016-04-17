@@ -19,7 +19,11 @@ function ParseCollada (colladaXML, callback) {
     var parsedObject = {}
     var parsedLibraryGeometries = parseLibraryGeometries(result.COLLADA.library_geometries)
 
+    // TODO: rename
+    var jointRelationships = parseLibraryVisualScenes(result.COLLADA.library_visual_scenes)
+
     var jointBindPoses
+    var orderedJointNames
     if (result.COLLADA.library_controllers) {
       // TODO: rename
       var foo = parseLibraryControllers(result.COLLADA.library_controllers)
@@ -27,6 +31,7 @@ function ParseCollada (colladaXML, callback) {
         parsedObject.bindShapeMatrix = foo.bindShapeMatrix
         parsedObject.vertexJointWeights = foo.vertexJointWeights
         jointBindPoses = foo.jointBindPoses
+        orderedJointNames = foo.orderedJointNames
       }
     }
 
@@ -36,15 +41,10 @@ function ParseCollada (colladaXML, callback) {
       if (Object.keys(parsedObject.keyframes).length === 0) {
         delete parsedObject.keyframes
       }
-      var keyframes = parseLibraryAnimations(result.COLLADA.library_animations, jointBindPoses)
+      var keyframes = parseLibraryAnimations(result.COLLADA.library_animations, jointBindPoses, jointRelationships, orderedJointNames)
       if (Object.keys(keyframes).length > 0) {
         parsedObject.keyframes = keyframes
       }
-    }
-
-    var joints = parseLibraryVisualScenes(result.COLLADA.library_visual_scenes)
-    if (joints.length > 0) {
-      parsedObject.joints = joints
     }
 
     // Return our parsed collada object
