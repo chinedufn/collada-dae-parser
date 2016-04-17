@@ -1,12 +1,12 @@
 var transpose = require('gl-mat4/transpose')
-// var mat4Multiply = require('gl-mat4/multiply')
+var mat4Multiply = require('gl-mat4/multiply')
 
 module.exports = ParseLibraryAnimations
 
 // TODO: parse interpolation
 // TODO: Don't hard code attribute location
 // TODO: Don't assume that joint animations are in order
-function ParseLibraryAnimations (library_animations) {
+function ParseLibraryAnimations (library_animations, jointBindPoses) {
   var animations = library_animations[0].animation
   var allKeyframes = {}
 
@@ -16,6 +16,9 @@ function ParseLibraryAnimations (library_animations) {
 
   animations.forEach(function (anim, index) {
     if (anim.$.id.indexOf('pose_matrix') !== -1) {
+      // TODO: Is this the best way to get an animations joint target?
+      var animatedJointName = anim.channel[0].$.target.split('/')[0]
+
       var currentKeyframes = anim.source[0].float_array[0]._.split(' ').map(Number)
 
       var currentJointPoseMatrices = anim.source[1].float_array[0]._.split(' ').map(Number)
@@ -24,7 +27,7 @@ function ParseLibraryAnimations (library_animations) {
         var currentJointMatrix = currentJointPoseMatrices.slice(16 * index, 16 * index + 16)
 
         // Multiply our joint's inverse bind matrix
-        // mat4Multiply(currentJointMatrix, invBinds[count], currentJointMatrix)
+        mat4Multiply(currentJointMatrix, jointBindPoses[animatedJointName], currentJointMatrix)
 
         // Turn our row major matrix into a column major matrix. OpenGL uses column major
         transpose(currentJointMatrix, currentJointMatrix)

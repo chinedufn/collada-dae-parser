@@ -31,10 +31,12 @@ function ParseLibraryControllers (library_controllers) {
     var joints = controller[0].skin[0].source[0].Name_array[0]._.split(' ')
 
     // Joint bind poses
-    // TODO: Do we need this when animating?
+    // TODO: Should we multiply in the bind shape matrix?
+    var jointBindPoses = {}
     var bindPoses = controller[0].skin[0].source[1].float_array[0]._.split(' ').map(Number)
-    joints.forEach(function (joint, index) {
-      console.log(bindPoses.slice(16 * index, 16 * index + 16))
+    joints.forEach(function (jointName, index) {
+      var bindPose = bindPoses.slice(16 * index, 16 * index + 16)
+      jointBindPoses[jointName] = bindPose
     })
 
     // Bind shape matrix (inverse bind matrix)
@@ -46,6 +48,7 @@ function ParseLibraryControllers (library_controllers) {
   // when skinning. i.e. mat4 vs mat3 or mat2 for weights
   return {
     bindShapeMatrix: bindShapeMatrix,
+    jointBindPoses: jointBindPoses,
     vertexJointWeights: parsedVertexJointWeights
   }
 }
