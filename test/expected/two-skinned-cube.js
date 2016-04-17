@@ -2,9 +2,6 @@
 // Animated on the Z axis. Y position never changes.
 // They begin at two different X locations
 //
-// Note. 'Bone' and 'Bone_001' are the names of the joints exported from in Blender
-// these could just as easily be 'foo' 'bar'
-//
 // TODO: Add a gif of every model
 
 module.exports = {
