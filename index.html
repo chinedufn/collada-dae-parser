@@ -43,9 +43,14 @@ function LoadModel (gl, callback) {
     // Handle weights (this model has only one joint/weight per vertex)
     // TODO: Should the consumer be expected to know the max # joints/weights per vertex?
     parsedDae.vertexJointWeights.forEach(function (jointsAndWeights) {
-      var jointIndex = Object.keys(jointsAndWeights)[0]
-      vertexJointAffectors.push(Number(jointIndex))
-      vertexJointWeights.push(jointsAndWeights[jointIndex])
+      // Push up to 4 bone matrices. For a real shader you might not want to
+      // waste extra space. This examples wants to be more easily editable
+      // If there are less than 4 joints, we add a fake joint with 0 weight
+      for (var i = 0; i < 4; i++) {
+        var jointIndex = Object.keys(jointsAndWeights)[i]
+        vertexJointAffectors.push(Number(jointIndex) || 0)
+        vertexJointWeights.push(jointsAndWeights[jointIndex] || 0)
+      }
     })
 
     // Joints the affect each vertex
@@ -78,7 +83,8 @@ function LoadModel (gl, callback) {
       vertexPositionIndexBuffer: vertexPositionIndexBuffer,
       affectingJointIndexBuffer: affectingJointIndexBuffer,
       weightBuffer: weightBuffer,
-      keyframes: parsedDae.keyframes
+      keyframes: parsedDae.keyframes,
+      numElements: parsedDae.vertexPositionIndices.length
     }
     callback(null, stuff)
   })
@@ -374,8 +380,15 @@ function Render (gl, viewport, animatedModel, shaderObject, dt) {
   var percentBetweenKeyframes = (lowestKeyframe + animationClock - min) / (max - min)
   var joint0 = createMatrix()
   var joint1 = createMatrix()
+  var joint2 = createMatrix()
+  var joint3 = createMatrix()
   interpolate(joint0, minJoints[0], maxJoints[0], percentBetweenKeyframes)
   interpolate(joint1, minJoints[1], maxJoints[1], percentBetweenKeyframes)
+  // Quickly adding in support for two other matrices. The model that we're currently using doesn't have 4 bones
+  // so we're passing in two fake matrices (they've been weighted to zero). This is for easy modification with
+  // your own models. In a real shader you might not be so wasteful
+  interpolate(joint2, minJoints[2] || createMatrix(), maxJoints[2] || createMatrix(), percentBetweenKeyframes)
+  interpolate(joint3, minJoints[3] || createMatrix(), maxJoints[3] || createMatrix(), percentBetweenKeyframes)
 
   gl.viewport(0, 0, viewport.width, viewport.height)
   gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
@@ -409,11 +422,11 @@ function Render (gl, viewport, animatedModel, shaderObject, dt) {
 
   // vertex joints
   gl.bindBuffer(gl.ARRAY_BUFFER, animatedModel.affectingJointIndexBuffer)
-  gl.vertexAttribPointer(shaderObject.jointIndexAttribute, 1, gl.FLOAT, false, 0, 0)
+  gl.vertexAttribPointer(shaderObject.jointIndexAttribute, 4, gl.FLOAT, false, 0, 0)
 
   // vertex joint weights
   gl.bindBuffer(gl.ARRAY_BUFFER, animatedModel.weightBuffer)
-  gl.vertexAttribPointer(shaderObject.jointWeightAttribute, 1, gl.FLOAT, false, 0, 0)
+  gl.vertexAttribPointer(shaderObject.jointWeightAttribute, 4, gl.FLOAT, false, 0, 0)
 
   // lighting
   var lightingDirection = [-10, -5, -3]
@@ -440,7 +453,7 @@ function Render (gl, viewport, animatedModel, shaderObject, dt) {
   mat3Transpose(normalMatrix, normalMatrix)
   gl.uniformMatrix3fv(shaderObject.nMatrixUniform, false, normalMatrix)
 
-  gl.drawElements(gl.TRIANGLES, 72, gl.UNSIGNED_SHORT, 0)
+  gl.drawElements(gl.TRIANGLES, animatedModel.numElements, gl.UNSIGNED_SHORT, 0)
 }
 
 },{"./matrix-math/make-inverse.js":4,"./matrix-math/make-look-at.js":5,"./matrix-math/make-perspective.js":6,"./matrix-math/make-translation.js":7,"./matrix-math/multiply.js":8,"gl-mat3/from-mat4":16,"gl-mat3/invert":17,"gl-mat3/transpose":18,"gl-mat4/create":20,"gl-vec3/normalize":34,"gl-vec3/scale":35,"mat4-interpolate":153}],10:[function(require,module,exports){
@@ -448,7 +461,7 @@ function Render (gl, viewport, animatedModel, shaderObject, dt) {
 
 var path = require('path')
 var fragment = Buffer("cHJlY2lzaW9uIG1lZGl1bXAgZmxvYXQ7Cgp2YXJ5aW5nIHZlYzMgdkxpZ2h0V2VpZ2h0aW5nOwoKdm9pZCBtYWluKHZvaWQpIHsKICAgIHZlYzMgYmFzZUNvbG9yID0gdmVjMygxLjAsIDEuMCwgMS4wKTsKICAgIGdsX0ZyYWdDb2xvciA9IHZlYzQoYmFzZUNvbG9yICogdkxpZ2h0V2VpZ2h0aW5nLCAxLjApOwp9Cg==","base64").toString()
-var vertex = Buffer("YXR0cmlidXRlIHZlYzMgYVZlcnRleFBvc2l0aW9uOwphdHRyaWJ1dGUgdmVjMyBhVmVydGV4Tm9ybWFsOwphdHRyaWJ1dGUgdmVjMiBhV2VpZ2h0OwoKYXR0cmlidXRlIGZsb2F0IGFKb2ludEluZGV4OwphdHRyaWJ1dGUgZmxvYXQgYUpvaW50V2VpZ2h0OwoKdW5pZm9ybSB2ZWMzIHVBbWJpZW50Q29sb3I7Cgp1bmlmb3JtIHZlYzMgdUxpZ2h0aW5nRGlyZWN0aW9uOwp1bmlmb3JtIHZlYzMgdURpcmVjdGlvbmFsQ29sb3I7Cgp1bmlmb3JtIG1hdDMgdU5NYXRyaXg7Cgp1bmlmb3JtIG1hdDQgdU1WTWF0cml4Owp1bmlmb3JtIG1hdDQgdVBNYXRyaXg7Cgp1bmlmb3JtIG1hdDQgYm9uZU1hdHJpY2VzWzJdOwoKdmFyeWluZyB2ZWMzIHZMaWdodFdlaWdodGluZzsKCnZvaWQgbWFpbiAodm9pZCkgewogIC8vIFNlbGVjdCBqb2ludCBtYXRyaXggZm9yIHRoaXMgdmVydGV4CiAgbWF0NCBqb2ludE1hdHJpeDsKICBpZiAoYUpvaW50SW5kZXggPCAxLjApIHsKICAgIGpvaW50TWF0cml4ID0gYm9uZU1hdHJpY2VzWzBdOwogIH0gZWxzZSBpZiAoYUpvaW50SW5kZXggPCAyLjApIHsKICAgIGpvaW50TWF0cml4ID0gYm9uZU1hdHJpY2VzWzFdOwogIH0KCiAgLy8gTGlnaHRpbmcKICB2ZWMzIHRyYW5zZm9ybWVkTm9ybWFsID0gdU5NYXRyaXggKiBhVmVydGV4Tm9ybWFsOwogIGZsb2F0IGRpcmVjdGlvbmFsTGlnaHRXZWlnaHRpbmcgPSBtYXgoZG90KHRyYW5zZm9ybWVkTm9ybWFsLCB1TGlnaHRpbmdEaXJlY3Rpb24pLCAwLjApOwogIHZMaWdodFdlaWdodGluZyA9IHVBbWJpZW50Q29sb3IgKyB1RGlyZWN0aW9uYWxDb2xvciAqIGRpcmVjdGlvbmFsTGlnaHRXZWlnaHRpbmc7CgogIC8vIEJsZW5kZXIgdXNlcyBhIHJpZ2h0IGhhbmRlZCBjb29yZGluYXRlIHN5c3RlbS4gV2UgY29udmVydCB0byBsZWZ0IGhhbmRlZCBoZXJlCiAgdmVjNCBsZWZ0V29ybGRTcGFjZSA9IGpvaW50TWF0cml4ICogYUpvaW50V2VpZ2h0ICogdmVjNChhVmVydGV4UG9zaXRpb24sIDEuMCk7CiAgZmxvYXQgeSA9IGxlZnRXb3JsZFNwYWNlLno7CiAgZmxvYXQgeiA9IC1sZWZ0V29ybGRTcGFjZS55OwogIGxlZnRXb3JsZFNwYWNlLnkgPSB5OwogIGxlZnRXb3JsZFNwYWNlLnogPSB6OwoKICAvLyBUT0RPOiBJcyB0aGF0IGV2ZW4gd29ybGQgc3BhY2U/LiBKdXN0IGd1ZXNzaW5nIGFuZCBkb24ndCBoYXZlIHdpZmkuLi4KICB2ZWM0IGxlZnRIYW5kZWRQb3NpdGlvbiA9IHVQTWF0cml4ICogdU1WTWF0cml4ICogbGVmdFdvcmxkU3BhY2U7CgogIC8vIFdlIG9ubHkgaGF2ZSBvbmUgaW5kZXggcmlnaHQgbm93Li4uIHNvIHRoZSB3ZWlnaHQgaXMgYWx3YXlzIDEuCiAgZ2xfUG9zaXRpb24gPSBsZWZ0SGFuZGVkUG9zaXRpb247Cn0K","base64").toString()
+var vertex = Buffer("YXR0cmlidXRlIHZlYzMgYVZlcnRleFBvc2l0aW9uOwphdHRyaWJ1dGUgdmVjMyBhVmVydGV4Tm9ybWFsOwphdHRyaWJ1dGUgdmVjMiBhV2VpZ2h0OwoKYXR0cmlidXRlIHZlYzQgYUpvaW50SW5kZXg7CmF0dHJpYnV0ZSB2ZWM0IGFKb2ludFdlaWdodDsKCnVuaWZvcm0gdmVjMyB1QW1iaWVudENvbG9yOwoKdW5pZm9ybSB2ZWMzIHVMaWdodGluZ0RpcmVjdGlvbjsKdW5pZm9ybSB2ZWMzIHVEaXJlY3Rpb25hbENvbG9yOwoKdW5pZm9ybSBtYXQzIHVOTWF0cml4OwoKdW5pZm9ybSBtYXQ0IHVNVk1hdHJpeDsKdW5pZm9ybSBtYXQ0IHVQTWF0cml4OwoKdW5pZm9ybSBtYXQ0IGJvbmVNYXRyaWNlc1s0XTsKCnZhcnlpbmcgdmVjMyB2TGlnaHRXZWlnaHRpbmc7Cgp2b2lkIG1haW4gKHZvaWQpIHsKICAvLyBTZWxlY3Qgam9pbnQgbWF0cml4IGZvciB0aGlzIHZlcnRleAogIG1hdDQgam9pbnRNYXRyaXgwOwogIG1hdDQgam9pbnRNYXRyaXgxOwogIG1hdDQgam9pbnRNYXRyaXgyOwogIG1hdDQgam9pbnRNYXRyaXgzOwogIG1hdDQgd2VpZ2h0ZWRKb2ludE1hdHJpeDsKICAvLyBUT0RPOiBUaGVyZSBoYXMgdG8gYmUgYW4gZWFzaWVyIHdheSB0byBkbyB0aGlzIGluIFdlYkdMIEdMU0wgLi4uCiAgLy8gU2VlbXMgbGlrZSB5b3UgY2FuJ3QgdXNlIHZhcmlhYmxlcyBhcyBpbmRpY2VzCiAgLy8gRm9yIG5vdyB3ZSdsbCBqdXN0IGNoYWluIGFsbCBvZiB0aGVzZSBpZiBzdGF0ZW1lbnRzCiAgaWYgKGFKb2ludEluZGV4LnggPCAxLjApIHsKICAgIGpvaW50TWF0cml4MCA9IGJvbmVNYXRyaWNlc1swXTsKICB9IGVsc2UgaWYgKGFKb2ludEluZGV4LnggPCAyLjApIHsKICAgIGpvaW50TWF0cml4MCA9IGJvbmVNYXRyaWNlc1sxXTsKICB9IGVsc2UgaWYgKGFKb2ludEluZGV4LnggPCAzLjApIHsKICAgIGpvaW50TWF0cml4MCA9IGJvbmVNYXRyaWNlc1syXTsKICB9IGVsc2UgaWYgKGFKb2ludEluZGV4LnggPCA0LjApIHsKICAgIGpvaW50TWF0cml4MCA9IGJvbmVNYXRyaWNlc1szXTsKICB9CgogLy8gMm5kIEpvaW50CiBpZiAoYUpvaW50SW5kZXgueSA8IDEuMCkgewogICAgam9pbnRNYXRyaXgxID0gYm9uZU1hdHJpY2VzWzBdOwogIH0gZWxzZSBpZiAoYUpvaW50SW5kZXgueSA8IDIuMCkgewogICAgam9pbnRNYXRyaXgxID0gYm9uZU1hdHJpY2VzWzFdOwogIH0gZWxzZSBpZiAoYUpvaW50SW5kZXgueSA8IDMuMCkgewogICAgam9pbnRNYXRyaXgxID0gYm9uZU1hdHJpY2VzWzJdOwogIH0gZWxzZSBpZiAoYUpvaW50SW5kZXgueSA8IDQuMCkgewogICAgam9pbnRNYXRyaXgxID0gYm9uZU1hdHJpY2VzWzNdOwogIH0KCiAvLyAzcmQgSm9pbnQKIGlmIChhSm9pbnRJbmRleC56IDwgMS4wKSB7CiAgICBqb2ludE1hdHJpeDIgPSBib25lTWF0cmljZXNbMF07CiAgfSBlbHNlIGlmIChhSm9pbnRJbmRleC56IDwgMi4wKSB7CiAgICBqb2ludE1hdHJpeDIgPSBib25lTWF0cmljZXNbMV07CiAgfSBlbHNlIGlmIChhSm9pbnRJbmRleC56IDwgMy4wKSB7CiAgICBqb2ludE1hdHJpeDIgPSBib25lTWF0cmljZXNbMl07CiAgfSBlbHNlIGlmIChhSm9pbnRJbmRleC56IDwgNC4wKSB7CiAgICBqb2ludE1hdHJpeDIgPSBib25lTWF0cmljZXNbM107CiAgfQoKIC8vIDR0aCBKb2ludAogaWYgKGFKb2ludEluZGV4LncgPCAxLjApIHsKICAgIGpvaW50TWF0cml4MyA9IGJvbmVNYXRyaWNlc1swXTsKICB9IGVsc2UgaWYgKGFKb2ludEluZGV4LncgPCAyLjApIHsKICAgIGpvaW50TWF0cml4MyA9IGJvbmVNYXRyaWNlc1sxXTsKICB9IGVsc2UgaWYgKGFKb2ludEluZGV4LncgPCAzLjApIHsKICAgIGpvaW50TWF0cml4MyA9IGJvbmVNYXRyaWNlc1syXTsKICB9IGVsc2UgaWYgKGFKb2ludEluZGV4LncgPCA0LjApIHsKICAgIGpvaW50TWF0cml4MyA9IGJvbmVNYXRyaWNlc1szXTsKICB9CgogIHdlaWdodGVkSm9pbnRNYXRyaXggKz0gam9pbnRNYXRyaXgwICogYUpvaW50V2VpZ2h0Lng7CiAgd2VpZ2h0ZWRKb2ludE1hdHJpeCArPSBqb2ludE1hdHJpeDEgKiBhSm9pbnRXZWlnaHQueTsKICB3ZWlnaHRlZEpvaW50TWF0cml4ICs9IGpvaW50TWF0cml4MiAqIGFKb2ludFdlaWdodC56OwogIHdlaWdodGVkSm9pbnRNYXRyaXggKz0gam9pbnRNYXRyaXgzICogYUpvaW50V2VpZ2h0Lnc7CgogIC8vIExpZ2h0aW5nCiAgdmVjMyB0cmFuc2Zvcm1lZE5vcm1hbCA9IHVOTWF0cml4ICogYVZlcnRleE5vcm1hbDsKICBmbG9hdCBkaXJlY3Rpb25hbExpZ2h0V2VpZ2h0aW5nID0gbWF4KGRvdCh0cmFuc2Zvcm1lZE5vcm1hbCwgdUxpZ2h0aW5nRGlyZWN0aW9uKSwgMC4wKTsKICB2TGlnaHRXZWlnaHRpbmcgPSB1QW1iaWVudENvbG9yICsgdURpcmVjdGlvbmFsQ29sb3IgKiBkaXJlY3Rpb25hbExpZ2h0V2VpZ2h0aW5nOwoKICAvLyBCbGVuZGVyIHVzZXMgYSByaWdodCBoYW5kZWQgY29vcmRpbmF0ZSBzeXN0ZW0uIFdlIGNvbnZlcnQgdG8gbGVmdCBoYW5kZWQgaGVyZQogIHZlYzQgbGVmdFdvcmxkU3BhY2UgPSB3ZWlnaHRlZEpvaW50TWF0cml4ICogdmVjNChhVmVydGV4UG9zaXRpb24sIDEuMCk7CiAgZmxvYXQgeSA9IGxlZnRXb3JsZFNwYWNlLno7CiAgZmxvYXQgeiA9IC1sZWZ0V29ybGRTcGFjZS55OwogIGxlZnRXb3JsZFNwYWNlLnkgPSB5OwogIGxlZnRXb3JsZFNwYWNlLnogPSB6OwoKICAvLyBUT0RPOiBJcyB0aGF0IGV2ZW4gd29ybGQgc3BhY2U/LiBKdXN0IGd1ZXNzaW5nIGFuZCBkb24ndCBoYXZlIHdpZmkuLi4KICB2ZWM0IGxlZnRIYW5kZWRQb3NpdGlvbiA9IHVQTWF0cml4ICogdU1WTWF0cml4ICogbGVmdFdvcmxkU3BhY2U7CgogIC8vIFdlIG9ubHkgaGF2ZSBvbmUgaW5kZXggcmlnaHQgbm93Li4uIHNvIHRoZSB3ZWlnaHQgaXMgYWx3YXlzIDEuCiAgZ2xfUG9zaXRpb24gPSBsZWZ0SGFuZGVkUG9zaXRpb247Cn0K","base64").toString()
 
 module.exports = InitShaders
 
@@ -495,7 +508,9 @@ function InitShaders (gl) {
     pMatrixUniform: gl.getUniformLocation(shaderProgram, 'uPMatrix'),
     mvMatrixUniform: gl.getUniformLocation(shaderProgram, 'uMVMatrix'),
     boneMatrix0: gl.getUniformLocation(shaderProgram, 'boneMatrices[0]'),
-    boneMatrix1: gl.getUniformLocation(shaderProgram, 'boneMatrices[1]')
+    boneMatrix1: gl.getUniformLocation(shaderProgram, 'boneMatrices[1]'),
+    boneMatrix2: gl.getUniformLocation(shaderProgram, 'boneMatrices[2]'),
+    boneMatrix3: gl.getUniformLocation(shaderProgram, 'boneMatrices[3]')
   }
 }
 
