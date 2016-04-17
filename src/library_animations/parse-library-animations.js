@@ -1,4 +1,5 @@
 var mat4Create = require('gl-mat4/create')
+var mat4Copy = require('gl-mat4/copy')
 var transpose = require('gl-mat4/transpose')
 var mat4Multiply = require('gl-mat4/multiply')
 
@@ -27,6 +28,11 @@ function ParseLibraryAnimations (library_animations, jointBindPoses, jointRelati
       currentKeyframes.forEach(function (_, keyframeIndex) {
         keyframeJointMatrices[currentKeyframes[keyframeIndex]] = keyframeJointMatrices[currentKeyframes[keyframeIndex]] || {}
         var currentJointMatrix = currentJointPoseMatrices.slice(16 * keyframeIndex, 16 * keyframeIndex + 16)
+        // TODO: Seems like we need to apply library visual scene top level node
+        // transformations to our top level joints
+        if (animationIndex === 0) {
+          require('gl-mat4/scale')(currentJointMatrix, currentJointMatrix, [4.154898, 4.154898, 4.154898])
+        }
 
         keyframeJointMatrices[currentKeyframes[keyframeIndex]][animatedJointName] = currentJointMatrix
       })
@@ -41,20 +47,26 @@ function ParseLibraryAnimations (library_animations, jointBindPoses, jointRelati
         allKeyframes[currentKeyframes[keyframeIndex]] = allKeyframes[currentKeyframes[keyframeIndex]] || []
 
         var currentJointMatrix = keyframeJointMatrices[currentKeyframes[keyframeIndex]][animatedJointName]
+        var bar = mat4Create()
         // require('gl-mat4/scale')(currentJointMatrix, currentJointMatrix, [4.154898, 4.154898, 4.154898])
 
         // Multiply by parent world matrix
         var parentWorldMatrix = getParentWorldMatrix(animatedJointName, currentKeyframes[keyframeIndex], jointRelationships, keyframeJointMatrices)
         if (parentWorldMatrix) {
-          mat4Multiply(currentJointMatrix, parentWorldMatrix, currentJointMatrix)
+          // TODO: No idea why switching the multiplication order here worked.
+          // Maybe something to do with fact that we're transposing? Not sure...
+          // Typically supposed to be parentWorldMatrix * currentJointMatrix I believe
+          mat4Multiply(bar, currentJointMatrix, parentWorldMatrix)
+        } else {
+          bar = mat4Copy(bar, currentJointMatrix)
         }
 
         // Multiply our joint's inverse bind matrix
-        mat4Multiply(currentJointMatrix, jointBindPoses[animatedJointName], currentJointMatrix)
+        mat4Multiply(bar, jointBindPoses[animatedJointName], bar)
 
         // Turn our row major matrix into a column major matrix. OpenGL uses column major
-        transpose(currentJointMatrix, currentJointMatrix)
-        allKeyframes[currentKeyframes[keyframeIndex]].push(currentJointMatrix)
+        transpose(bar, bar)
+        allKeyframes[currentKeyframes[keyframeIndex]].push(bar)
       })
     }
   })

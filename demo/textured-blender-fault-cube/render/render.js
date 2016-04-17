@@ -1,7 +1,7 @@
 var matrixMultiply = require('./matrix-math/multiply.js')
 var makeTranslation = require('./matrix-math/make-translation.js')
 var makePerspective = require('./matrix-math/make-perspective.js')
-// var makeYRotation = require('./matrix-math/make-y-rotation.js')
+var makeYRotation = require('./matrix-math/make-y-rotation.js')
 // var makeXRotation = require('./matrix-math/make-x-rotation.js')
 var makeLookAt = require('./matrix-math/make-look-at.js')
 var makeInverse = require('./matrix-math/make-inverse.js')
@@ -76,7 +76,7 @@ function Render (gl, viewport, animatedModel, shaderObject, dt) {
   var modelPosition = [0, 0, 0]
   var cameraMatrix = makeTranslation(0, 0, 10)
   // cameraMatrix = matrixMultiply(cameraMatrix, makeXRotation(0 - stuff.xRotation))
-  // cameraMatrix = matrixMultiply(cameraMatrix, makeYRotation(0 + stuff.yRotation))
+  // cameraMatrix = matrixMultiply(cameraMatrix, makeYRotation(Math.PI))
   var cameraPosition = [
     cameraMatrix[12],
     cameraMatrix[13],
