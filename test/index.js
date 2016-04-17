@@ -15,6 +15,10 @@ var skeletonSkinnedCubesPath = path.resolve(__dirname, './fixture/two-skinned-cu
 var skeletonSkinnedCubesXML = fs.readFileSync(skeletonSkinnedCubesPath).toString()
 var expectedSkinnedCube = require('./expected/two-skinned-cube.js')
 
+var animatedLetterFPath = path.resolve(__dirname, './fixture/letter-f-animated.dae')
+var animatedLetterFXML = fs.readFileSync(animatedLetterFPath).toString()
+var expectedAnimatedLetterF = require('./expected/animated-letter-f.js')
+
 var parseCollada = require('../')
 
 test('Parse a default blender cube with an added texture', function (t) {
@@ -44,6 +48,15 @@ test('Parse two blender cubes animated with bones and skinning', function (t) {
       t.fail()
     }
     t.deepEqual(parsedSkeletonSkinnedCubes, expectedSkinnedCube)
+    t.end()
+  })
+})
+
+test('Parse animated letter F with parent and child bone', function (t) {
+  t.plan(1)
+  parseCollada(animatedLetterFXML, function (err, parsedAnimatedLetterF) {
+    if (err) { t.fail() }
+    t.deepEqual(parsedAnimatedLetterF, expectedAnimatedLetterF)
     t.end()
   })
 })
