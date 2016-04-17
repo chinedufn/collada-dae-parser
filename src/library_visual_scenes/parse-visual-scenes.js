@@ -25,13 +25,14 @@ function ParseVisualScenes (library_visual_scenes) {
 
 // Recursively parse child joints
 // TODO: factor in parent world matrix
-function parseJoints (node, accumulator) {
+function parseJoints (node, parentJointName, accumulator) {
   accumulator = accumulator || []
   node.forEach(function (joint) {
     accumulator[joint.$.sid] = accumulator[joint.$.sid] || {}
     accumulator[joint.$.sid].jointMatrix = joint.matrix[0]._.split(' ').map(Number)
+    accumulator[joint.$.sid].parent = parentJointName
     if (joint.node) {
-      parseJoints(joint.node, accumulator)
+      parseJoints(joint.node, joint.$.sid, accumulator)
     }
   })
 
