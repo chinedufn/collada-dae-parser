@@ -28,13 +28,13 @@ function ParseLibraryControllers (library_controllers) {
     })
 
     // All of our models joints
-    var joints = controller[0].skin[0].source[0].Name_array[0]._.split(' ')
+    var orderedJointNames = controller[0].skin[0].source[0].Name_array[0]._.split(' ')
 
     // Joint bind poses
     // TODO: Should we multiply in the bind shape matrix?
     var jointBindPoses = {}
     var bindPoses = controller[0].skin[0].source[1].float_array[0]._.split(' ').map(Number)
-    joints.forEach(function (jointName, index) {
+    orderedJointNames.forEach(function (jointName, index) {
       var bindPose = bindPoses.slice(16 * index, 16 * index + 16)
       jointBindPoses[jointName] = bindPose
     })
@@ -49,6 +49,7 @@ function ParseLibraryControllers (library_controllers) {
   return {
     bindShapeMatrix: bindShapeMatrix,
     jointBindPoses: jointBindPoses,
+    orderedJointNames: orderedJointNames,
     vertexJointWeights: parsedVertexJointWeights
   }
 }
