@@ -15,7 +15,7 @@ uniform mat3 uNMatrix;
 uniform mat4 uMVMatrix;
 uniform mat4 uPMatrix;
 
-uniform mat4 boneMatrices[4];
+uniform mat4 boneMatrices[5];
 
 varying vec3 vLightWeighting;
 
@@ -37,9 +37,9 @@ void main (void) {
     jointMatrix0 = boneMatrices[2];
   } else if (aJointIndex.x < 4.0) {
     jointMatrix0 = boneMatrices[3];
+  } else if (aJointIndex.x < 5.0) {
+    jointMatrix0 = boneMatrices[4];
   }
-
- // 2nd Joint
  if (aJointIndex.y < 1.0) {
     jointMatrix1 = boneMatrices[0];
   } else if (aJointIndex.y < 2.0) {
@@ -48,9 +48,9 @@ void main (void) {
     jointMatrix1 = boneMatrices[2];
   } else if (aJointIndex.y < 4.0) {
     jointMatrix1 = boneMatrices[3];
+  } else if (aJointIndex.y < 5.0) {
+    jointMatrix1 = boneMatrices[4];
   }
-
- // 3rd Joint
  if (aJointIndex.z < 1.0) {
     jointMatrix2 = boneMatrices[0];
   } else if (aJointIndex.z < 2.0) {
@@ -59,6 +59,8 @@ void main (void) {
     jointMatrix2 = boneMatrices[2];
   } else if (aJointIndex.z < 4.0) {
     jointMatrix2 = boneMatrices[3];
+  } else if (aJointIndex.z < 5.0) {
+    jointMatrix2 = boneMatrices[4];
   }
 
  // 4th Joint
@@ -70,7 +72,10 @@ void main (void) {
     jointMatrix3 = boneMatrices[2];
   } else if (aJointIndex.w < 4.0) {
     jointMatrix3 = boneMatrices[3];
+  } else if (aJointIndex.w < 5.0) {
+    jointMatrix3 = boneMatrices[4];
   }
+
 
   weightedJointMatrix += jointMatrix0 * aJointWeight.x;
   weightedJointMatrix += jointMatrix1 * aJointWeight.y;

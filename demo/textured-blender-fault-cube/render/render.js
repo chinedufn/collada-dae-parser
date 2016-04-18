@@ -60,6 +60,7 @@ function Render (gl, viewport, animatedModel, shaderObject, dt) {
   var joint1 = createMatrix()
   var joint2 = createMatrix()
   var joint3 = createMatrix()
+  var joint4 = createMatrix()
   interpolate(joint0, minJoints[0], maxJoints[0], percentBetweenKeyframes)
   interpolate(joint1, minJoints[1], maxJoints[1], percentBetweenKeyframes)
   // Quickly adding in support for two other matrices. The model that we're currently using doesn't have 4 bones
@@ -67,6 +68,7 @@ function Render (gl, viewport, animatedModel, shaderObject, dt) {
   // your own models. In a real shader you might not be so wasteful
   interpolate(joint2, minJoints[2] || createMatrix(), maxJoints[2] || createMatrix(), percentBetweenKeyframes)
   interpolate(joint3, minJoints[3] || createMatrix(), maxJoints[3] || createMatrix(), percentBetweenKeyframes)
+  interpolate(joint4, minJoints[4] || createMatrix(), maxJoints[4] || createMatrix(), percentBetweenKeyframes)
 
   gl.viewport(0, 0, viewport.width, viewport.height)
   gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
@@ -74,7 +76,7 @@ function Render (gl, viewport, animatedModel, shaderObject, dt) {
   var pMatrix = makePerspective(Math.PI / 3, viewport.width / viewport.height, 1, 2000)
 
   var modelPosition = [0, 0, 0]
-  var cameraMatrix = makeTranslation(0, 0, 10)
+  var cameraMatrix = makeTranslation(0, 0, 15)
   // cameraMatrix = matrixMultiply(cameraMatrix, makeXRotation(0 - stuff.xRotation))
   // cameraMatrix = matrixMultiply(cameraMatrix, makeYRotation(Math.PI))
   var cameraPosition = [
@@ -121,6 +123,7 @@ function Render (gl, viewport, animatedModel, shaderObject, dt) {
   gl.uniformMatrix4fv(shaderObject.boneMatrix1, false, joint1)
   gl.uniformMatrix4fv(shaderObject.boneMatrix2, false, joint2)
   gl.uniformMatrix4fv(shaderObject.boneMatrix3, false, joint3)
+  gl.uniformMatrix4fv(shaderObject.boneMatrix4, false, joint4)
 
   gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, animatedModel.vertexPositionIndexBuffer)
 

@@ -50,6 +50,7 @@ function InitShaders (gl) {
     boneMatrix0: gl.getUniformLocation(shaderProgram, 'boneMatrices[0]'),
     boneMatrix1: gl.getUniformLocation(shaderProgram, 'boneMatrices[1]'),
     boneMatrix2: gl.getUniformLocation(shaderProgram, 'boneMatrices[2]'),
-    boneMatrix3: gl.getUniformLocation(shaderProgram, 'boneMatrices[3]')
+    boneMatrix3: gl.getUniformLocation(shaderProgram, 'boneMatrices[3]'),
+    boneMatrix4: gl.getUniformLocation(shaderProgram, 'boneMatrices[4]')
   }
 }
