@@ -1,19 +1,19 @@
-var mat4Create = require('gl-mat4/create')
-var mat4Copy = require('gl-mat4/copy')
-var transpose = require('gl-mat4/transpose')
 var mat4Multiply = require('gl-mat4/multiply')
+var mat4Scale = require('gl-mat4/scale')
+var mat4Transpose = require('gl-mat4/transpose')
 
 module.exports = ParseLibraryAnimations
 
 // TODO: parse interpolation
 // TODO: Don't hard code attribute location
 // TODO: Don't assume that joint animations are in order
-// TODO: Extend joint info into one param and pass in
-// TODO: Extremely inefficient
-function ParseLibraryAnimations (library_animations, jointBindPoses, jointRelationships, orderedJointNames) {
+// TODO: Inefficient. use depth first traversal
+function ParseLibraryAnimations (library_animations, jointBindPoses, visualSceneData) {
   var animations = library_animations[0].animation
   var allKeyframes = {}
   var keyframeJointMatrices = {}
+  var jointRelationships = visualSceneData.jointRelationships
+  var armatureScale = visualSceneData.armatureScale
 
   // First pass.. get all the joint matrices
   animations.forEach(function (anim, animationIndex) {
@@ -30,8 +30,8 @@ function ParseLibraryAnimations (library_animations, jointBindPoses, jointRelati
         var currentJointMatrix = currentJointPoseMatrices.slice(16 * keyframeIndex, 16 * keyframeIndex + 16)
         // TODO: Seems like we need to apply library visual scene top level node
         // transformations to our top level joints
-        if (animationIndex === 0) {
-          require('gl-mat4/scale')(currentJointMatrix, currentJointMatrix, [4.154898, 4.154898, 4.154898])
+        if (!jointRelationships[animatedJointName].parent) {
+          mat4Scale(currentJointMatrix, currentJointMatrix, armatureScale)
         }
 
         keyframeJointMatrices[currentKeyframes[keyframeIndex]][animatedJointName] = currentJointMatrix
@@ -44,38 +44,37 @@ function ParseLibraryAnimations (library_animations, jointBindPoses, jointRelati
       var animatedJointName = anim.channel[0].$.target.split('/')[0]
       var currentKeyframes = anim.source[0].float_array[0]._.split(' ').map(Number)
       currentKeyframes.forEach(function (_, keyframeIndex) {
-        allKeyframes[currentKeyframes[keyframeIndex]] = allKeyframes[currentKeyframes[keyframeIndex]] || []
+        var currentKeyframe = currentKeyframes[keyframeIndex]
+        allKeyframes[currentKeyframes[keyframeIndex]] = allKeyframes[currentKeyframe] || []
 
-        var currentJointMatrix = keyframeJointMatrices[currentKeyframes[keyframeIndex]][animatedJointName]
-        var bar = mat4Create()
-        // require('gl-mat4/scale')(currentJointMatrix, currentJointMatrix, [4.154898, 4.154898, 4.154898])
+        var currentJointMatrix = keyframeJointMatrices[currentKeyframe][animatedJointName]
+        // Needed new reference var because we were accidentally mutating our currentJointMatrix
+        var jointWorldMatrix = currentJointMatrix.slice(0)
 
         // Multiply by parent world matrix
-        var parentWorldMatrix = getParentWorldMatrix(animatedJointName, currentKeyframes[keyframeIndex], jointRelationships, keyframeJointMatrices)
+        var parentWorldMatrix = getParentWorldMatrix(animatedJointName, currentKeyframe, jointRelationships, keyframeJointMatrices)
         if (parentWorldMatrix) {
           // TODO: No idea why switching the multiplication order here worked.
           // Maybe something to do with fact that we're transposing? Not sure...
           // Typically supposed to be parentWorldMatrix * currentJointMatrix I believe
-          mat4Multiply(bar, currentJointMatrix, parentWorldMatrix)
-        } else {
-          bar = mat4Copy(bar, currentJointMatrix)
+          mat4Multiply(jointWorldMatrix, jointWorldMatrix, parentWorldMatrix)
         }
 
         // Multiply our joint's inverse bind matrix
-        mat4Multiply(bar, jointBindPoses[animatedJointName], bar)
+        mat4Multiply(jointWorldMatrix, jointBindPoses[animatedJointName], jointWorldMatrix)
 
         // Turn our row major matrix into a column major matrix. OpenGL uses column major
-        transpose(bar, bar)
-        allKeyframes[currentKeyframes[keyframeIndex]].push(bar)
+        mat4Transpose(jointWorldMatrix, jointWorldMatrix)
+
+        // Trim to 6 significant figures (Maybe even 6 is more than needed?)
+        jointWorldMatrix = jointWorldMatrix.map(function (val) {
+          return parseFloat(val.toFixed(6))
+        })
+
+        allKeyframes[currentKeyframe].push(jointWorldMatrix)
       })
     }
   })
-
-  if (orderedJointNames) {
-    orderedJointNames.forEach(function (jointName) {
-      jointRelationships[jointName].parent
-    })
-  }
 
   return allKeyframes
 }
@@ -83,7 +82,8 @@ function ParseLibraryAnimations (library_animations, jointBindPoses, jointRelati
 // TODO: Test with parent -> child -> child relationship to be sure this works
 // TODO: Refactor. Depth first traversal might make all of this less hacky
 function getParentWorldMatrix (jointName, keyframe, jointRelationships, keyframeJointMatrices) {
-  var _ = mat4Create()
+  // Just a placeholder parameter for gl-matrix multiply
+  var _ = []
   var parentJointName = jointRelationships[jointName].parent
   if (parentJointName) {
     var parentJointMatrix = keyframeJointMatrices[keyframe][parentJointName]

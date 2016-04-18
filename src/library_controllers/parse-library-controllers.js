@@ -49,7 +49,6 @@ function ParseLibraryControllers (library_controllers) {
   return {
     bindShapeMatrix: bindShapeMatrix,
     jointBindPoses: jointBindPoses,
-    orderedJointNames: orderedJointNames,
     vertexJointWeights: parsedVertexJointWeights
   }
 }

@@ -5,10 +5,14 @@ function ParseVisualScenes (library_visual_scenes) {
   var visualScene = library_visual_scenes[0].visual_scene[0]
   var parsedJoints = []
 
+  // TODO: Not sure if we're actually scaling the armature. It seems
+  // like we need to apply these transformations to the top level joints
+  var armatureScale = []
   visualScene.node.forEach(function (node) {
     // This is the location of all top level parent nodes
     if (node.node) {
       // node.node is the location of all top level nodes
+      armatureScale = node.scale[0]._.split(' ').map(Number)
       parsedJoints = parseJoints(node.node)
     }
     /*
@@ -20,7 +24,10 @@ function ParseVisualScenes (library_visual_scenes) {
     */
   })
 
-  return parsedJoints
+  return {
+    jointRelationships: parsedJoints,
+    armatureScale: armatureScale
+  }
 }
 
 // Recursively parse child joints
