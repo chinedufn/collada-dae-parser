@@ -89,7 +89,8 @@ function getParentWorldMatrix (jointName, keyframe, jointRelationships, keyframe
     var parentJointMatrix = keyframeJointMatrices[keyframe][parentJointName]
     var parentWorldMatrix
     if (jointRelationships[parentJointName].parent) {
-      parentWorldMatrix = mat4Multiply(_, getParentWorldMatrix(parentJointName, keyframe, jointRelationships, keyframeJointMatrices), parentJointMatrix)
+      // TODO: Not sure why multiplying in this order works. Expected it to be the opposite
+      parentWorldMatrix = mat4Multiply(_, parentJointMatrix, getParentWorldMatrix(parentJointName, keyframe, jointRelationships, keyframeJointMatrices))
     }
     return parentWorldMatrix || parentJointMatrix
   }

@@ -119,6 +119,8 @@ function Render (gl, viewport, animatedModel, shaderObject, dt) {
   // Vertex weight
   gl.uniformMatrix4fv(shaderObject.boneMatrix0, false, joint0)
   gl.uniformMatrix4fv(shaderObject.boneMatrix1, false, joint1)
+  gl.uniformMatrix4fv(shaderObject.boneMatrix2, false, joint2)
+  gl.uniformMatrix4fv(shaderObject.boneMatrix3, false, joint3)
 
   gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, animatedModel.vertexPositionIndexBuffer)
 

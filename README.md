@@ -60,10 +60,8 @@ function (err, parsedDaeObject) {
 
 ## TODO:
 
-- [ ] parent child joint relationships (multiply joint and parent world matrix)
-- [ ] handling different coordinate systems. (ex: blender and OpenGL use different axis orientations)
 - [ ] cli
-- [ ] live example animation with child joints and multiple weights per vertex
+- [ ] rounding values. Currently lots of .999999 and 1.000001
 
 ## See Also
 
