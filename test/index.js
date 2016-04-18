@@ -19,6 +19,10 @@ var animatedLetterFPath = path.resolve(__dirname, './fixture/letter-f-animated.d
 var animatedLetterFXML = fs.readFileSync(animatedLetterFPath).toString()
 var expectedAnimatedLetterF = require('./expected/animated-letter-f.js')
 
+var parentChildChildLetterFPath = path.resolve(__dirname, './fixture/parent-child-child-letter-f.dae')
+var parentChildChildLetterFXML = fs.readFileSync(parentChildChildLetterFPath).toString()
+var expectedParentChildChildF = require('./expected/parent-child-child-letter-f.js')
+
 var parseCollada = require('../')
 
 test('Parse a default blender cube with an added texture', function (t) {
@@ -57,6 +61,15 @@ test('Parse animated letter F with parent and child bone', function (t) {
   parseCollada(animatedLetterFXML, function (err, parsedAnimatedLetterF) {
     if (err) { t.fail() }
     t.deepEqual(parsedAnimatedLetterF, expectedAnimatedLetterF)
+    t.end()
+  })
+})
+
+test('Parse animated letter F with parent and child bone', function (t) {
+  t.plan(1)
+  parseCollada(parentChildChildLetterFXML, function (err, parsedParentChildChildF) {
+    if (err) { t.fail() }
+    t.deepEqual(parsedParentChildChildF, expectedParentChildChildF)
     t.end()
   })
 })
