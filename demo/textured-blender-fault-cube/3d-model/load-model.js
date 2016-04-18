@@ -6,7 +6,7 @@ module.exports = LoadModel
 // TODO: clean up
 function LoadModel (gl, callback) {
   // TODO: Read using xhr request
-  dae2json(fs.readFileSync('./demo/assets/parent-child-child-letter-f.dae'), function (err, parsedDae) {
+  dae2json(fs.readFileSync('./demo/assets/test2.dae'), function (err, parsedDae) {
     if (err) { callback(err) }
 
     var vertexPositionBuffer = gl.createBuffer()
@@ -23,10 +23,10 @@ function LoadModel (gl, callback) {
     // Handle weights (this model has only one joint/weight per vertex)
     // TODO: Should the consumer be expected to know the max # joints/weights per vertex?
     parsedDae.vertexJointWeights.forEach(function (jointsAndWeights) {
-      // Push up to 4 bone matrices. For a real shader you might not want to
+      // Push up to 5 bone matrices. For a real shader you might not want to
       // waste extra space. This examples wants to be more easily editable
       // If there are less than 4 joints, we add a fake joint with 0 weight
-      for (var i = 0; i < 4; i++) {
+      for (var i = 0; i < 5; i++) {
         var jointIndex = Object.keys(jointsAndWeights)[i]
         vertexJointAffectors.push(Number(jointIndex) || 0)
         vertexJointWeights.push(jointsAndWeights[jointIndex] || 0)
