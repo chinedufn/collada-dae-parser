@@ -109,14 +109,14 @@ function Render (gl, viewport, animatedModel, shaderObject, dt) {
   gl.vertexAttribPointer(shaderObject.jointWeightAttribute, 4, gl.FLOAT, false, 0, 0)
 
   // lighting
-  var lightingDirection = [-10, -5, -3]
+  var lightingDirection = [0, 0, 1]
   var normalizedLD = []
   vec3Normalize(normalizedLD, lightingDirection)
   vec3Scale(normalizedLD, normalizedLD, -1)
 
-  gl.uniform3f(shaderObject.ambientColorUniform, 0.15, 0.1, 0.1)
+  gl.uniform3f(shaderObject.ambientColorUniform, 0.5, 0.5, 0.5)
   gl.uniform3fv(shaderObject.lightingDirectionUniform, normalizedLD)
-  gl.uniform3f(shaderObject.directionalColorUniform, 0.1, 0.1, 0.75)
+  gl.uniform3f(shaderObject.directionalColorUniform, 1.0, 1.0, 1.0)
 
   // Vertex weight
   gl.uniformMatrix4fv(shaderObject.boneMatrix0, false, joint0)

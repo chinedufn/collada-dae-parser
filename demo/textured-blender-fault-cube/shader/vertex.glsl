@@ -26,6 +26,7 @@ void main (void) {
   mat4 jointMatrix2;
   mat4 jointMatrix3;
   mat4 weightedJointMatrix;
+
   // TODO: There has to be an easier way to do this in WebGL GLSL ...
   // Seems like you can't use variables as indices
   // For now we'll just chain all of these if statements
