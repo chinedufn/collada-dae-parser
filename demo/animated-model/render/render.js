@@ -35,7 +35,7 @@ function Render (gl, viewport, animatedModel, shaderObject, dt, state) {
   animationClock += dt / 1000
   var animationDuration = max - min
   if (animationClock > animationDuration) {
-    animationClock -= animationDuration
+    animationClock %= animationDuration
   }
   // Find two closest keyframes
   var lowestKeyframe = null
