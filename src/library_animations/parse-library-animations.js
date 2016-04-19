@@ -76,11 +76,13 @@ function getParentWorldMatrix (jointName, keyframe, jointRelationships, keyframe
   var jointMatrixTree = foo(jointName, keyframe, jointRelationships, keyframeJointMatrices, accumulator)
   var worldMatrix = require('gl-mat4/create')()
   jointMatrixTree.forEach(function (jointMatrix) {
+    // TODO: Still not sure why we multiply in this order
     mat4Multiply(worldMatrix, worldMatrix, jointMatrix)
   })
   return worldMatrix
 }
 
+// TODO: Clean up... well.. at least it works now :sweat_smile:
 function foo (jointName, keyframe, jointRelationships, keyframeJointMatrices) {
   var jointMatrix = keyframeJointMatrices[keyframe][jointName]
   var parentJointName = jointRelationships[jointName].parent

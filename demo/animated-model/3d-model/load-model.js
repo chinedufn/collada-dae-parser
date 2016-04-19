@@ -26,7 +26,7 @@ function LoadModel (gl, callback) {
       // Push up to 5 bone matrices. For a real shader you might not want to
       // waste extra space. This examples wants to be more easily editable
       // If there are less than 4 joints, we add a fake joint with 0 weight
-      for (var i = 0; i < 5; i++) {
+      for (var i = 0; i < 4; i++) {
         var jointIndex = Object.keys(jointsAndWeights)[i]
         vertexJointAffectors.push(Number(jointIndex) || 0)
         vertexJointWeights.push(jointsAndWeights[jointIndex] || 0)
