@@ -60,8 +60,14 @@ function (err, parsedDaeObject) {
 
 ## TODO:
 
-- [ ] cli
+- [ ] basic cli (potentially pull into own repo, but start here)
 - [ ] rounding values. Currently lots of .999999 and 1.000001
+- [ ] fix normals in demo lighting
+- [ ] add a textured T-Rex demo model
+- [ ] All of the TODO: statements in code
+- [ ] Allow file buffer to be passed in
+- [ ] Documentation / references
+- [ ] Then v1.0.0 !
 
 ## See Also
 
