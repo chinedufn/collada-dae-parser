@@ -47,18 +47,8 @@ function ParseLibraryAnimations (library_animations, jointBindPoses, visualScene
         var currentKeyframe = currentKeyframes[keyframeIndex]
         allKeyframes[currentKeyframes[keyframeIndex]] = allKeyframes[currentKeyframe] || []
 
-        var currentJointMatrix = keyframeJointMatrices[currentKeyframe][animatedJointName]
-        // Needed new reference var because we were accidentally mutating our currentJointMatrix
-        var jointWorldMatrix = currentJointMatrix.slice(0)
-
         // Multiply by parent world matrix
-        var parentWorldMatrix = getParentWorldMatrix(animatedJointName, currentKeyframe, jointRelationships, keyframeJointMatrices)
-        if (parentWorldMatrix) {
-          // TODO: No idea why switching the multiplication order here worked.
-          // Maybe something to do with fact that we're transposing? Not sure...
-          // Typically supposed to be parentWorldMatrix * currentJointMatrix I believe
-          mat4Multiply(jointWorldMatrix, jointWorldMatrix, parentWorldMatrix)
-        }
+        var jointWorldMatrix = getParentWorldMatrix(animatedJointName, currentKeyframe, jointRelationships, keyframeJointMatrices)
 
         // Multiply our joint's inverse bind matrix
         mat4Multiply(jointWorldMatrix, jointBindPoses[animatedJointName], jointWorldMatrix)
@@ -81,18 +71,21 @@ function ParseLibraryAnimations (library_animations, jointBindPoses, visualScene
 
 // TODO: Test with parent -> child -> child relationship to be sure this works
 // TODO: Refactor. Depth first traversal might make all of this less hacky
-function getParentWorldMatrix (jointName, keyframe, jointRelationships, keyframeJointMatrices) {
-  // Just a placeholder parameter for gl-matrix multiply
-  var _ = []
+function getParentWorldMatrix (jointName, keyframe, jointRelationships, keyframeJointMatrices, accumulator) {
+  // child -> parent -> parent -> ...
+  var jointMatrixTree = foo(jointName, keyframe, jointRelationships, keyframeJointMatrices, accumulator)
+  var worldMatrix = require('gl-mat4/create')()
+  jointMatrixTree.forEach(function (jointMatrix) {
+    mat4Multiply(worldMatrix, worldMatrix, jointMatrix)
+  })
+  return worldMatrix
+}
+
+function foo (jointName, keyframe, jointRelationships, keyframeJointMatrices) {
+  var jointMatrix = keyframeJointMatrices[keyframe][jointName]
   var parentJointName = jointRelationships[jointName].parent
   if (parentJointName) {
-    var parentJointMatrix = keyframeJointMatrices[keyframe][parentJointName]
-    var parentWorldMatrix
-    if (jointRelationships[parentJointName].parent) {
-      // TODO: Not sure why multiplying in this order works. Expected it to be the opposite
-      parentWorldMatrix = mat4Multiply(_, parentJointMatrix, getParentWorldMatrix(parentJointName, keyframe, jointRelationships, keyframeJointMatrices))
-    }
-    return parentWorldMatrix || parentJointMatrix
+    return [jointMatrix].concat(foo(parentJointName, keyframe, jointRelationships, keyframeJointMatrices))
   }
-  return
+  return [jointMatrix]
 }

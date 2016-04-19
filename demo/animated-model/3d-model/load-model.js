@@ -6,7 +6,7 @@ module.exports = LoadModel
 // TODO: clean up
 function LoadModel (gl, callback) {
   // TODO: Read using xhr request
-  dae2json(fs.readFileSync('./demo/assets/test2.dae'), function (err, parsedDae) {
+  dae2json(fs.readFileSync('./demo/assets/p-c-c-c-test.dae'), function (err, parsedDae) {
     if (err) { callback(err) }
 
     var vertexPositionBuffer = gl.createBuffer()
