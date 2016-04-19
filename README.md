@@ -66,6 +66,7 @@ function (err, parsedDaeObject) {
 - [ ] add a textured T-Rex demo model
 - [ ] All of the TODO: statements in code
 - [ ] Allow file buffer to be passed in
+- [ ] Add a GIF of every test fixture animation
 - [ ] Documentation / references
 - [ ] Then v1.0.0 !
 
