@@ -21,68 +21,28 @@ varying vec3 vLightWeighting;
 
 void main (void) {
   // Select joint matrix for this vertex
-  mat4 jointMatrix0;
-  mat4 jointMatrix1;
-  mat4 jointMatrix2;
-  mat4 jointMatrix3;
+  mat4 jointMatrix[4];
   mat4 weightedJointMatrix;
 
-  // TODO: There has to be an easier way to do this in WebGL GLSL ...
-  // Seems like you can't use variables as indices
-  // For now we'll just chain all of these if statements
-  // UPDATE: Maybe try -> http://stackoverflow.com/questions/6247572/variable-array-index-not-possible-in-webgl-shaders
-  if (aJointIndex.x < 1.0) {
-    jointMatrix0 = boneMatrices[0];
-  } else if (aJointIndex.x < 2.0) {
-    jointMatrix0 = boneMatrices[1];
-  } else if (aJointIndex.x < 3.0) {
-    jointMatrix0 = boneMatrices[2];
-  } else if (aJointIndex.x < 4.0) {
-    jointMatrix0 = boneMatrices[3];
-  } else if (aJointIndex.x < 5.0) {
-    jointMatrix0 = boneMatrices[4];
-  }
- if (aJointIndex.y < 1.0) {
-    jointMatrix1 = boneMatrices[0];
-  } else if (aJointIndex.y < 2.0) {
-    jointMatrix1 = boneMatrices[1];
-  } else if (aJointIndex.y < 3.0) {
-    jointMatrix1 = boneMatrices[2];
-  } else if (aJointIndex.y < 4.0) {
-    jointMatrix1 = boneMatrices[3];
-  } else if (aJointIndex.y < 5.0) {
-    jointMatrix1 = boneMatrices[4];
-  }
- if (aJointIndex.z < 1.0) {
-    jointMatrix2 = boneMatrices[0];
-  } else if (aJointIndex.z < 2.0) {
-    jointMatrix2 = boneMatrices[1];
-  } else if (aJointIndex.z < 3.0) {
-    jointMatrix2 = boneMatrices[2];
-  } else if (aJointIndex.z < 4.0) {
-    jointMatrix2 = boneMatrices[3];
-  } else if (aJointIndex.z < 5.0) {
-    jointMatrix2 = boneMatrices[4];
+  for (int i = 0; i < 5; i++) {
+    if (aJointIndex.x == float(i)) {
+      jointMatrix[0] = boneMatrices[i];
+    }
+    if (aJointIndex.y == float(i)) {
+      jointMatrix[1] = boneMatrices[i];
+    }
+    if (aJointIndex.z == float(i)) {
+      jointMatrix[2] = boneMatrices[i];
+    }
+    if (aJointIndex.w == float(i)) {
+      jointMatrix[3] = boneMatrices[i];
+    }
   }
 
- // 4th Joint
- if (aJointIndex.w < 1.0) {
-    jointMatrix3 = boneMatrices[0];
-  } else if (aJointIndex.w < 2.0) {
-    jointMatrix3 = boneMatrices[1];
-  } else if (aJointIndex.w < 3.0) {
-    jointMatrix3 = boneMatrices[2];
-  } else if (aJointIndex.w < 4.0) {
-    jointMatrix3 = boneMatrices[3];
-  } else if (aJointIndex.w < 5.0) {
-    jointMatrix3 = boneMatrices[4];
-  }
-
-
-  weightedJointMatrix += jointMatrix0 * aJointWeight.x;
-  weightedJointMatrix += jointMatrix1 * aJointWeight.y;
-  weightedJointMatrix += jointMatrix2 * aJointWeight.z;
-  weightedJointMatrix += jointMatrix3 * aJointWeight.w;
+  weightedJointMatrix += jointMatrix[0] * aJointWeight.x;
+  weightedJointMatrix += jointMatrix[1] * aJointWeight.y;
+  weightedJointMatrix += jointMatrix[2] * aJointWeight.z;
+  weightedJointMatrix += jointMatrix[3] * aJointWeight.w;
 
   // Lighting
   vec3 transformedNormal = uNMatrix * aVertexNormal;
@@ -96,7 +56,7 @@ void main (void) {
   leftWorldSpace.y = y;
   leftWorldSpace.z = z;
 
-  // TODO: Is that even world space?. Just guessing and don't have wifi...
+  // TODO: Is that even called world space?
   vec4 leftHandedPosition = uPMatrix * uMVMatrix * leftWorldSpace;
 
   // We only have one index right now... so the weight is always 1.
