@@ -65,7 +65,7 @@ test('Parse animated letter F with parent and child bone', function (t) {
   })
 })
 
-test('Parse animated letter F with parent and child bone', function (t) {
+test('Parse with parent -> child -> child joint relationship', function (t) {
   t.plan(1)
   parseCollada(parentChildChildLetterFXML, function (err, parsedParentChildChildF) {
     if (err) { t.fail() }

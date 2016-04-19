@@ -74,7 +74,9 @@ function ParseLibraryAnimations (library_animations, jointBindPoses, visualScene
 function getParentWorldMatrix (jointName, keyframe, jointRelationships, keyframeJointMatrices, accumulator) {
   // child -> parent -> parent -> ...
   var jointMatrixTree = foo(jointName, keyframe, jointRelationships, keyframeJointMatrices, accumulator)
-  var worldMatrix = require('gl-mat4/create')()
+  // TODO: Revisit this. Thrown in to pass tests. Maybe just return `jointMatrix`
+  // when there aren't any parent matrices to factor in
+  var worldMatrix = [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1]
   jointMatrixTree.forEach(function (jointMatrix) {
     // TODO: Still not sure why we multiply in this order
     mat4Multiply(worldMatrix, worldMatrix, jointMatrix)
