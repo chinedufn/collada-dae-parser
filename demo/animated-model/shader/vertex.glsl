@@ -30,6 +30,7 @@ void main (void) {
   // TODO: There has to be an easier way to do this in WebGL GLSL ...
   // Seems like you can't use variables as indices
   // For now we'll just chain all of these if statements
+  // UPDATE: Maybe try -> http://stackoverflow.com/questions/6247572/variable-array-index-not-possible-in-webgl-shaders
   if (aJointIndex.x < 1.0) {
     jointMatrix0 = boneMatrices[0];
   } else if (aJointIndex.x < 2.0) {
