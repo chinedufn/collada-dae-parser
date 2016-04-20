@@ -39,10 +39,11 @@ void main (void) {
     }
   }
 
-  weightedJointMatrix += jointMatrix[0] * aJointWeight.x;
-  weightedJointMatrix += jointMatrix[1] * aJointWeight.y;
-  weightedJointMatrix += jointMatrix[2] * aJointWeight.z;
-  weightedJointMatrix += jointMatrix[3] * aJointWeight.w;
+  // `+=` wasn't working on some devices
+  weightedJointMatrix = jointMatrix[0] * aJointWeight.x +
+    jointMatrix[1] * aJointWeight.y +
+    jointMatrix[2] * aJointWeight.z +
+    jointMatrix[3] * aJointWeight.w;
 
   // Lighting
   vec3 transformedNormal = uNMatrix * aVertexNormal;
