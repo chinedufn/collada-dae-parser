@@ -17,9 +17,17 @@ Will be adding an api, cli, and example gh-pages
 $ npm install --save collada-dae-parser
 ```
 
-## Usage
-
 ## CLI
+
+Output stringified JSON to stdout
+
+```sh
+# parse from stdin
+cat my-3d-model.dae | dae2json > parsed-model.json
+
+# parse from file
+dae2json my-3d-modal.dae > parsed-model.json
+```
 
 ## API
 
@@ -52,7 +60,6 @@ function (err, parsedDaeObject) {
     vertexPositions: [...],
     vertexUVIndices: [...],
     vertexUVs: [...]
-    // The rest is TODO
   }
   */
 }
@@ -60,7 +67,7 @@ function (err, parsedDaeObject) {
 
 ## TODO:
 
-- [ ] basic cli (potentially pull into own repo, but start here)
+- [x] basic cli (potentially pull into own repo, but start here)
 - [ ] rounding values. Currently lots of .999999 and 1.000001
 - [ ] fix normals in demo lighting
 - [ ] add a textured T-Rex demo model
