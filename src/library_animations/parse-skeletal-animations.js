@@ -28,9 +28,8 @@ function ParseLibraryAnimations (library_animations, jointBindPoses, visualScene
       currentKeyframes.forEach(function (_, keyframeIndex) {
         keyframeJointMatrices[currentKeyframes[keyframeIndex]] = keyframeJointMatrices[currentKeyframes[keyframeIndex]] || {}
         var currentJointMatrix = currentJointPoseMatrices.slice(16 * keyframeIndex, 16 * keyframeIndex + 16)
-        // TODO: Seems like we need to apply library visual scene top level node
-        // transformations to our top level joints
         if (!jointRelationships[animatedJointName].parent) {
+          // apply library visual scene transformations to top level parent joint(s)
           mat4Scale(currentJointMatrix, currentJointMatrix, armatureScale)
         }
 
@@ -69,7 +68,6 @@ function ParseLibraryAnimations (library_animations, jointBindPoses, visualScene
   return allKeyframes
 }
 
-// TODO: Test with parent -> child -> child relationship to be sure this works
 // TODO: Refactor. Depth first traversal might make all of this less hacky
 function getParentWorldMatrix (jointName, keyframe, jointRelationships, keyframeJointMatrices, accumulator) {
   // child -> parent -> parent -> ...

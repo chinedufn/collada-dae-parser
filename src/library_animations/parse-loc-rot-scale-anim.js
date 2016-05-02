@@ -1,16 +1,11 @@
 module.exports = ExtractAnimation
 
 // TODO: Don't hard code dimension detection
-// TODO: variable names basically unreadable
-var xyzMap = {
-  0: 'x',
-  1: 'y',
-  2: 'z'
-}
+var xyzMap = { 0: 'x', 1: 'y', 2: 'z' }
 function ExtractAnimation (libraryAnimations) {
-  var allKeyframes = {
-  }
+  var allKeyframes = {}
   var numAnims = Object.keys(libraryAnimations).length
+
   for (var i = 0; i < numAnims; i++) {
     if (libraryAnimations[i].$.id.indexOf('location') !== -1 || libraryAnimations[i].$.id.indexOf('rotation') !== -1 || libraryAnimations[i].$.id.indexOf('scale') !== -1) {
       var animationSource = libraryAnimations[i].source
@@ -36,7 +31,6 @@ function ExtractAnimation (libraryAnimations) {
         allKeyframes[currentKeyframes[index]] = allKeyframes[currentKeyframes[index]] || {}
         allKeyframes[currentKeyframes[index]][dimension] = allKeyframes[currentKeyframes[index]][dimension] || {}
         allKeyframes[currentKeyframes[index]][dimension][xyz] = positions[index]
-        // foo[keys[index]] = 'shut'
       })
     }
   }
