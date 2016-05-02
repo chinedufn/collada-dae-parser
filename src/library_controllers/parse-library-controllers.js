@@ -27,11 +27,12 @@ function ParseLibraryControllers (library_controllers) {
       }
     })
 
-    // All of our models joints
+    // All of our model's joints
     var orderedJointNames = controller[0].skin[0].source[0].Name_array[0]._.split(' ')
 
     // Joint bind poses
     // TODO: Should we multiply in the bind shape matrix?
+    // ^ yes, but wait until we have a test file for it
     var jointBindPoses = {}
     var bindPoses = controller[0].skin[0].source[1].float_array[0]._.split(' ').map(Number)
     orderedJointNames.forEach(function (jointName, index) {
