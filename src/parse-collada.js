@@ -1,45 +1,41 @@
 var parseXML = require('xml2js').parseString
-// TODO: better name
-var extractAnimation = require('./extract-animation.js')
 var parseLibraryGeometries = require('./library_geometries/parse-library-geometries.js')
 var parseLibraryVisualScenes = require('./library_visual_scenes/parse-visual-scenes.js')
 var parseLibraryControllers = require('./library_controllers/parse-library-controllers.js')
-var parseLibraryAnimations = require('./library_animations/parse-library-animations.js')
+var parseSkeletalAnimations = require('./library_animations/parse-skeletal-animations.js')
+var parseLocRotScaleAnim = require('./library_animations/parse-loc-rot-scale-anim.js')
 
 module.exports = ParseCollada
 
 // TODO:
-// Parse skeletal / skinning animations
 // Use input, accessor, and param attributes instead of hard coding lookups
 // Clean Up Code / less confusing var names
 function ParseCollada (colladaXML, callback) {
   parseXML(colladaXML, function (err, result) {
-    if (err) { console.log(err) }
+    if (err) { return callback(err) }
 
     var parsedObject = {}
     var parsedLibraryGeometries = parseLibraryGeometries(result.COLLADA.library_geometries)
 
-    // TODO: rename
     var visualSceneData = parseLibraryVisualScenes(result.COLLADA.library_visual_scenes)
 
     var jointBindPoses
     if (result.COLLADA.library_controllers) {
-      // TODO: rename
-      var foo = parseLibraryControllers(result.COLLADA.library_controllers)
-      if (foo.vertexJointWeights && Object.keys(foo.vertexJointWeights) .length > 0) {
-        parsedObject.bindShapeMatrix = foo.bindShapeMatrix
-        parsedObject.vertexJointWeights = foo.vertexJointWeights
-        jointBindPoses = foo.jointBindPoses
+      var controllerData = parseLibraryControllers(result.COLLADA.library_controllers)
+      if (controllerData.vertexJointWeights && Object.keys(controllerData.vertexJointWeights) .length > 0) {
+        parsedObject.bindShapeMatrix = controllerData.bindShapeMatrix
+        parsedObject.vertexJointWeights = controllerData.vertexJointWeights
+        jointBindPoses = controllerData.jointBindPoses
       }
     }
 
     // TODO: Also parse interpolation/intangent/outtangent
     if (result.COLLADA.library_animations) {
-      parsedObject.keyframes = extractAnimation(result.COLLADA.library_animations[0].animation)
+      parsedObject.keyframes = parseLocRotScaleAnim(result.COLLADA.library_animations[0].animation)
       if (Object.keys(parsedObject.keyframes).length === 0) {
         delete parsedObject.keyframes
       }
-      var keyframes = parseLibraryAnimations(result.COLLADA.library_animations, jointBindPoses, visualSceneData)
+      var keyframes = parseSkeletalAnimations(result.COLLADA.library_animations, jointBindPoses, visualSceneData)
       if (Object.keys(keyframes).length > 0) {
         parsedObject.keyframes = keyframes
       }
