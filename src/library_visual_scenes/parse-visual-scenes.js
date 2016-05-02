@@ -5,8 +5,7 @@ function ParseVisualScenes (library_visual_scenes) {
   var visualScene = library_visual_scenes[0].visual_scene[0]
   var parsedJoints = []
 
-  // TODO: Not sure if we're actually scaling the armature. It seems
-  // like we need to apply these transformations to the top level joints
+  // Some .dae files will export a shrunken model. Here's how to scale it
   var armatureScale = []
   visualScene.node.forEach(function (node) {
     // This is the location of all top level parent nodes
@@ -31,8 +30,6 @@ function ParseVisualScenes (library_visual_scenes) {
 }
 
 // Recursively parse child joints
-// TODO: factor in parent world matrix
-// TODO: Facilitate depth first traversal?
 function parseJoints (node, parentJointName, accumulator) {
   accumulator = accumulator || []
   node.forEach(function (joint) {
