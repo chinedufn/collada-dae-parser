@@ -10,13 +10,15 @@ function ParseLibraryGeometries (library_geometries) {
   var vertexNormalIndices = []
   var vertexPositionIndices = []
   var vertexUVIndices = []
+  // TODO: This is currently dependent on a certain vertex data order
+  // we should instead read this order from the .dae file
   polylistIndices.forEach(function (vertexIndex, positionInArray) {
     if (positionInArray % source.length === 0) {
       vertexPositionIndices.push(Number(vertexIndex))
     } else if (positionInArray % source.length === 1) {
       vertexNormalIndices.push(Number(vertexIndex))
     }
-    if (source.length > 2 && positionInArray % source.length === 2) {
+    if (positionInArray % source.length === 2) {
       vertexUVIndices.push(Number(vertexIndex))
     }
   })
