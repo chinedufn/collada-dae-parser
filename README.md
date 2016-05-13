@@ -73,7 +73,7 @@ function (err, parsedDaeObject) {
 - [ ] add a textured complex demo model
 - [ ] allow zoom in, zoom out in demo
 - [x] Factor in bind shape matrix
-- [ ] Stop exporting bind shape matrix
+- [x] Stop exporting bind shape matrix
 - [ ] toggle animation on and off
 - [ ] multiple animations in demo
 - [ ] full screen demo with controls overlayed

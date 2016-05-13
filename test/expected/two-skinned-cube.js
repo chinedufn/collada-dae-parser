@@ -5,7 +5,6 @@
 // TODO: Add a gif of every model
 
 module.exports = {
-  bindShapeMatrix: [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1],
   keyframes: {
     '0.04166662': [
       [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1],
