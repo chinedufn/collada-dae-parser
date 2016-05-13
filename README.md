@@ -70,7 +70,12 @@ function (err, parsedDaeObject) {
 - [x] basic cli (potentially pull into own repo, but start here)
 - [ ] rounding values. Currently lots of .999999 and 1.000001
 - [ ] fix normals in demo lighting
-- [ ] add a textured T-Rex demo model
+- [ ] add a textured complex demo model
+- [ ] allow zoom in, zoom out in demo
+- [ ] test parser against mirrored blender collada exports (had an issue with a mirrored T-Rex model)
+- [ ] toggle animation on and off
+- [ ] multiple animations in demo
+- [ ] full screen demo with controls overlayed
 - [ ] All of the TODO: statements in code
 - [ ] Allow file buffer to be passed in
 - [ ] Add a GIF of every test fixture animation
