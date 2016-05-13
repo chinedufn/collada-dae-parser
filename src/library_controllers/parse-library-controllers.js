@@ -1,4 +1,5 @@
 var transpose = require('gl-mat4/transpose')
+var mat4Multiply = require('gl-mat4/multiply')
 
 module.exports = ParseLibraryControllers
 
@@ -30,6 +31,9 @@ function ParseLibraryControllers (library_controllers) {
     // All of our model's joints
     var orderedJointNames = controller[0].skin[0].source[0].Name_array[0]._.split(' ')
 
+    // Bind shape matrix (inverse bind matrix)
+    var bindShapeMatrix = controller[0].skin[0].bind_shape_matrix[0].split(' ').map(Number)
+
     // Joint bind poses
     // TODO: Should we multiply in the bind shape matrix?
     // ^ yes, but wait until we have a test file for it
@@ -37,11 +41,10 @@ function ParseLibraryControllers (library_controllers) {
     var bindPoses = controller[0].skin[0].source[1].float_array[0]._.split(' ').map(Number)
     orderedJointNames.forEach(function (jointName, index) {
       var bindPose = bindPoses.slice(16 * index, 16 * index + 16)
+      mat4Multiply(bindPose, bindShapeMatrix, bindPose)
       jointBindPoses[jointName] = bindPose
     })
 
-    // Bind shape matrix (inverse bind matrix)
-    var bindShapeMatrix = controller[0].skin[0].bind_shape_matrix[0].split(' ').map(Number)
     transpose(bindShapeMatrix, bindShapeMatrix)
   }
   // TODO: Should we also export the greatest number of joints for a vertex?

@@ -70,7 +70,7 @@ function Render (gl, viewport, animatedModel, shaderObject, dt, state) {
   var pMatrix = makePerspective(Math.PI / 3, viewport.width / viewport.height, 1, 2000)
 
   var modelPosition = [0, 0, 0]
-  var cameraMatrix = makeTranslation(0, 0, 40)
+  var cameraMatrix = makeTranslation(0, 0, 3)
   cameraMatrix = matrixMultiply(cameraMatrix, makeXRotation(-state.orbit.xRadians))
   cameraMatrix = matrixMultiply(cameraMatrix, makeYRotation(state.orbit.yRadians))
   var cameraPosition = [

@@ -1,3 +1,4 @@
 node_modules
 run-on-save.sh
 example-dist
+.DS_STORE
