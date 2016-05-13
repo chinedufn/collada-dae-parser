@@ -80,7 +80,15 @@ function (err, parsedDaeObject) {
 - [ ] Allow file buffer to be passed in
 - [ ] Add a GIF of every test fixture animation
 - [ ] Documentation / references
-- [ ] Then v1.0.0 !
+
+## References
+
+- waZim. (2010) ["Step by Step Skeletal Animation in C++ and OpenGL, Using COLLADA Part 1](http://www.wazim.com/Collada_Tutorial_1.htm) & [Part 2](http://www.wazim.com/Collada_Tutorial_2.htm)"
+    - Heavily informed the initial parser
+- Markus Ruh. (2012) [Vertex Skinning](http://ruh.li/AnimationVertexSkinning.html)
+    - Heavily informed the vertex skinning in the initial demo vertex shader
+- Jerimiah van Oosten. (2011) "[GPU Skinning of MD5 Models in OpenGL and Cg](http://www.3dgep.com/gpu-skinning-of-md5-models-in-opengl-and-cg/)"
+    - Heavily informed the vertex skinning in the initial demo vertex shader
 
 ## See Also
 
