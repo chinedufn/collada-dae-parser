@@ -72,7 +72,8 @@ function (err, parsedDaeObject) {
 - [ ] fix normals in demo lighting
 - [ ] add a textured complex demo model
 - [ ] allow zoom in, zoom out in demo
-- [ ] test parser against mirrored blender collada exports (had an issue with a mirrored T-Rex model)
+- [x] Factor in bind shape matrix
+- [ ] Stop exporting bind shape matrix
 - [ ] toggle animation on and off
 - [ ] multiple animations in demo
 - [ ] full screen demo with controls overlayed
@@ -80,6 +81,8 @@ function (err, parsedDaeObject) {
 - [ ] Allow file buffer to be passed in
 - [ ] Add a GIF of every test fixture animation
 - [ ] Documentation / references
+
+- We might want another module to export the raw useful data.. Then we can transform it / add opinions higher up.
 
 ## References
 
