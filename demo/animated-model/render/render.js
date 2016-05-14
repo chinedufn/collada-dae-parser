@@ -103,7 +103,7 @@ function Render (gl, viewport, animatedModel, shaderObject, dt, state) {
   gl.vertexAttribPointer(shaderObject.jointWeightAttribute, 4, gl.FLOAT, false, 0, 0)
 
   // lighting
-  var lightingDirection = [0, 0, 1]
+  var lightingDirection = [0, 0, -1]
   var normalizedLD = []
   vec3Normalize(normalizedLD, lightingDirection)
   vec3Scale(normalizedLD, normalizedLD, -1)
@@ -113,11 +113,22 @@ function Render (gl, viewport, animatedModel, shaderObject, dt, state) {
   gl.uniform3f(shaderObject.directionalColorUniform, 1.0, 1.0, 1.0)
 
   // Vertex weight
+  // TODO: for loop
   gl.uniformMatrix4fv(shaderObject.boneMatrix0, false, interpolatedJoints[0])
   gl.uniformMatrix4fv(shaderObject.boneMatrix1, false, interpolatedJoints[1])
   gl.uniformMatrix4fv(shaderObject.boneMatrix2, false, interpolatedJoints[2])
   gl.uniformMatrix4fv(shaderObject.boneMatrix3, false, interpolatedJoints[3])
   gl.uniformMatrix4fv(shaderObject.boneMatrix4, false, interpolatedJoints[4])
+
+  // Normal Matrices
+  for (var q = 0; q < 5; q++) {
+    // TODO: better name
+    var jointNormalMatrix = []
+    mat3FromMat4(jointNormalMatrix, interpolatedJoints[q])
+    mat3Invert(jointNormalMatrix, jointNormalMatrix)
+    mat3Transpose(jointNormalMatrix, jointNormalMatrix)
+    gl.uniformMatrix3fv(shaderObject['normalMatrix' + q], false, jointNormalMatrix)
+  }
 
   gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, animatedModel.vertexPositionIndexBuffer)
 
