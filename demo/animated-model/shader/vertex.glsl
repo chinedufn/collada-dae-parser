@@ -16,26 +16,33 @@ uniform mat4 uMVMatrix;
 uniform mat4 uPMatrix;
 
 uniform mat4 boneMatrices[5];
+uniform mat3 boneNormals[5];
 
 varying vec3 vLightWeighting;
 
 void main (void) {
   // Select joint matrix for this vertex
   mat4 jointMatrix[4];
+  mat3 normalMatrix[4];
   mat4 weightedJointMatrix;
+  mat3 weightedNormalMatrix;
 
   for (int i = 0; i < 5; i++) {
     if (aJointIndex.x == float(i)) {
       jointMatrix[0] = boneMatrices[i];
+      normalMatrix[0] = boneNormals[i];
     }
     if (aJointIndex.y == float(i)) {
       jointMatrix[1] = boneMatrices[i];
+      normalMatrix[1] = boneNormals[i];
     }
     if (aJointIndex.z == float(i)) {
       jointMatrix[2] = boneMatrices[i];
+      normalMatrix[2] = boneNormals[i];
     }
     if (aJointIndex.w == float(i)) {
       jointMatrix[3] = boneMatrices[i];
+      normalMatrix[3] = boneNormals[i];
     }
   }
 
@@ -45,8 +52,13 @@ void main (void) {
     jointMatrix[2] * aJointWeight.z +
     jointMatrix[3] * aJointWeight.w;
 
+  weightedNormalMatrix = normalMatrix[0] * aJointWeight.x +
+    normalMatrix[1] * aJointWeight.y +
+    normalMatrix[2] * aJointWeight.z +
+    normalMatrix[3] * aJointWeight.w;
+
   // Lighting
-  vec3 transformedNormal = uNMatrix * aVertexNormal;
+  vec3 transformedNormal = weightedNormalMatrix * aVertexNormal;
   float directionalLightWeighting = max(dot(transformedNormal, uLightingDirection), 0.0);
   vLightWeighting = uAmbientColor + uDirectionalColor * directionalLightWeighting;
 
