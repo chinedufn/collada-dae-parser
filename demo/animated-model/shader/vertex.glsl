@@ -59,13 +59,20 @@ void main (void) {
 
   // Lighting
   vec3 transformedNormal = weightedNormalMatrix * aVertexNormal;
+  float y;
+  float z;
+  y = transformedNormal.z;
+  z = -transformedNormal.y;
+  transformedNormal.y = y;
+  transformedNormal.z = z;
+
   float directionalLightWeighting = max(dot(transformedNormal, uLightingDirection), 0.0);
   vLightWeighting = uAmbientColor + uDirectionalColor * directionalLightWeighting;
 
   // Blender uses a right handed coordinate system. We convert to left handed here
   vec4 leftWorldSpace = weightedJointMatrix * vec4(aVertexPosition, 1.0);
-  float y = leftWorldSpace.z;
-  float z = -leftWorldSpace.y;
+  y = leftWorldSpace.z;
+  z = -leftWorldSpace.y;
   leftWorldSpace.y = y;
   leftWorldSpace.z = z;
 

@@ -52,7 +52,6 @@ function (err, parsedDaeObject) {
   console.log(parsedDaeObject)
   /*
   {
-    bindShapeMatrix: [...],
     keyframes: {...},
     vertexNormalIndices: [...],
     vertexNormals: [...],
@@ -69,17 +68,17 @@ function (err, parsedDaeObject) {
 
 - [x] basic cli (potentially pull into own repo, but start here)
 - [ ] rounding values. Currently lots of .999999 and 1.000001
-- [ ] fix normals in demo lighting
+- [x] fix normals in demo lighting
 - [ ] add a textured complex demo model
 - [ ] allow zoom in, zoom out in demo
 - [x] Factor in bind shape matrix
 - [x] Stop exporting bind shape matrix
-- [ ] toggle animation on and off
+- [ ] toggle between 2 animations
 - [ ] multiple animations in demo
-- [ ] full screen demo with controls overlayed
+- [ ] full screen demo with controls overlay
 - [ ] All of the TODO: statements in code
 - [ ] Allow file buffer to be passed in
-- [ ] Add a GIF of every test fixture animation
+- [ ] Add a GIF of every test fixture animation and demo
 - [ ] Documentation / references
 
 - We might want another module to export the raw useful data.. Then we can transform it / add opinions higher up.

@@ -103,7 +103,7 @@ function Render (gl, viewport, animatedModel, shaderObject, dt, state) {
   gl.vertexAttribPointer(shaderObject.jointWeightAttribute, 4, gl.FLOAT, false, 0, 0)
 
   // lighting
-  var lightingDirection = [0, 0, -1]
+  var lightingDirection = [1, -0.5, -1]
   var normalizedLD = []
   vec3Normalize(normalizedLD, lightingDirection)
   vec3Scale(normalizedLD, normalizedLD, -1)

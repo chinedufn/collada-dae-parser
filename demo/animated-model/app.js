@@ -12,7 +12,7 @@ module.exports = BlenderCubeCanvas
 function BlenderCubeCanvas () {
   var AppState = new SS({
     currentlyPressedKeys: {},
-    orbit: {yRadians: -0.65, xRadians: 0.9}
+    orbit: {yRadians: -1.9, xRadians: 1.05}
   })
   var canvas = document.createElement('canvas')
   canvas.width = 680
