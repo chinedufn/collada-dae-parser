@@ -3,7 +3,9 @@ collada-dae-parser [![npm version](https://badge.fury.io/js/collada-dae-parser.s
 
 > Parse collada .dae file vertex positions, textures, normals and animations
 
-[View live demo](http://chinedufn.github.io/collada-dae-parser/)
+[View live animated model](http://chinedufn.github.io/collada-dae-parser/)
+
+[View demo source](/demo)
 
 ## WIP
 
@@ -66,20 +68,20 @@ function (err, parsedDaeObject) {
 
 ## TODO:
 
-- [x] basic cli (potentially pull into own repo, but start here)
-- [ ] rounding values. Currently lots of .999999 and 1.000001
-- [x] fix normals in demo lighting
-- [ ] add a textured complex demo model
-- [ ] allow zoom in, zoom out in demo
-- [x] Factor in bind shape matrix
-- [x] Stop exporting bind shape matrix
-- [ ] toggle between 2 animations
-- [ ] multiple animations in demo
-- [ ] full screen demo with controls overlay
-- [ ] All of the TODO: statements in code
-- [ ] Allow file buffer to be passed in
-- [ ] Add a GIF of every test fixture animation and demo
-- [ ] Documentation / references
+- [x] src: basic cli (potentially pull into own repo, but start here)
+- [x] src: Allow file buffer to be passed in
+- [x] src: Factor in bind shape matrix
+- [x] src: Stop exporting bind shape matrix
+- [x] demo: fix normals in demo lighting
+- [ ] src / demo: add a textured demo model
+- [ ] src: rounding values. Currently lots of .999999 and 1.000001
+- [ ] src: All of the TODO: statements in code
+- [ ] demo: full screen demo with controls overlay
+- [ ] demo: toggle between 2 animations
+- [ ] demo: Support mobile touch events
+- [ ] demo: allow zoom in, zoom out in demo
+- [ ] doc: Add a GIF of every test fixture animation and demo
+- [ ] doc: Documentation
 
 - We might want another module to export the raw useful data.. Then we can transform it / add opinions higher up.
 
