@@ -5,7 +5,7 @@ var sourceLink = document.createElement('a')
 sourceLink.href = 'https://github.com/chinedufn/collada-dae-parser'
 sourceLink.innerHTML = 'View source on GitHub'
 
-incompleteWarning.innerHTML = 'Work in progress. - Parse collada .dae files for viewing 3d model animations in the browser. - '
+incompleteWarning.innerHTML = 'Work in progress. - Parse collada .dae files for viewing 3d model animations in the browser. - Rotate camera using arrow keys. - '
 incompleteWarning.appendChild(sourceLink)
 
 document.body.appendChild(incompleteWarning)
