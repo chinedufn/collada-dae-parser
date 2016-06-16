@@ -7,16 +7,37 @@ collada-dae-parser [![npm version](https://badge.fury.io/js/collada-dae-parser.s
 
 [View demo source](/demo)
 
-## WIP
+## Notice
 
-This package is a work in progress so check back later.
+This package is still a work in progress (hence no major bump)
 
-Will be adding an api, cli, and example gh-pages
+I won't need skeletal animations until around September. Commits will be few and far between until then.
+
+But.. I'm still around. If you have a question, ideas or use cases that aren't covered open an issue!
+
+## What does it do?
+
+`collada-dae-parser` parses a [collada](https://www.khronos.org/collada/) file and outputs JSON. This is useful for displaying [skeletal animations](https://en.wikipedia.org/wiki/Skeletal_animation) in the browser. 
+
+`collada-dae-parser` is only concerned with giving you JSON. An animation system is outside of this modules scope.
 
 ## To Install
 
 ```sh
+# API
 $ npm install --save collada-dae-parser
+# CLI
+$ npm install -g collada-dae-parser
+```
+
+## Making use of the parser
+
+If you're unfamiliar with skeletal animation, the demo is a good starting point. Here's where we're [parsing our `collada` file and buffering our graphics data](https://github.com/chinedufn/collada-dae-parser/blob/master/demo/animated-model/3d-model/load-model.js). We're parsing at runtime in the demo, but in a real application you'd want to parse your collada files during a build step.
+
+```sh 
+# Run the demo locally. Changes to the `demo` directory will live reload in your browser
+# PRs and issues are welcome!
+git clone https://github.com/chinedufn/collada-dae-parser && cd collada-dae-parser && npm install && npm run demo
 ```
 
 ## CLI
@@ -33,15 +54,15 @@ dae2json my-3d-modal.dae > parsed-model.json
 
 ## API
 
-### `parseDae(xmlString, callback)` -> `object`
+### `parseDae(xmlFile, callback)` -> `object`
 
-#### xmlString
+#### xmlFile
 
 *Required*
 
-Type: `string`
+Type: `string` or `Buffer`
 
-Your collada file as a string
+Your collada file data. Not the filename, the file contents.
 
 #### callback
 
@@ -83,7 +104,7 @@ function (err, parsedDaeObject) {
 - [ ] doc: Add a GIF of every test fixture animation and demo
 - [ ] doc: Documentation
 
-- We might want another module to export the raw useful data.. Then we can transform it / add opinions higher up.
+- [ ] A separate package that uses collada-dae-parser to implement a stateless skeletal animation system
 
 ## References
 
