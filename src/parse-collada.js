@@ -50,7 +50,7 @@ function ParseCollada (colladaXML, callback) {
     parsedObject.vertexUVs = parsedLibraryGeometries.vertexUVs
   }
   if (callback) callback(null, parsedObject)
-  return result
+  return parsedObject
 }
 
 function compactXML (res, xml) {
