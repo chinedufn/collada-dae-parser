@@ -52,6 +52,6 @@
   },
   "dependencies": {
     "gl-mat4": "^1.1.4",
-    "xml2js": "^0.4.16"
+    "xml-parser": "^1.2.1"
   }
 }
