@@ -30,7 +30,9 @@ function ParseLibraryAnimations (library_animations, jointBindPoses, visualScene
         var currentJointMatrix = currentJointPoseMatrices.slice(16 * keyframeIndex, 16 * keyframeIndex + 16)
         if (!jointRelationships[animatedJointName].parent) {
           // apply library visual scene transformations to top level parent joint(s)
-          mat4Scale(currentJointMatrix, currentJointMatrix, armatureScale)
+          if (armatureScale) {
+            mat4Scale(currentJointMatrix, currentJointMatrix, armatureScale)
+          }
         }
 
         keyframeJointMatrices[currentKeyframes[keyframeIndex]][animatedJointName] = currentJointMatrix
