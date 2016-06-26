@@ -34,6 +34,12 @@ test('Parse a default blender cube with an added texture', function (t) {
   })
 })
 
+test('Parse a default blender cube with an added texture without a callback', function (t) {
+  t.plan(1)
+  var parsedCube = parseCollada(tbdcColladaXML)
+  t.deepEqual(parsedCube, expectedTBDC)
+})
+
 test('Parse a default blender cube with an animation', function (t) {
   t.plan(1)
   parseCollada(animatedColladaXML, function (err, parsedAnimatedCube) {
