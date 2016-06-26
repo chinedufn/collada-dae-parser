@@ -11,8 +11,9 @@ function ParseVisualScenes (library_visual_scenes) {
     // This is the location of all top level parent nodes
     if (node.node) {
       // node.node is the location of all top level nodes
-      armatureScale = node.scale && node.scale[0]
-        ? node.scale[0]._.split(' ').map(Number) : null
+      if (node.scale && node.scale.length > 0) {
+        armatureScale = node.scale[0]._.split(' ').map(Number)
+      }
       parsedJoints = parseJoints(node.node)
     }
     /*
