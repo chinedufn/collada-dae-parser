@@ -6,7 +6,7 @@ function ParseVisualScenes (library_visual_scenes) {
   var parsedJoints = []
 
   // Some .dae files will export a shrunken model. Here's how to scale it
-  var armatureScale = []
+  var armatureScale = null
   visualScene.node.forEach(function (node) {
     // This is the location of all top level parent nodes
     if (node.node) {
