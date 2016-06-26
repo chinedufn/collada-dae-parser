@@ -56,6 +56,8 @@ dae2json my-3d-modal.dae > parsed-model.json
 
 ### `parseDae(xmlFile, callback)` -> `object`
 
+This function returns the parsed collada object.
+
 #### xmlFile
 
 *Required*
@@ -66,7 +68,7 @@ Your collada file data. Not the filename, the file contents.
 
 #### callback
 
-*Required*
+*Optional*
 
 Type: `function`
 
