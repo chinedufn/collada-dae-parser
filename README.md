@@ -96,6 +96,7 @@ function (err, parsedDaeObject) {
 - [x] src: Factor in bind shape matrix
 - [x] src: Stop exporting bind shape matrix
 - [x] demo: fix normals in demo lighting
+- [ ] src: Remove callback from API
 - [ ] src / demo: add a textured demo model
 - [ ] src: rounding values. Currently lots of .999999 and 1.000001
 - [ ] src: All of the TODO: statements in code
