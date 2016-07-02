@@ -10,7 +10,7 @@ module.exports = ParseCollada
 // TODO:
 // Use input, accessor, and param attributes instead of hard coding lookups
 // Clean Up Code / less confusing var names
-function ParseCollada (colladaXML, callback) {
+function ParseCollada (colladaXML) {
   var result = compactXML({}, xmlparser(colladaXML.toString()).root)
   result = { COLLADA: result.COLLADA[0] }
 
@@ -49,7 +49,6 @@ function ParseCollada (colladaXML, callback) {
     parsedObject.vertexUVIndices = parsedLibraryGeometries.vertexUVIndices
     parsedObject.vertexUVs = parsedLibraryGeometries.vertexUVs
   }
-  if (callback) callback(null, parsedObject)
   return parsedObject
 }
 

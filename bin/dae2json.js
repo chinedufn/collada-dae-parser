@@ -11,7 +11,7 @@ var filename = process.argv[2]
 // If a filename was specified, read it and write to stdout
 if (filename) {
   var daeString = fs.readFileSync(path.resolve(process.cwd(), filename)).toString()
-  dae2json(daeString, writeParsedJSON)
+  writeParsedJSON(dae2json(daeString))
 }
 
 // If no filename was specified, read from stdin and write to stdout
@@ -21,17 +21,10 @@ if (!filename) {
     bufferedDaeString += chunk
   })
   process.stdin.on('end', function () {
-    dae2json(bufferedDaeString, writeParsedJSON)
+    writeParsedJSON(dae2json(bufferedDaeString))
   })
 }
 
-function writeParsedJSON (err, parsedJSON) {
-  if (err) { exit(err) }
+function writeParsedJSON (parsedJSON) {
   console.log(JSON.stringify(parsedJSON))
 }
-
-function exit (err) {
-  console.log(err)
-  process.exit(1)
-}
-

@@ -6,98 +6,96 @@ module.exports = LoadModel
 // TODO: clean up
 function LoadModel (gl, callback) {
   // TODO: Read using xhr request
-  dae2json(fs.readFileSync('./demo/assets/animated-male-figure.dae'), function (err, parsedDae) {
-    if (err) { callback(err) }
+  var parsedDae = dae2json(fs.readFileSync('./demo/assets/animated-male-figure.dae'))
 
-    // Vertex normals
-    // TODO: Comment this
-    var vertexNormals = []
+  // Vertex normals
+  // TODO: Comment this
+  var vertexNormals = []
 
-    // TODO: naming
-    var vertexJointAffectors = []
-    var vertexJointWeights = []
-    /*
-    parsedDae.vertexJointWeights.forEach(function (jointsAndWeights) {
+  // TODO: naming
+  var vertexJointAffectors = []
+  var vertexJointWeights = []
+  /*
+     parsedDae.vertexJointWeights.forEach(function (jointsAndWeights) {
+     for (var i = 0; i < 4; i++) {
+     var jointIndex = Object.keys(jointsAndWeights)[i]
+     vertexJointAffectors.push(Number(jointIndex) || 0)
+     vertexJointWeights.push(jointsAndWeights[jointIndex] || 0)
+     }
+     })
+     */
+
+  // TODO: Can probably make this more efficient by indexing duplicate index -> normal -> new tail end index
+  // TODO: generally inefficient. Running calculations more than necessary. Still figuring out how to do this...
+  //  Throwing things in for now then optimize later
+  var encounteredIndices = {}
+  var vertexPositionIndices = []
+  var largestPositionIndex = 0
+  parsedDae.vertexPositionIndices.forEach(function (vertexPositionIndex, counter) {
+    largestPositionIndex = Math.max(largestPositionIndex, vertexPositionIndex)
+    if (!encounteredIndices[vertexPositionIndex]) {
+      var jointsAndWeights = parsedDae.vertexJointWeights[vertexPositionIndex]
+      // First time seeing the vertex position index
+      vertexPositionIndices[counter] = vertexPositionIndex
       for (var i = 0; i < 4; i++) {
+        if (i < 3) {
+          vertexNormals[vertexPositionIndex * 3 + i] = parsedDae.vertexNormals[parsedDae.vertexNormalIndices[counter] * 3 + i]
+        }
         var jointIndex = Object.keys(jointsAndWeights)[i]
-        vertexJointAffectors.push(Number(jointIndex) || 0)
-        vertexJointWeights.push(jointsAndWeights[jointIndex] || 0)
+        vertexJointAffectors[vertexPositionIndex * 4 + i] = Number(jointIndex) || 0
+        vertexJointWeights[vertexPositionIndex * 4 + i] = jointsAndWeights[jointIndex] || 0
       }
-    })
-    */
-
-    // TODO: Can probably make this more efficient by indexing duplicate index -> normal -> new tail end index
-    // TODO: generally inefficient. Running calculations more than necessary. Still figuring out how to do this...
-    //  Throwing things in for now then optimize later
-    var encounteredIndices = {}
-    var vertexPositionIndices = []
-    var largestPositionIndex = 0
-    parsedDae.vertexPositionIndices.forEach(function (vertexPositionIndex, counter) {
-      largestPositionIndex = Math.max(largestPositionIndex, vertexPositionIndex)
-      if (!encounteredIndices[vertexPositionIndex]) {
-        var jointsAndWeights = parsedDae.vertexJointWeights[vertexPositionIndex]
-        // First time seeing the vertex position index
-        vertexPositionIndices[counter] = vertexPositionIndex
-        for (var i = 0; i < 4; i++) {
-          if (i < 3) {
-            vertexNormals[vertexPositionIndex * 3 + i] = parsedDae.vertexNormals[parsedDae.vertexNormalIndices[counter] * 3 + i]
-          }
-          var jointIndex = Object.keys(jointsAndWeights)[i]
-          vertexJointAffectors[vertexPositionIndex * 4 + i] = Number(jointIndex) || 0
-          vertexJointWeights[vertexPositionIndex * 4 + i] = jointsAndWeights[jointIndex] || 0
-        }
-        encounteredIndices[vertexPositionIndex] = true
-      }
-    })
-    parsedDae.vertexPositionIndices.forEach(function (vertexPositionIndex, counter) {
-      if (encounteredIndices[vertexPositionIndex]) {
-        vertexPositionIndices[counter] = ++largestPositionIndex
-        var jointsAndWeights = parsedDae.vertexJointWeights[vertexPositionIndex]
-        for (var i = 0; i < 4; i++) {
-          if (i < 3) {
-            parsedDae.vertexPositions[largestPositionIndex * 3 + i] = parsedDae.vertexPositions[vertexPositionIndex * 3 + i]
-            vertexNormals[largestPositionIndex * 3 + i] = parsedDae.vertexNormals[parsedDae.vertexNormalIndices[counter] * 3 + i]
-          }
-          var jointIndex = Object.keys(jointsAndWeights)[i]
-          vertexJointAffectors[largestPositionIndex * 4 + i] = Number(jointIndex) || 0
-          vertexJointWeights[largestPositionIndex * 4 + i] = jointsAndWeights[jointIndex] || 0
-        }
-      }
-    })
-
-    var vertexPositionBuffer = gl.createBuffer()
-    gl.bindBuffer(gl.ARRAY_BUFFER, vertexPositionBuffer)
-    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(parsedDae.vertexPositions), gl.STATIC_DRAW)
-
-    var vertexPositionIndexBuffer = gl.createBuffer()
-    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, vertexPositionIndexBuffer)
-    gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(vertexPositionIndices), gl.STATIC_DRAW)
-
-    // Joints the affect each vertex
-    // TODO: naming
-    var affectingJointIndexBuffer = gl.createBuffer()
-    gl.bindBuffer(gl.ARRAY_BUFFER, affectingJointIndexBuffer)
-    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertexJointAffectors), gl.STATIC_DRAW)
-
-    // Weights of affecting joints
-    // TODO: naming
-    var weightBuffer = gl.createBuffer()
-    gl.bindBuffer(gl.ARRAY_BUFFER, weightBuffer)
-    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertexJointWeights), gl.STATIC_DRAW)
-
-    var vertexNormalBuffer = gl.createBuffer()
-    gl.bindBuffer(gl.ARRAY_BUFFER, vertexNormalBuffer)
-    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertexNormals), gl.STATIC_DRAW)
-
-    var stuff = {
-      vertexNormalBuffer: vertexNormalBuffer,
-      vertexPositionBuffer: vertexPositionBuffer,
-      vertexPositionIndexBuffer: vertexPositionIndexBuffer,
-      affectingJointIndexBuffer: affectingJointIndexBuffer,
-      weightBuffer: weightBuffer,
-      keyframes: parsedDae.keyframes,
-      numElements: vertexPositionIndices.length
+      encounteredIndices[vertexPositionIndex] = true
     }
-    callback(null, stuff)
   })
+  parsedDae.vertexPositionIndices.forEach(function (vertexPositionIndex, counter) {
+    if (encounteredIndices[vertexPositionIndex]) {
+      vertexPositionIndices[counter] = ++largestPositionIndex
+      var jointsAndWeights = parsedDae.vertexJointWeights[vertexPositionIndex]
+      for (var i = 0; i < 4; i++) {
+        if (i < 3) {
+          parsedDae.vertexPositions[largestPositionIndex * 3 + i] = parsedDae.vertexPositions[vertexPositionIndex * 3 + i]
+          vertexNormals[largestPositionIndex * 3 + i] = parsedDae.vertexNormals[parsedDae.vertexNormalIndices[counter] * 3 + i]
+        }
+        var jointIndex = Object.keys(jointsAndWeights)[i]
+        vertexJointAffectors[largestPositionIndex * 4 + i] = Number(jointIndex) || 0
+        vertexJointWeights[largestPositionIndex * 4 + i] = jointsAndWeights[jointIndex] || 0
+      }
+    }
+  })
+
+  var vertexPositionBuffer = gl.createBuffer()
+  gl.bindBuffer(gl.ARRAY_BUFFER, vertexPositionBuffer)
+  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(parsedDae.vertexPositions), gl.STATIC_DRAW)
+
+  var vertexPositionIndexBuffer = gl.createBuffer()
+  gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, vertexPositionIndexBuffer)
+  gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(vertexPositionIndices), gl.STATIC_DRAW)
+
+  // Joints the affect each vertex
+  // TODO: naming
+  var affectingJointIndexBuffer = gl.createBuffer()
+  gl.bindBuffer(gl.ARRAY_BUFFER, affectingJointIndexBuffer)
+  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertexJointAffectors), gl.STATIC_DRAW)
+
+  // Weights of affecting joints
+  // TODO: naming
+  var weightBuffer = gl.createBuffer()
+  gl.bindBuffer(gl.ARRAY_BUFFER, weightBuffer)
+  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertexJointWeights), gl.STATIC_DRAW)
+
+  var vertexNormalBuffer = gl.createBuffer()
+  gl.bindBuffer(gl.ARRAY_BUFFER, vertexNormalBuffer)
+  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertexNormals), gl.STATIC_DRAW)
+
+  var stuff = {
+    vertexNormalBuffer: vertexNormalBuffer,
+    vertexPositionBuffer: vertexPositionBuffer,
+    vertexPositionIndexBuffer: vertexPositionIndexBuffer,
+    affectingJointIndexBuffer: affectingJointIndexBuffer,
+    weightBuffer: weightBuffer,
+    keyframes: parsedDae.keyframes,
+    numElements: vertexPositionIndices.length
+  }
+  callback(null, stuff)
 }

@@ -24,17 +24,7 @@ var parentChildChildLetterFPath = path.resolve(__dirname, '../fixture/parent-chi
 var parentChildChildLetterFXML = fs.readFileSync(parentChildChildLetterFPath)
 var expectedParentChildChildF = require('../expected/parent-child-child-letter-f.js')
 
-test('Parse a default blender cube with an added texture', function (t) {
-  t.plan(1)
-  parseCollada(tbdcColladaXML, function (err, parsedCube) {
-    if (err) {
-      t.fail()
-    }
-    t.deepEqual(parsedCube, expectedTBDC)
-  })
-})
-
-test('Parse a default blender cube with an added texture without a callback', function (t) {
+test('Parse a default blender cube', function (t) {
   t.plan(1)
   var parsedCube = parseCollada(tbdcColladaXML)
   t.deepEqual(parsedCube, expectedTBDC)
@@ -42,39 +32,24 @@ test('Parse a default blender cube with an added texture without a callback', fu
 
 test('Parse a default blender cube with an animation', function (t) {
   t.plan(1)
-  parseCollada(animatedColladaXML, function (err, parsedAnimatedCube) {
-    if (err) {
-      t.fail()
-    }
-    t.deepEqual(parsedAnimatedCube, expectedAnimatedCube)
-  })
+  var parsedAnimatedCube = parseCollada(animatedColladaXML)
+  t.deepEqual(parsedAnimatedCube, expectedAnimatedCube)
 })
 
 test('Parse two blender cubes animated with bones and skinning', function (t) {
   t.plan(1)
-  parseCollada(skeletonSkinnedCubesXML, function (err, parsedSkeletonSkinnedCubes) {
-    if (err) {
-      t.fail()
-    }
-    t.deepEqual(parsedSkeletonSkinnedCubes, expectedSkinnedCube)
-    t.end()
-  })
+  var parsedSkeletonSkinnedCubes = parseCollada(skeletonSkinnedCubesXML)
+  t.deepEqual(parsedSkeletonSkinnedCubes, expectedSkinnedCube)
 })
 
 test('Parse animated letter F with parent and child bone', function (t) {
   t.plan(1)
-  parseCollada(animatedLetterFXML, function (err, parsedAnimatedLetterF) {
-    if (err) { t.fail() }
-    t.deepEqual(parsedAnimatedLetterF, expectedAnimatedLetterF)
-    t.end()
-  })
+  var parsedAnimatedLetterF = parseCollada(animatedLetterFXML)
+  t.deepEqual(parsedAnimatedLetterF, expectedAnimatedLetterF)
 })
 
 test('Parse with parent -> child -> child joint relationship', function (t) {
   t.plan(1)
-  parseCollada(parentChildChildLetterFXML, function (err, parsedParentChildChildF) {
-    if (err) { t.fail() }
-    t.deepEqual(parsedParentChildChildF, expectedParentChildChildF)
-    t.end()
-  })
+  var parsedParentChildChildF = parseCollada(parentChildChildLetterFXML)
+  t.deepEqual(parsedParentChildChildF, expectedParentChildChildF)
 })
