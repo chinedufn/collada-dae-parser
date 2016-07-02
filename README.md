@@ -34,7 +34,7 @@ $ npm install -g collada-dae-parser
 
 If you're unfamiliar with skeletal animation, the demo is a good starting point. Here's where we're [parsing our `collada` file and buffering our graphics data](https://github.com/chinedufn/collada-dae-parser/blob/master/demo/animated-model/3d-model/load-model.js). We're parsing at runtime in the demo, but in a real application you'd want to parse your collada files during a build step.
 
-```sh 
+```sh
 # Run the demo locally. Changes to the `demo` directory will live reload in your browser
 # PRs and issues are welcome!
 git clone https://github.com/chinedufn/collada-dae-parser && cd collada-dae-parser && npm install && npm run demo
@@ -54,7 +54,7 @@ dae2json my-3d-modal.dae > parsed-model.json
 
 ## API
 
-### `parseDae(xmlFile, callback)` -> `object`
+### `parseDae(xmlFile)` -> `object`
 
 This function returns the parsed collada object.
 
@@ -66,16 +66,13 @@ Type: `string` or `Buffer`
 
 Your collada file data. Not the filename, the file contents.
 
-#### callback
-
-*Optional*
-
-Type: `function`
+#### Returned Object
 
 ```js
-function (err, parsedDaeObject) {
-  console.log(parsedDaeObject)
-  /*
+var parseDae = require('collada-dae-parser')
+var parsedCollada = parseDae(fs.readFileSync(fileName))
+console.log(parsedCollada)
+/*
   {
     keyframes: {...},
     vertexNormalIndices: [...],
@@ -85,8 +82,7 @@ function (err, parsedDaeObject) {
     vertexUVIndices: [...],
     vertexUVs: [...]
   }
-  */
-}
+*/
 ```
 
 ## TODO:
