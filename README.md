@@ -5,7 +5,7 @@ collada-dae-parser [![npm version](https://badge.fury.io/js/collada-dae-parser.s
 
 [View live animated model demo](http://chinedufn.github.io/collada-dae-parser/)
 
-![image]http://i.giphy.com/l46Ch6CIolihxVKWk.gif)
+![image](http://i.giphy.com/l46Ch6CIolihxVKWk.gif)
 
 [View demo source](/demo)
 
