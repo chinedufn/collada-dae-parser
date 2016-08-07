@@ -122,6 +122,11 @@ console.log(parsedCollada)
 ## See Also
 
 - [wavefront-obj-parser](https://github.com/chinedufn/wavefront-obj-parser)
+- 
+
+## Credits
+
+- [Ben Houston](https://clara.io/user/bhouston) for the [3d male figure model](https://clara.io/view/d49ee603-8e6c-4720-bd20-9e3d7b13978a/webgl)
 
 ## License
 
