@@ -5,15 +5,9 @@ var makeYRotation = require('./matrix-math/make-y-rotation.js')
 var makeXRotation = require('./matrix-math/make-x-rotation.js')
 var makeLookAt = require('./matrix-math/make-look-at.js')
 var makeInverse = require('./matrix-math/make-inverse.js')
-var interpolate = require('mat4-interpolate')
-var createMatrix = require('gl-mat4/create')
-var vec3Normalize = require('gl-vec3/normalize')
-var vec3Scale = require('gl-vec3/scale')
-var mat3FromMat4 = require('gl-mat3/from-mat4')
-var mat3Invert = require('gl-mat3/invert')
-var mat3Transpose = require('gl-mat3/transpose')
 
-var animationClock = 0
+var interpolateJoints = require('./temporary-refactor-zone/interpolate-joints.js')
+var drawModel = require('./temporary-refactor-zone/draw-model.js')
 
 module.exports = Render
 
@@ -21,48 +15,9 @@ module.exports = Render
 // TODO: There's a lot happening in here that should happen elsewhere (i.e. animation setup)
 // will be easier to split out once we know what we're doing
 function Render (gl, viewport, animatedModel, shaderObject, dt, state) {
-  var min
-  var max
-  Object.keys(animatedModel.keyframes).forEach(function (frame) {
-    if (!min && !max) {
-      min = frame
-      max = frame
-    } else {
-      min = Math.min(min, frame)
-      max = Math.max(max, frame)
-    }
-  })
-  animationClock += dt / 1000
-  var animationDuration = max - min
-  if (animationClock > animationDuration) {
-    animationClock %= animationDuration
-  }
-  // Find two closest keyframes
-  var lowestKeyframe = null
-  min = max = null
-  var minJoints = []
-  var maxJoints = []
-  Object.keys(animatedModel.keyframes).sort().forEach(function (frame, index) {
-    frame = Number(frame)
-    if (index === 0) { lowestKeyframe = frame }
-    if (frame <= lowestKeyframe + animationClock) {
-      min = frame
-      minJoints = animatedModel.keyframes['' + frame]
-    }
-    if (frame >= lowestKeyframe + animationClock && !max) {
-      max = frame
-      maxJoints = animatedModel.keyframes['' + frame]
-    }
-  })
-
-  var percentBetweenKeyframes = (lowestKeyframe + animationClock - min) / (max - min)
-  var interpolatedJoints = []
   // TODO: get # joints from model
   var numJoints = 5
-  for (var i = 0; i < numJoints; i++) {
-    interpolatedJoints[i] = createMatrix()
-    interpolate(interpolatedJoints[i], minJoints[i] || createMatrix(), maxJoints[i] || createMatrix(), percentBetweenKeyframes)
-  }
+  var interpolatedJoints = interpolateJoints(animatedModel.keyframes, dt, numJoints)
 
   gl.viewport(0, 0, viewport.width, viewport.height)
   gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
@@ -83,63 +38,12 @@ function Render (gl, viewport, animatedModel, shaderObject, dt, state) {
 
   var viewMatrix = makeInverse(cameraMatrix)
 
-  var modelMatrix = makeTranslation(modelPosition[0], modelPosition[1], modelPosition[2])
-  modelMatrix = matrixMultiply(modelMatrix, viewMatrix)
-
-  // Vertex positions
-  gl.bindBuffer(gl.ARRAY_BUFFER, animatedModel.vertexPositionBuffer)
-  gl.vertexAttribPointer(shaderObject.vertexPositionAttribute, 3, gl.FLOAT, false, 0, 0)
-
-  // Vertex normals
-  gl.bindBuffer(gl.ARRAY_BUFFER, animatedModel.vertexNormalBuffer)
-  gl.vertexAttribPointer(shaderObject.vertexNormalAttribute, 3, gl.FLOAT, false, 0, 0)
-
-  // vertex joints
-  gl.bindBuffer(gl.ARRAY_BUFFER, animatedModel.affectingJointIndexBuffer)
-  gl.vertexAttribPointer(shaderObject.jointIndexAttribute, 4, gl.FLOAT, false, 0, 0)
-
-  // vertex joint weights
-  gl.bindBuffer(gl.ARRAY_BUFFER, animatedModel.weightBuffer)
-  gl.vertexAttribPointer(shaderObject.jointWeightAttribute, 4, gl.FLOAT, false, 0, 0)
-
-  // lighting
-  var lightingDirection = [1, -0.5, -1]
-  var normalizedLD = []
-  vec3Normalize(normalizedLD, lightingDirection)
-  vec3Scale(normalizedLD, normalizedLD, -1)
-
-  gl.uniform3f(shaderObject.ambientColorUniform, 0.5, 0.5, 0.5)
-  gl.uniform3fv(shaderObject.lightingDirectionUniform, normalizedLD)
-  gl.uniform3f(shaderObject.directionalColorUniform, 1.0, 1.0, 1.0)
-
-  // Vertex weight
-  // TODO: for loop
-  gl.uniformMatrix4fv(shaderObject.boneMatrix0, false, interpolatedJoints[0])
-  gl.uniformMatrix4fv(shaderObject.boneMatrix1, false, interpolatedJoints[1])
-  gl.uniformMatrix4fv(shaderObject.boneMatrix2, false, interpolatedJoints[2])
-  gl.uniformMatrix4fv(shaderObject.boneMatrix3, false, interpolatedJoints[3])
-  gl.uniformMatrix4fv(shaderObject.boneMatrix4, false, interpolatedJoints[4])
-
-  // Normal Matrices
-  for (var q = 0; q < 5; q++) {
-    // TODO: better name
-    var jointNormalMatrix = []
-    mat3FromMat4(jointNormalMatrix, interpolatedJoints[q])
-    mat3Invert(jointNormalMatrix, jointNormalMatrix)
-    mat3Transpose(jointNormalMatrix, jointNormalMatrix)
-    gl.uniformMatrix3fv(shaderObject['normalMatrix' + q], false, jointNormalMatrix)
-  }
-
-  gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, animatedModel.vertexPositionIndexBuffer)
-
-  gl.uniformMatrix4fv(shaderObject.pMatrixUniform, false, pMatrix)
-  gl.uniformMatrix4fv(shaderObject.mvMatrixUniform, false, modelMatrix)
-  // Set light uniform
-  var normalMatrix = []
-  mat3FromMat4(normalMatrix, modelMatrix)
-  mat3Invert(normalMatrix, normalMatrix)
-  mat3Transpose(normalMatrix, normalMatrix)
-  gl.uniformMatrix3fv(shaderObject.nMatrixUniform, false, normalMatrix)
-
-  gl.drawElements(gl.TRIANGLES, animatedModel.numElements, gl.UNSIGNED_SHORT, 0)
+  drawModel(gl, {
+    interpolatedJoints: interpolatedJoints,
+    modelData: animatedModel,
+    position: modelPosition,
+    perspectiveMatrix: pMatrix,
+    shaderObj: shaderObject,
+    viewMatrix: viewMatrix
+  })
 }
