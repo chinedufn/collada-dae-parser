@@ -3,7 +3,9 @@ collada-dae-parser [![npm version](https://badge.fury.io/js/collada-dae-parser.s
 
 > Parse collada .dae file vertex positions, textures, normals and animations
 
-[View live animated model](http://chinedufn.github.io/collada-dae-parser/)
+[View live animated model demo](http://chinedufn.github.io/collada-dae-parser/)
+
+![image](http://i.giphy.com/l46Ch6CIolihxVKWk.gif)
 
 [View demo source](/demo)
 
@@ -35,9 +37,12 @@ $ npm install -g collada-dae-parser
 If you're unfamiliar with skeletal animation, the demo is a good starting point. Here's where we're [parsing our `collada` file and buffering our graphics data](https://github.com/chinedufn/collada-dae-parser/blob/master/demo/animated-model/3d-model/load-model.js). We're parsing at runtime in the demo, but in a real application you'd want to parse your collada files during a build step.
 
 ```sh
-# Run the demo locally. Changes to the `demo` directory will live reload in your browser
+# Run the demo locally. Changes to the `src` and `demo` directories will live reload in your browser
 # PRs and issues are welcome!
-git clone https://github.com/chinedufn/collada-dae-parser && cd collada-dae-parser && npm install && npm run demo
+git clone https://github.com/chinedufn/collada-dae-parser
+cd collada-dae-parser
+npm install
+npm run demo
 ```
 
 ## CLI
@@ -92,7 +97,7 @@ console.log(parsedCollada)
 - [x] src: Factor in bind shape matrix
 - [x] src: Stop exporting bind shape matrix
 - [x] demo: fix normals in demo lighting
-- [ ] src: Remove callback from API
+- [x] src: Remove callback from API
 - [ ] src / demo: add a textured demo model
 - [ ] src: rounding values. Currently lots of .999999 and 1.000001
 - [ ] src: All of the TODO: statements in code
@@ -117,6 +122,11 @@ console.log(parsedCollada)
 ## See Also
 
 - [wavefront-obj-parser](https://github.com/chinedufn/wavefront-obj-parser)
+- 
+
+## Credits
+
+- [Ben Houston](https://clara.io/user/bhouston) for the [3d male figure model](https://clara.io/view/d49ee603-8e6c-4720-bd20-9e3d7b13978a/webgl)
 
 ## License
 
