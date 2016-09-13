@@ -1,13 +1,9 @@
-var matrixMultiply = require('./matrix-math/multiply.js')
-var makeTranslation = require('./matrix-math/make-translation.js')
 var makePerspective = require('./matrix-math/make-perspective.js')
-var makeYRotation = require('./matrix-math/make-y-rotation.js')
-var makeXRotation = require('./matrix-math/make-x-rotation.js')
-var makeLookAt = require('./matrix-math/make-look-at.js')
 var makeInverse = require('./matrix-math/make-inverse.js')
 
 var interpolateJoints = require('./temporary-refactor-zone/interpolate-joints.js')
 var drawModel = require('./temporary-refactor-zone/draw-model.js')
+var makeCamera = require('./temporary-refactor-zone/make-camera.js')
 
 module.exports = Render
 
@@ -25,17 +21,8 @@ function Render (gl, viewport, animatedModel, shaderObject, dt, state) {
   var pMatrix = makePerspective(Math.PI / 3, viewport.width / viewport.height, 1, 2000)
 
   var modelPosition = [0, 0, 0]
-  var cameraMatrix = makeTranslation(0, 0, 3)
-  cameraMatrix = matrixMultiply(cameraMatrix, makeXRotation(-state.orbit.xRadians))
-  cameraMatrix = matrixMultiply(cameraMatrix, makeYRotation(state.orbit.yRadians))
-  var cameraPosition = [
-    cameraMatrix[12],
-    cameraMatrix[13],
-    cameraMatrix[14]
-  ]
-  var up = [0, 1, 0]
-  cameraMatrix = makeLookAt(cameraPosition, modelPosition, up)
 
+  var cameraMatrix = makeCamera(state.orbit, modelPosition)
   var viewMatrix = makeInverse(cameraMatrix)
 
   drawModel(gl, {
