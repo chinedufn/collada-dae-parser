@@ -2,7 +2,6 @@ var makePerspective = require('./matrix-math/make-perspective.js')
 var makeInverse = require('./matrix-math/make-inverse.js')
 
 var interpolateJoints = require('./temporary-refactor-zone/interpolate-joints.js')
-var drawModel = require('./temporary-refactor-zone/draw-model.js')
 var makeCamera = require('./temporary-refactor-zone/make-camera.js')
 
 module.exports = Render
@@ -25,9 +24,8 @@ function Render (gl, viewport, animatedModel, shaderObject, dt, state) {
   var cameraMatrix = makeCamera(state.orbit, modelPosition)
   var viewMatrix = makeInverse(cameraMatrix)
 
-  drawModel(gl, {
+  animatedModel.draw({
     interpolatedJoints: interpolatedJoints,
-    modelData: animatedModel,
     position: modelPosition,
     perspectiveMatrix: pMatrix,
     shaderObj: shaderObject,

@@ -3,10 +3,12 @@ var dae2json = require('../../../')
 
 var expandVertices = require('./expand-vertices.js')
 
+var drawModel = require('./draw-model.js')
+
 module.exports = LoadModel
 
 // TODO: clean up
-function LoadModel (gl, callback) {
+function LoadModel (gl) {
   // TODO: Read using xhr request
   var parsedDae = dae2json(fs.readFileSync('./demo/assets/animated-male-figure.dae'))
   var vertexData = expandVertices(parsedDae)
@@ -35,14 +37,17 @@ function LoadModel (gl, callback) {
   gl.bindBuffer(gl.ARRAY_BUFFER, vertexNormalBuffer)
   gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertexData.vertexNormals), gl.STATIC_DRAW)
 
-  var stuff = {
-    vertexNormalBuffer: vertexNormalBuffer,
-    vertexPositionBuffer: vertexPositionBuffer,
-    vertexPositionIndexBuffer: vertexPositionIndexBuffer,
-    affectingJointIndexBuffer: affectingJointIndexBuffer,
-    weightBuffer: weightBuffer,
+  // Return our draw function and keyframes
+  // TODO: Can/should we avoid returning keyframes? Wrap their usage in a service?
+  return {
     keyframes: parsedDae.keyframes,
-    numElements: vertexData.vertexPositionIndices.length
+    draw: drawModel.bind(null, gl, {
+      vertexNormalBuffer: vertexNormalBuffer,
+      vertexPositionBuffer: vertexPositionBuffer,
+      vertexPositionIndexBuffer: vertexPositionIndexBuffer,
+      affectingJointIndexBuffer: affectingJointIndexBuffer,
+      weightBuffer: weightBuffer,
+      numElements: vertexData.vertexPositionIndices.length
+    })
   }
-  callback(null, stuff)
 }

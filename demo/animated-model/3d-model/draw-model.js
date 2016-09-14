@@ -1,5 +1,5 @@
-var matrixMultiply = require('../matrix-math/multiply.js')
-var makeTranslation = require('../matrix-math/make-translation.js')
+var matrixMultiply = require('../render/matrix-math/multiply.js')
+var makeTranslation = require('../render/matrix-math/make-translation.js')
 
 var vec3Normalize = require('gl-vec3/normalize')
 var vec3Scale = require('gl-vec3/scale')
@@ -10,24 +10,24 @@ var mat3Transpose = require('gl-mat3/transpose')
 
 module.exports = drawModel
 
-function drawModel (gl, opts) {
+function drawModel (gl, modelData, opts) {
   var modelMatrix = makeTranslation(opts.position[0], opts.position[1], opts.position[2])
   modelMatrix = matrixMultiply(modelMatrix, opts.viewMatrix)
 
   // Vertex positions
-  gl.bindBuffer(gl.ARRAY_BUFFER, opts.modelData.vertexPositionBuffer)
+  gl.bindBuffer(gl.ARRAY_BUFFER, modelData.vertexPositionBuffer)
   gl.vertexAttribPointer(opts.shaderObj.vertexPositionAttribute, 3, gl.FLOAT, false, 0, 0)
 
   // Vertex normals
-  gl.bindBuffer(gl.ARRAY_BUFFER, opts.modelData.vertexNormalBuffer)
+  gl.bindBuffer(gl.ARRAY_BUFFER, modelData.vertexNormalBuffer)
   gl.vertexAttribPointer(opts.shaderObj.vertexNormalAttribute, 3, gl.FLOAT, false, 0, 0)
 
   // vertex joints
-  gl.bindBuffer(gl.ARRAY_BUFFER, opts.modelData.affectingJointIndexBuffer)
+  gl.bindBuffer(gl.ARRAY_BUFFER, modelData.affectingJointIndexBuffer)
   gl.vertexAttribPointer(opts.shaderObj.jointIndexAttribute, 4, gl.FLOAT, false, 0, 0)
 
   // vertex joint weights
-  gl.bindBuffer(gl.ARRAY_BUFFER, opts.modelData.weightBuffer)
+  gl.bindBuffer(gl.ARRAY_BUFFER, modelData.weightBuffer)
   gl.vertexAttribPointer(opts.shaderObj.jointWeightAttribute, 4, gl.FLOAT, false, 0, 0)
 
   // lighting
@@ -58,7 +58,7 @@ function drawModel (gl, opts) {
     gl.uniformMatrix3fv(opts.shaderObj['normalMatrix' + q], false, jointNormalMatrix)
   }
 
-  gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, opts.modelData.vertexPositionIndexBuffer)
+  gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, modelData.vertexPositionIndexBuffer)
 
   gl.uniformMatrix4fv(opts.shaderObj.pMatrixUniform, false, opts.perspectiveMatrix)
   gl.uniformMatrix4fv(opts.shaderObj.mvMatrixUniform, false, modelMatrix)
@@ -69,5 +69,6 @@ function drawModel (gl, opts) {
   mat3Transpose(normalMatrix, normalMatrix)
   gl.uniformMatrix3fv(opts.shaderObj.nMatrixUniform, false, normalMatrix)
 
-  gl.drawElements(gl.TRIANGLES, opts.modelData.numElements, gl.UNSIGNED_SHORT, 0)
+  gl.drawElements(gl.TRIANGLES, modelData.numElements, gl.UNSIGNED_SHORT, 0)
 }
+
