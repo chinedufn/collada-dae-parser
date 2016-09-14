@@ -9,14 +9,6 @@ collada-dae-parser [![npm version](https://badge.fury.io/js/collada-dae-parser.s
 
 [View demo source](/demo)
 
-## Notice
-
-This package is still a work in progress (hence no major bump)
-
-I won't need skeletal animations until around September. Commits will be few and far between until then.
-
-But.. I'm still around. If you have a question, ideas or use cases that aren't covered open an issue!
-
 ## What does it do?
 
 `collada-dae-parser` parses a [collada](https://www.khronos.org/collada/) file and outputs JSON. This is useful for displaying [skeletal animations](https://en.wikipedia.org/wiki/Skeletal_animation) in the browser. 
