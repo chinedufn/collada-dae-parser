@@ -26,16 +26,14 @@ function BlenderCubeCanvas () {
   var shaderObject = initShaders(gl)
   initControls(AppState)
 
-  loadModel(gl, function (err, modelData) {
-    if (err) { console.log(err) }
+  var modelData = loadModel(gl)
 
-    loop(function (dt) {
-      animate(AppState)
-      // TODO: Pull out some of the animation happening in render
-      // TODO: Clean up params
-      render(gl, viewport, modelData, shaderObject, dt, AppState.get())
-    }).start()
-  })
+  loop(function (dt) {
+    animate(AppState)
+    // TODO: Pull out some of the animation happening in render
+    // TODO: Clean up params
+    render(gl, viewport, modelData, shaderObject, dt, AppState.get())
+  }).start()
 
   return {
     element: canvas
