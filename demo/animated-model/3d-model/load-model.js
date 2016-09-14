@@ -8,7 +8,7 @@ var drawModel = require('./draw-model.js')
 module.exports = LoadModel
 
 // TODO: clean up
-function LoadModel (gl) {
+function LoadModel (gl, opts) {
   // TODO: Read using xhr request
   var parsedDae = dae2json(fs.readFileSync('./demo/assets/animated-male-figure.dae'))
   var vertexData = expandVertices(parsedDae)

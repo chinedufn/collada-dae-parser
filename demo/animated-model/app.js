@@ -12,6 +12,7 @@ module.exports = BlenderCubeCanvas
 function BlenderCubeCanvas () {
   var AppState = new SS({
     currentlyPressedKeys: {},
+    firstAndLastKeyframe: [0, 3],
     orbit: {yRadians: -1.9, xRadians: 1.05}
   })
   var canvas = document.createElement('canvas')
@@ -26,7 +27,12 @@ function BlenderCubeCanvas () {
   var shaderObject = initShaders(gl)
   initControls(AppState)
 
-  var modelData = loadModel(gl)
+  var modelData = loadModel(gl, {
+    animations: {
+      'foo': [0, 1],
+      'bar': [2, 3]
+    }
+  })
 
   loop(function (dt) {
     animate(AppState)
