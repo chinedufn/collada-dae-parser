@@ -5,16 +5,19 @@ var loadModel = require('./3d-model/load-model.js')
 var initShaders = require('./shader/init-shader.js')
 var SS = require('solid-state')
 var animate = require('./animate/animate.js')
-var initControls = require('./control/orbit-controls.js')
+var initControls = require('./control/init-control.js')
+var initTargets = require('./init-target/init-target.js')
 
 module.exports = BlenderCubeCanvas
 
 function BlenderCubeCanvas () {
   var AppState = new SS({
     currentlyPressedKeys: {},
-    firstAndLastKeyframe: [0, 3],
+    currentAnimation: [0, 3],
     orbit: {yRadians: -1.9, xRadians: 1.05}
   })
+  AppState.set('targets', initTargets(AppState))
+
   var canvas = document.createElement('canvas')
   canvas.width = 680
   canvas.height = 420
