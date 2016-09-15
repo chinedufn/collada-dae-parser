@@ -46,7 +46,7 @@
     "mat4-interpolate": "^1.0.4",
     "mkdirp": "^0.5.1",
     "raf-loop": "^1.1.3",
-    "solid-state": "^0.3.0",
+    "solid-state": "^1.0.3",
     "standard": "^6.0.8",
     "tape": "^4.5.1"
   },

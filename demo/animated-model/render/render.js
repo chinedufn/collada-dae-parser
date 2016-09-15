@@ -14,7 +14,7 @@ function Render (gl, viewport, animatedModel, shaderObject, dt, state) {
   var numJoints = 5
   var selectedKeyframes = Object.keys(animatedModel.keyframes)
   .sort()
-  .slice(state.firstAndLastKeyframe[0], state.firstAndLastKeyframe[1] + 1)
+  .slice(state.currentAnimation[0], state.currentAnimation[1] + 1)
   .reduce(function (selectedKeyframes, currentKeyframe) {
     selectedKeyframes[currentKeyframe] = animatedModel.keyframes[currentKeyframe]
     return selectedKeyframes
