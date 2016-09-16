@@ -53,4 +53,3 @@ function percentBetweenKeyframes (keyframes, dt, numJoints) {
 
   return interpolatedJoints
 }
-

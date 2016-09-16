@@ -10,7 +10,7 @@ module.exports = LoadModel
 // TODO: clean up
 function LoadModel (gl, opts) {
   // TODO: Read using xhr request
-  var parsedDae = dae2json(fs.readFileSync('./demo/assets/animated-male-figure.dae'))
+  var parsedDae = dae2json(fs.readFileSync('./demo/assets/collada-demo-animated-male.dae'))
   var vertexData = expandVertices(parsedDae)
 
   var vertexPositionBuffer = gl.createBuffer()
