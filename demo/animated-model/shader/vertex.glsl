@@ -15,8 +15,8 @@ uniform mat3 uNMatrix;
 uniform mat4 uMVMatrix;
 uniform mat4 uPMatrix;
 
-uniform mat4 boneMatrices[5];
-uniform mat3 boneNormals[5];
+uniform mat4 boneMatrices[6];
+uniform mat3 boneNormals[6];
 
 varying vec3 vLightWeighting;
 
@@ -27,7 +27,7 @@ void main (void) {
   mat4 weightedJointMatrix;
   mat3 weightedNormalMatrix;
 
-  for (int i = 0; i < 5; i++) {
+  for (int i = 0; i < 6; i++) {
     if (aJointIndex.x == float(i)) {
       jointMatrix[0] = boneMatrices[i];
       normalMatrix[0] = boneNormals[i];

@@ -2,7 +2,7 @@ var EventEmitter = require('events')
 
 var animationDictionary = {
   'bend': [0, 3],
-  'jump': [2, 3]
+  'jump': [3, 6]
 }
 
 module.exports = InitAnimationTarget

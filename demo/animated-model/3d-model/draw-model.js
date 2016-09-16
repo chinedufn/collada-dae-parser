@@ -47,6 +47,7 @@ function drawModel (gl, modelData, opts) {
   gl.uniformMatrix4fv(opts.shaderObj.boneMatrix2, false, opts.interpolatedJoints[2])
   gl.uniformMatrix4fv(opts.shaderObj.boneMatrix3, false, opts.interpolatedJoints[3])
   gl.uniformMatrix4fv(opts.shaderObj.boneMatrix4, false, opts.interpolatedJoints[4])
+  gl.uniformMatrix4fv(opts.shaderObj.boneMatrix5, false, opts.interpolatedJoints[5])
 
   // Normal Matrices
   for (var q = 0; q < 5; q++) {

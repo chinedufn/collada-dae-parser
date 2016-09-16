@@ -53,10 +53,12 @@ function InitShaders (gl) {
     boneMatrix2: gl.getUniformLocation(shaderProgram, 'boneMatrices[2]'),
     boneMatrix3: gl.getUniformLocation(shaderProgram, 'boneMatrices[3]'),
     boneMatrix4: gl.getUniformLocation(shaderProgram, 'boneMatrices[4]'),
+    boneMatrix5: gl.getUniformLocation(shaderProgram, 'boneMatrices[5]'),
     normalMatrix0: gl.getUniformLocation(shaderProgram, 'boneNormals[0]'),
     normalMatrix1: gl.getUniformLocation(shaderProgram, 'boneNormals[1]'),
     normalMatrix2: gl.getUniformLocation(shaderProgram, 'boneNormals[2]'),
     normalMatrix3: gl.getUniformLocation(shaderProgram, 'boneNormals[3]'),
-    normalMatrix4: gl.getUniformLocation(shaderProgram, 'boneNormals[4]')
+    normalMatrix4: gl.getUniformLocation(shaderProgram, 'boneNormals[4]'),
+    normalMatrix5: gl.getUniformLocation(shaderProgram, 'boneNormals[5]')
   }
 }

@@ -11,7 +11,7 @@ module.exports = Render
 // will be easier to split out once we know what we're doing
 function Render (gl, animatedModel, shaderObject, dt, state) {
   // TODO: get # joints from model
-  var numJoints = 5
+  var numJoints = 6
   var selectedKeyframes = Object.keys(animatedModel.keyframes)
   .sort()
   .slice(state.currentAnimation[0], state.currentAnimation[1] + 1)
