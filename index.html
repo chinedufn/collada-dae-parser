@@ -80,7 +80,7 @@ function drawModel (gl, modelData, opts) {
 }
 
 
-},{"../render/matrix-math/make-translation.js":14,"../render/matrix-math/multiply.js":17,"gl-mat3/from-mat4":31,"gl-mat3/invert":32,"gl-mat3/transpose":33,"gl-vec3/normalize":49,"gl-vec3/scale":50}],2:[function(require,module,exports){
+},{"../render/matrix-math/make-translation.js":14,"../render/matrix-math/multiply.js":17,"gl-mat3/from-mat4":32,"gl-mat3/invert":33,"gl-mat3/transpose":34,"gl-vec3/normalize":50,"gl-vec3/scale":51}],2:[function(require,module,exports){
 module.exports = expandVertices
 
 // Takes our parsed data and expands the vertex data using our uv/vertex/normal index data
@@ -206,7 +206,7 @@ function LoadModel (gl, opts) {
 }
 
 }).call(this,require("buffer").Buffer)
-},{"../../../":78,"./draw-model.js":1,"./expand-vertices.js":2,"buffer":26}],4:[function(require,module,exports){
+},{"../../../":80,"./draw-model.js":1,"./expand-vertices.js":2,"buffer":27}],4:[function(require,module,exports){
 module.exports = Animate
 
 function Animate (AppState) {
@@ -277,7 +277,7 @@ function ToggleAnimation (AppState) {
   AppState.set(state)
 }
 
-},{"events":30}],6:[function(require,module,exports){
+},{"events":31}],6:[function(require,module,exports){
 var render = require('./render/render.js')
 var document = require('global/document')
 var loop = require('raf-loop')
@@ -285,6 +285,7 @@ var loadModel = require('./3d-model/load-model.js')
 var initShaders = require('./shader/init-shader.js')
 var SS = require('solid-state')
 var animate = require('./animate/animate.js')
+var viewportResize = require('./viewport/viewport-resize.js')
 var initControls = require('./control/init-control.js')
 var initTargets = require('./init-target/init-target.js')
 
@@ -294,19 +295,20 @@ function BlenderCubeCanvas () {
   var AppState = new SS({
     currentlyPressedKeys: {},
     currentAnimation: [0, 3],
-    orbit: {yRadians: -1.9, xRadians: 1.05}
+    orbit: {yRadians: -1.9, xRadians: 1.05},
+    viewport: { width: 680, height: 420 }
   })
   AppState.set('targets', initTargets(AppState))
 
   var canvas = document.createElement('canvas')
-  canvas.width = 680
-  canvas.height = 420
+  canvas.style.width = '100%'
+  canvas.style.height = '100%'
+  viewportResize(AppState, canvas)
 
   var gl = canvas.getContext('webgl')
   gl.clearColor(0.0, 0.0, 0.0, 1.0)
   gl.enable(gl.DEPTH_TEST)
 
-  var viewport = {height: canvas.height, width: canvas.width}
   var shaderObject = initShaders(gl)
   initControls(AppState)
 
@@ -321,7 +323,7 @@ function BlenderCubeCanvas () {
     animate(AppState)
     // TODO: Pull out some of the animation happening in render
     // TODO: Clean up params
-    render(gl, viewport, modelData, shaderObject, dt, AppState.get())
+    render(gl, modelData, shaderObject, dt, AppState.get())
   }).start()
 
   return {
@@ -329,7 +331,7 @@ function BlenderCubeCanvas () {
   }
 }
 
-},{"./3d-model/load-model.js":3,"./animate/animate.js":4,"./control/init-control.js":7,"./init-target/init-target.js":10,"./render/render.js":18,"./shader/init-shader.js":21,"global/document":51,"raf-loop":65,"solid-state":68}],7:[function(require,module,exports){
+},{"./3d-model/load-model.js":3,"./animate/animate.js":4,"./control/init-control.js":7,"./init-target/init-target.js":10,"./render/render.js":18,"./shader/init-shader.js":21,"./viewport/viewport-resize.js":22,"global/document":52,"raf-loop":67,"solid-state":70}],7:[function(require,module,exports){
 var initOrbitControls = require('./orbit-controls.js')
 var initMouseControls = require('./mouse-control.js')
 
@@ -613,7 +615,7 @@ module.exports = Render
 // TODO: Pass in an object instead of a bunch of params
 // TODO: There's a lot happening in here that should happen elsewhere (i.e. animation setup)
 // will be easier to split out once we know what we're doing
-function Render (gl, viewport, animatedModel, shaderObject, dt, state) {
+function Render (gl, animatedModel, shaderObject, dt, state) {
   // TODO: get # joints from model
   var numJoints = 5
   var selectedKeyframes = Object.keys(animatedModel.keyframes)
@@ -626,10 +628,10 @@ function Render (gl, viewport, animatedModel, shaderObject, dt, state) {
 
   var interpolatedJoints = interpolateJoints(selectedKeyframes, dt, numJoints)
 
-  gl.viewport(0, 0, viewport.width, viewport.height)
+  gl.viewport(0, 0, state.viewport.width, state.viewport.height)
   gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
 
-  var pMatrix = makePerspective(Math.PI / 3, viewport.width / viewport.height, 1, 2000)
+  var pMatrix = makePerspective(Math.PI / 3, state.viewport.width / state.viewport.height, 1, 2000)
 
   var modelPosition = [0, 0, 0]
 
@@ -703,7 +705,7 @@ function percentBetweenKeyframes (keyframes, dt, numJoints) {
 }
 
 
-},{"gl-mat4/create":35,"mat4-interpolate":58}],20:[function(require,module,exports){
+},{"gl-mat4/create":36,"mat4-interpolate":60}],20:[function(require,module,exports){
 var makeTranslation = require('../matrix-math/make-translation.js')
 var matrixMultiply = require('../matrix-math/multiply.js')
 var makeYRotation = require('../matrix-math/make-y-rotation.js')
@@ -793,10 +795,51 @@ function InitShaders (gl) {
 }
 
 }).call(this,require("buffer").Buffer)
-},{"buffer":26,"path":61}],22:[function(require,module,exports){
+},{"buffer":27,"path":63}],22:[function(require,module,exports){
+var window = require('global/window')
+var document = require('global/document')
+
+var MutationObserver = window.MutationObserver
+
+module.exports = viewportResize
+
+function viewportResize (AppState, canvas) {
+  var observer = new MutationObserver(checkForCanvas.bind(null, AppState, canvas))
+  observer.observe(document.body, {childList: true, subtree: true})
+
+  window.addEventListener('resize', function () {
+    console.log('resize')
+    var positionInfo = canvas.getBoundingClientRect()
+    canvas.height = positionInfo.height
+    canvas.width = positionInfo.width
+    AppState.set('viewport', {width: canvas.width, height: canvas.height})
+  })
+}
+
+function checkForCanvas (AppState, canvas, mutationRecords) {
+  // TODO: Remove this console.log once we know this isn't getting called over and over again
+  console.log('mutation observed')
+  mutationRecords.forEach(function (mutationRecord) {
+    if (mutationRecord.addedNodes[0] === canvas) {
+      var positionInfo = canvas.getBoundingClientRect()
+      canvas.width = positionInfo.width
+      canvas.height = positionInfo.height
+      AppState.set('viewport', {width: canvas.width, height: canvas.height})
+    }
+  })
+}
+
+},{"global/document":52,"global/window":53}],23:[function(require,module,exports){
 var mount = document.createElement('div')
+mount.style.width = '100%'
+mount.style.height = '100%'
 
 var incompleteWarning = document.createElement('span')
+incompleteWarning.style.position = 'fixed'
+incompleteWarning.style.backgroundColor = 'white'
+incompleteWarning.style.width = '90%'
+incompleteWarning.style.margin = '0 auto'
+
 var sourceLink = document.createElement('a')
 sourceLink.href = 'https://github.com/chinedufn/collada-dae-parser'
 sourceLink.innerHTML = 'View source on GitHub'
@@ -807,10 +850,14 @@ incompleteWarning.appendChild(sourceLink)
 document.body.appendChild(incompleteWarning)
 document.body.appendChild(mount)
 
+document.querySelector('html').style.height = '100%'
+document.body.style.height = '100%'
+document.body.style.margin = 0
+
 var app = require('./animated-model/app.js')().element
 mount.insertBefore(app, mount.children[0])
 
-},{"./animated-model/app.js":6}],23:[function(require,module,exports){
+},{"./animated-model/app.js":6}],24:[function(require,module,exports){
 'use strict'
 
 module.exports = function assertFunction (value) {
@@ -819,7 +866,7 @@ module.exports = function assertFunction (value) {
   }
 }
 
-},{}],24:[function(require,module,exports){
+},{}],25:[function(require,module,exports){
 'use strict'
 
 exports.toByteArray = toByteArray
@@ -930,9 +977,9 @@ function fromByteArray (uint8) {
   return parts.join('')
 }
 
-},{}],25:[function(require,module,exports){
-
 },{}],26:[function(require,module,exports){
+
+},{}],27:[function(require,module,exports){
 (function (global){
 /*!
  * The buffer module from node.js, for the browser.
@@ -2392,7 +2439,7 @@ function blitBuffer (src, dst, offset, length) {
 }
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"base64-js":24,"ieee754":52,"isarray":55}],27:[function(require,module,exports){
+},{"base64-js":25,"ieee754":54,"isarray":57}],28:[function(require,module,exports){
 
 /**
  * This is the web browser implementation of `debug()`.
@@ -2562,7 +2609,7 @@ function localstorage(){
   } catch (e) {}
 }
 
-},{"./debug":28}],28:[function(require,module,exports){
+},{"./debug":29}],29:[function(require,module,exports){
 
 /**
  * This is the common logic for both the Node.js and web browser
@@ -2761,7 +2808,7 @@ function coerce(val) {
   return val;
 }
 
-},{"ms":60}],29:[function(require,module,exports){
+},{"ms":62}],30:[function(require,module,exports){
 'use strict'
 
 var assertFn = require('assert-function')
@@ -2799,7 +2846,7 @@ function Ear () {
   return listeners
 }
 
-},{"assert-function":23}],30:[function(require,module,exports){
+},{"assert-function":24}],31:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -3099,7 +3146,7 @@ function isUndefined(arg) {
   return arg === void 0;
 }
 
-},{}],31:[function(require,module,exports){
+},{}],32:[function(require,module,exports){
 module.exports = fromMat4
 
 /**
@@ -3123,7 +3170,7 @@ function fromMat4(out, a) {
   return out
 }
 
-},{}],32:[function(require,module,exports){
+},{}],33:[function(require,module,exports){
 module.exports = invert
 
 /**
@@ -3162,7 +3209,7 @@ function invert(out, a) {
   return out
 }
 
-},{}],33:[function(require,module,exports){
+},{}],34:[function(require,module,exports){
 module.exports = transpose
 
 /**
@@ -3198,7 +3245,7 @@ function transpose(out, a) {
   return out
 }
 
-},{}],34:[function(require,module,exports){
+},{}],35:[function(require,module,exports){
 module.exports = clone;
 
 /**
@@ -3227,7 +3274,7 @@ function clone(a) {
     out[15] = a[15];
     return out;
 };
-},{}],35:[function(require,module,exports){
+},{}],36:[function(require,module,exports){
 module.exports = create;
 
 /**
@@ -3255,7 +3302,7 @@ function create() {
     out[15] = 1;
     return out;
 };
-},{}],36:[function(require,module,exports){
+},{}],37:[function(require,module,exports){
 module.exports = determinant;
 
 /**
@@ -3286,7 +3333,7 @@ function determinant(a) {
     // Calculate the determinant
     return b00 * b11 - b01 * b10 + b02 * b09 + b03 * b08 - b04 * b07 + b05 * b06;
 };
-},{}],37:[function(require,module,exports){
+},{}],38:[function(require,module,exports){
 module.exports = fromRotationTranslation;
 
 /**
@@ -3340,7 +3387,7 @@ function fromRotationTranslation(out, q, v) {
     
     return out;
 };
-},{}],38:[function(require,module,exports){
+},{}],39:[function(require,module,exports){
 module.exports = identity;
 
 /**
@@ -3368,7 +3415,7 @@ function identity(out) {
     out[15] = 1;
     return out;
 };
-},{}],39:[function(require,module,exports){
+},{}],40:[function(require,module,exports){
 module.exports = invert;
 
 /**
@@ -3424,7 +3471,7 @@ function invert(out, a) {
 
     return out;
 };
-},{}],40:[function(require,module,exports){
+},{}],41:[function(require,module,exports){
 module.exports = multiply;
 
 /**
@@ -3467,7 +3514,7 @@ function multiply(out, a, b) {
     out[15] = b0*a03 + b1*a13 + b2*a23 + b3*a33;
     return out;
 };
-},{}],41:[function(require,module,exports){
+},{}],42:[function(require,module,exports){
 module.exports = scale;
 
 /**
@@ -3499,7 +3546,7 @@ function scale(out, a, v) {
     out[15] = a[15];
     return out;
 };
-},{}],42:[function(require,module,exports){
+},{}],43:[function(require,module,exports){
 module.exports = translate;
 
 /**
@@ -3538,7 +3585,7 @@ function translate(out, a, v) {
 
     return out;
 };
-},{}],43:[function(require,module,exports){
+},{}],44:[function(require,module,exports){
 module.exports = transpose;
 
 /**
@@ -3588,7 +3635,7 @@ function transpose(out, a) {
     
     return out;
 };
-},{}],44:[function(require,module,exports){
+},{}],45:[function(require,module,exports){
 module.exports = slerp
 
 /**
@@ -3641,7 +3688,7 @@ function slerp (out, a, b, t) {
   return out
 }
 
-},{}],45:[function(require,module,exports){
+},{}],46:[function(require,module,exports){
 module.exports = cross;
 
 /**
@@ -3661,7 +3708,7 @@ function cross(out, a, b) {
     out[2] = ax * by - ay * bx
     return out
 }
-},{}],46:[function(require,module,exports){
+},{}],47:[function(require,module,exports){
 module.exports = dot;
 
 /**
@@ -3674,7 +3721,7 @@ module.exports = dot;
 function dot(a, b) {
     return a[0] * b[0] + a[1] * b[1] + a[2] * b[2]
 }
-},{}],47:[function(require,module,exports){
+},{}],48:[function(require,module,exports){
 module.exports = length;
 
 /**
@@ -3689,7 +3736,7 @@ function length(a) {
         z = a[2]
     return Math.sqrt(x*x + y*y + z*z)
 }
-},{}],48:[function(require,module,exports){
+},{}],49:[function(require,module,exports){
 module.exports = lerp;
 
 /**
@@ -3710,7 +3757,7 @@ function lerp(out, a, b, t) {
     out[2] = az + t * (b[2] - az)
     return out
 }
-},{}],49:[function(require,module,exports){
+},{}],50:[function(require,module,exports){
 module.exports = normalize;
 
 /**
@@ -3734,7 +3781,7 @@ function normalize(out, a) {
     }
     return out
 }
-},{}],50:[function(require,module,exports){
+},{}],51:[function(require,module,exports){
 module.exports = scale;
 
 /**
@@ -3751,7 +3798,7 @@ function scale(out, a, b) {
     out[2] = a[2] * b
     return out
 }
-},{}],51:[function(require,module,exports){
+},{}],52:[function(require,module,exports){
 (function (global){
 var topLevel = typeof global !== 'undefined' ? global :
     typeof window !== 'undefined' ? window : {}
@@ -3770,7 +3817,20 @@ if (typeof document !== 'undefined') {
 }
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"min-document":25}],52:[function(require,module,exports){
+},{"min-document":26}],53:[function(require,module,exports){
+(function (global){
+if (typeof window !== "undefined") {
+    module.exports = window;
+} else if (typeof global !== "undefined") {
+    module.exports = global;
+} else if (typeof self !== "undefined"){
+    module.exports = self;
+} else {
+    module.exports = {};
+}
+
+}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
+},{}],54:[function(require,module,exports){
 exports.read = function (buffer, offset, isLE, mLen, nBytes) {
   var e, m
   var eLen = nBytes * 8 - mLen - 1
@@ -3856,7 +3916,7 @@ exports.write = function (buffer, value, offset, isLE, mLen, nBytes) {
   buffer[offset + i - d] |= s * 128
 }
 
-},{}],53:[function(require,module,exports){
+},{}],55:[function(require,module,exports){
 if (typeof Object.create === 'function') {
   // implementation from standard node.js 'util' module
   module.exports = function inherits(ctor, superCtor) {
@@ -3881,21 +3941,21 @@ if (typeof Object.create === 'function') {
   }
 }
 
-},{}],54:[function(require,module,exports){
+},{}],56:[function(require,module,exports){
 'use strict';
 module.exports = function (x) {
 	var type = typeof x;
 	return x !== null && (type === 'object' || type === 'function');
 };
 
-},{}],55:[function(require,module,exports){
+},{}],57:[function(require,module,exports){
 var toString = {}.toString;
 
 module.exports = Array.isArray || function (arr) {
   return toString.call(arr) == '[object Array]';
 };
 
-},{}],56:[function(require,module,exports){
+},{}],58:[function(require,module,exports){
 /*jshint unused:true*/
 /*
 Input:  matrix      ; a 4x4 matrix
@@ -4075,7 +4135,7 @@ function combine(out, a, b, scale1, scale2) {
     out[1] = a[1] * scale1 + b[1] * scale2
     out[2] = a[2] * scale1 + b[2] * scale2
 }
-},{"./normalize":57,"gl-mat4/clone":34,"gl-mat4/create":35,"gl-mat4/determinant":36,"gl-mat4/invert":39,"gl-mat4/transpose":43,"gl-vec3/cross":45,"gl-vec3/dot":46,"gl-vec3/length":47,"gl-vec3/normalize":49}],57:[function(require,module,exports){
+},{"./normalize":59,"gl-mat4/clone":35,"gl-mat4/create":36,"gl-mat4/determinant":37,"gl-mat4/invert":40,"gl-mat4/transpose":44,"gl-vec3/cross":46,"gl-vec3/dot":47,"gl-vec3/length":48,"gl-vec3/normalize":50}],59:[function(require,module,exports){
 module.exports = function normalize(out, mat) {
     var m44 = mat[15]
     // Cannot normalize.
@@ -4086,7 +4146,7 @@ module.exports = function normalize(out, mat) {
         out[i] = mat[i] * scale
     return true
 }
-},{}],58:[function(require,module,exports){
+},{}],60:[function(require,module,exports){
 var lerp = require('gl-vec3/lerp')
 
 var recompose = require('mat4-recompose')
@@ -4139,7 +4199,7 @@ function vec3(n) {
 function vec4() {
     return [0,0,0,1]
 }
-},{"gl-mat4/determinant":36,"gl-vec3/lerp":48,"mat4-decompose":56,"mat4-recompose":59,"quat-slerp":64}],59:[function(require,module,exports){
+},{"gl-mat4/determinant":37,"gl-vec3/lerp":49,"mat4-decompose":58,"mat4-recompose":61,"quat-slerp":66}],61:[function(require,module,exports){
 /*
 Input:  translation ; a 3 component vector
         scale       ; a 3 component vector
@@ -4200,7 +4260,7 @@ module.exports = function recomposeMat4(matrix, translation, scale, skew, perspe
     mat4.scale(matrix, matrix, scale)
     return matrix
 }
-},{"gl-mat4/create":35,"gl-mat4/fromRotationTranslation":37,"gl-mat4/identity":38,"gl-mat4/multiply":40,"gl-mat4/scale":41,"gl-mat4/translate":42}],60:[function(require,module,exports){
+},{"gl-mat4/create":36,"gl-mat4/fromRotationTranslation":38,"gl-mat4/identity":39,"gl-mat4/multiply":41,"gl-mat4/scale":42,"gl-mat4/translate":43}],62:[function(require,module,exports){
 /**
  * Helpers.
  */
@@ -4327,7 +4387,7 @@ function plural(ms, n, name) {
   return Math.ceil(ms / n) + ' ' + name + 's';
 }
 
-},{}],61:[function(require,module,exports){
+},{}],63:[function(require,module,exports){
 (function (process){
 // Copyright Joyent, Inc. and other Node contributors.
 //
@@ -4555,7 +4615,7 @@ var substr = 'ab'.substr(-1) === 'b'
 ;
 
 }).call(this,require('_process'))
-},{"_process":63}],62:[function(require,module,exports){
+},{"_process":65}],64:[function(require,module,exports){
 (function (process){
 // Generated by CoffeeScript 1.7.1
 (function() {
@@ -4591,7 +4651,7 @@ var substr = 'ab'.substr(-1) === 'b'
 }).call(this);
 
 }).call(this,require('_process'))
-},{"_process":63}],63:[function(require,module,exports){
+},{"_process":65}],65:[function(require,module,exports){
 // shim for using process in browser
 
 var process = module.exports = {};
@@ -4684,9 +4744,9 @@ process.chdir = function (dir) {
 };
 process.umask = function() { return 0; };
 
-},{}],64:[function(require,module,exports){
+},{}],66:[function(require,module,exports){
 module.exports = require('gl-quat/slerp')
-},{"gl-quat/slerp":44}],65:[function(require,module,exports){
+},{"gl-quat/slerp":45}],67:[function(require,module,exports){
 var inherits = require('inherits')
 var EventEmitter = require('events').EventEmitter
 var now = require('right-now')
@@ -4731,7 +4791,7 @@ Engine.prototype.tick = function() {
     this.emit('tick', dt)
     this.last = time
 }
-},{"events":30,"inherits":53,"raf":66,"right-now":67}],66:[function(require,module,exports){
+},{"events":31,"inherits":55,"raf":68,"right-now":69}],68:[function(require,module,exports){
 (function (global){
 var now = require('performance-now')
   , root = typeof window === 'undefined' ? global : window
@@ -4807,7 +4867,7 @@ module.exports.polyfill = function() {
 }
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"performance-now":62}],67:[function(require,module,exports){
+},{"performance-now":64}],69:[function(require,module,exports){
 (function (global){
 module.exports =
   global.performance &&
@@ -4818,7 +4878,7 @@ module.exports =
   }
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{}],68:[function(require,module,exports){
+},{}],70:[function(require,module,exports){
 var Listeners = require('ear')
 var dotProp = require('dot-prop')
 var extend = require('xtend')
@@ -4855,7 +4915,7 @@ State.prototype.del = function (key) {
   this.listeners(this.get())
 }
 
-},{"dot-prop":69,"ear":29,"traverse":70,"xtend":72}],69:[function(require,module,exports){
+},{"dot-prop":71,"ear":30,"traverse":72,"xtend":74}],71:[function(require,module,exports){
 'use strict';
 var isObj = require('is-obj');
 
@@ -4968,7 +5028,7 @@ function getPathSegments(path) {
 	return parts;
 }
 
-},{"is-obj":54}],70:[function(require,module,exports){
+},{"is-obj":56}],72:[function(require,module,exports){
 var traverse = module.exports = function (obj) {
     return new Traverse(obj);
 };
@@ -5284,7 +5344,7 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
     return key in obj;
 };
 
-},{}],71:[function(require,module,exports){
+},{}],73:[function(require,module,exports){
 
 /**
  * Module dependencies.
@@ -5453,7 +5513,7 @@ function parse(xml) {
   }
 }
 
-},{"debug":27}],72:[function(require,module,exports){
+},{"debug":28}],74:[function(require,module,exports){
 module.exports = extend
 
 var hasOwnProperty = Object.prototype.hasOwnProperty;
@@ -5474,7 +5534,7 @@ function extend() {
     return target
 }
 
-},{}],73:[function(require,module,exports){
+},{}],75:[function(require,module,exports){
 module.exports = ExtractAnimation
 
 // TODO: Don't hard code dimension detection
@@ -5515,7 +5575,7 @@ function ExtractAnimation (libraryAnimations) {
   return allKeyframes
 }
 
-},{}],74:[function(require,module,exports){
+},{}],76:[function(require,module,exports){
 var mat4Multiply = require('gl-mat4/multiply')
 var mat4Scale = require('gl-mat4/scale')
 var mat4Transpose = require('gl-mat4/transpose')
@@ -5612,7 +5672,7 @@ function foo (jointName, keyframe, jointRelationships, keyframeJointMatrices) {
   return [jointMatrix]
 }
 
-},{"gl-mat4/multiply":40,"gl-mat4/scale":41,"gl-mat4/transpose":43}],75:[function(require,module,exports){
+},{"gl-mat4/multiply":41,"gl-mat4/scale":42,"gl-mat4/transpose":44}],77:[function(require,module,exports){
 var transpose = require('gl-mat4/transpose')
 var mat4Multiply = require('gl-mat4/multiply')
 
@@ -5672,7 +5732,7 @@ function ParseLibraryControllers (library_controllers) {
   }
 }
 
-},{"gl-mat4/multiply":40,"gl-mat4/transpose":43}],76:[function(require,module,exports){
+},{"gl-mat4/multiply":41,"gl-mat4/transpose":44}],78:[function(require,module,exports){
 module.exports = ParseLibraryGeometries
 
 function ParseLibraryGeometries (library_geometries) {
@@ -5716,7 +5776,7 @@ function ParseLibraryGeometries (library_geometries) {
   }
 }
 
-},{}],77:[function(require,module,exports){
+},{}],79:[function(require,module,exports){
 module.exports = ParseVisualScenes
 
 // TODO: Handle child joints. Maybe depth first traversal?
@@ -5765,7 +5825,7 @@ function parseJoints (node, parentJointName, accumulator) {
   return accumulator
 }
 
-},{}],78:[function(require,module,exports){
+},{}],80:[function(require,module,exports){
 var xmlparser = require('xml-parser')
 var parseLibraryGeometries = require('./library_geometries/parse-library-geometries.js')
 var parseLibraryVisualScenes = require('./library_visual_scenes/parse-visual-scenes.js')
@@ -5837,7 +5897,7 @@ function compactXML (res, xml) {
   return res
 }
 
-},{"./library_animations/parse-loc-rot-scale-anim.js":73,"./library_animations/parse-skeletal-animations.js":74,"./library_controllers/parse-library-controllers.js":75,"./library_geometries/parse-library-geometries.js":76,"./library_visual_scenes/parse-visual-scenes.js":77,"xml-parser":71}]},{},[22]);
+},{"./library_animations/parse-loc-rot-scale-anim.js":75,"./library_animations/parse-skeletal-animations.js":76,"./library_controllers/parse-library-controllers.js":77,"./library_geometries/parse-library-geometries.js":78,"./library_visual_scenes/parse-visual-scenes.js":79,"xml-parser":73}]},{},[23]);
 </script>
   </body>
 </html>
