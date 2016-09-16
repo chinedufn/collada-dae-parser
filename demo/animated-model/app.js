@@ -5,6 +5,7 @@ var loadModel = require('./3d-model/load-model.js')
 var initShaders = require('./shader/init-shader.js')
 var SS = require('solid-state')
 var animate = require('./animate/animate.js')
+var viewportResize = require('./viewport/viewport-resize.js')
 var initControls = require('./control/init-control.js')
 var initTargets = require('./init-target/init-target.js')
 
@@ -14,19 +15,20 @@ function BlenderCubeCanvas () {
   var AppState = new SS({
     currentlyPressedKeys: {},
     currentAnimation: [0, 3],
-    orbit: {yRadians: -1.9, xRadians: 1.05}
+    orbit: {yRadians: -1.9, xRadians: 1.05},
+    viewport: { width: 680, height: 420 }
   })
   AppState.set('targets', initTargets(AppState))
 
   var canvas = document.createElement('canvas')
-  canvas.width = 680
-  canvas.height = 420
+  canvas.style.width = '100%'
+  canvas.style.height = '100%'
+  viewportResize(AppState, canvas)
 
   var gl = canvas.getContext('webgl')
   gl.clearColor(0.0, 0.0, 0.0, 1.0)
   gl.enable(gl.DEPTH_TEST)
 
-  var viewport = {height: canvas.height, width: canvas.width}
   var shaderObject = initShaders(gl)
   initControls(AppState)
 
@@ -41,7 +43,7 @@ function BlenderCubeCanvas () {
     animate(AppState)
     // TODO: Pull out some of the animation happening in render
     // TODO: Clean up params
-    render(gl, viewport, modelData, shaderObject, dt, AppState.get())
+    render(gl, modelData, shaderObject, dt, AppState.get())
   }).start()
 
   return {
