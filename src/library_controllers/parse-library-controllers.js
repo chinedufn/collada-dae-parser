@@ -24,7 +24,10 @@ function ParseLibraryControllers (library_controllers) {
       var numJointWeightsToRead = jointWeightCounts[index]
       parsedVertexJointWeights[index] = {}
       for (var i = 0; i < numJointWeightsToRead; i++) {
-        parsedVertexJointWeights[index][jointsAndWeights.shift()] = weightsArray[jointsAndWeights.shift()]
+        // The particular joint that we are dealing with, and its weighting on this vertex
+        var jointNumber = jointsAndWeights.shift()
+        var jointWeighting = jointsAndWeights.shift()
+        parsedVertexJointWeights[index][jointNumber] = weightsArray[jointWeighting]
       }
     })
 
