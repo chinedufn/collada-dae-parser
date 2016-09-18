@@ -36,6 +36,7 @@ function expandVertices (parsedDae) {
           vertexNormals[vertexPositionIndex * 3 + i] = parsedDae.vertexNormals[parsedDae.vertexNormalIndices[counter] * 3 + i]
         }
         var jointIndex = Object.keys(jointsAndWeights)[i]
+        // TODO: Should zero be -1? It will have a zero weight regardless, but that lets us distinguish between empty bone slots and zero index bone slots
         vertexJointAffectors[vertexPositionIndex * 4 + i] = Number(jointIndex) || 0
         vertexJointWeights[vertexPositionIndex * 4 + i] = jointsAndWeights[jointIndex] || 0
       }
@@ -52,6 +53,7 @@ function expandVertices (parsedDae) {
           vertexNormals[largestPositionIndex * 3 + i] = parsedDae.vertexNormals[parsedDae.vertexNormalIndices[counter] * 3 + i]
         }
         var jointIndex = Object.keys(jointsAndWeights)[i]
+        // TODO: Should zero be -1? It will have a zero weight regardless, but that lets us distinguish between empty bone slots and zero index bone slots
         vertexJointAffectors[largestPositionIndex * 4 + i] = Number(jointIndex) || 0
         vertexJointWeights[largestPositionIndex * 4 + i] = jointsAndWeights[jointIndex] || 0
       }

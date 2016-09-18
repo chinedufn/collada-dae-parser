@@ -13,7 +13,7 @@ module.exports = BlenderCubeCanvas
 function BlenderCubeCanvas () {
   var AppState = new SS({
     currentlyPressedKeys: {},
-    currentAnimation: [0, 3],
+    currentAnimation: [0, 4],
     orbit: {yRadians: -1.9, xRadians: 1.05},
     viewport: { width: 680, height: 420 }
   })
