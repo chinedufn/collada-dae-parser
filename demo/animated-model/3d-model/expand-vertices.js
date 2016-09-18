@@ -58,7 +58,15 @@ function expandVertices (parsedDae) {
     }
   })
 
+  // We count the number of matrices in one of the keyframes
+  // There *should* be one matrix per joint
+  // All keyframes *should* have the same number of joints
+  var firstKeyframeTime = Object.keys(parsedDae.keyframes).slice(0, 1)
+  var numJoints = parsedDae.keyframes[firstKeyframeTime].length
+
   return {
+    // TODO: This has nothing to do with expanding joints. Calculate elsewhere
+    numJoints: numJoints,
     vertexNormals: vertexNormals,
     vertexPositionIndices: vertexPositionIndices,
     vertexJointAffectors: vertexJointAffectors,

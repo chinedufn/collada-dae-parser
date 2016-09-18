@@ -9,9 +9,8 @@ module.exports = Render
 // TODO: Pass in an object instead of a bunch of params
 // TODO: There's a lot happening in here that should happen elsewhere (i.e. animation setup)
 // will be easier to split out once we know what we're doing
-function Render (gl, animatedModel, shaderObject, dt, state) {
+function Render (gl, animatedModel, dt, state) {
   // TODO: get # joints from model
-  var numJoints = 6
   var selectedKeyframes = Object.keys(animatedModel.keyframes)
   .sort()
   .slice(state.currentAnimation[0], state.currentAnimation[1] + 1)
@@ -20,7 +19,7 @@ function Render (gl, animatedModel, shaderObject, dt, state) {
     return selectedKeyframes
   }, {})
 
-  var interpolatedJoints = interpolateJoints(selectedKeyframes, dt, numJoints)
+  var interpolatedJoints = interpolateJoints(selectedKeyframes, dt, animatedModel.numJoints)
 
   gl.viewport(0, 0, state.viewport.width, state.viewport.height)
   gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
@@ -36,7 +35,7 @@ function Render (gl, animatedModel, shaderObject, dt, state) {
     interpolatedJoints: interpolatedJoints,
     position: modelPosition,
     perspectiveMatrix: pMatrix,
-    shaderObj: shaderObject,
-    viewMatrix: viewMatrix
+    viewMatrix: viewMatrix,
+    numJoints: animatedModel.numJoints
   })
 }
