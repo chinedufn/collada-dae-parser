@@ -6,7 +6,9 @@ var vertex = fs.readFileSync(path.resolve(__dirname, './vertex.glsl')).toString(
 module.exports = InitShaders
 
 // TODO: Add error handling
-function InitShaders (gl) {
+function InitShaders (gl, opts) {
+  var numJoints = opts.numJoints
+
   var fragmentShader = gl.createShader(gl.FRAGMENT_SHADER)
   var vertexShader = gl.createShader(gl.VERTEX_SHADER)
 
@@ -34,7 +36,7 @@ function InitShaders (gl) {
   var jointWeightAttribute = gl.getAttribLocation(shaderProgram, 'aJointWeight')
   gl.enableVertexAttribArray(jointWeightAttribute)
 
-  return {
+  var shaderObj = {
     ambientColorUniform: gl.getUniformLocation(shaderProgram, 'uAmbientColor'),
     lightingDirectionUniform: gl.getUniformLocation(shaderProgram, 'uLightingDirection'),
     directionalColorUniform: gl.getUniformLocation(shaderProgram, 'uDirectionalColor'),
@@ -46,19 +48,13 @@ function InitShaders (gl) {
     jointWeightAttribute: jointWeightAttribute,
     samplerUniform: gl.getUniformLocation(shaderProgram, 'uSampler'),
     pMatrixUniform: gl.getUniformLocation(shaderProgram, 'uPMatrix'),
-    mvMatrixUniform: gl.getUniformLocation(shaderProgram, 'uMVMatrix'),
-    // TODO: For loop
-    boneMatrix0: gl.getUniformLocation(shaderProgram, 'boneMatrices[0]'),
-    boneMatrix1: gl.getUniformLocation(shaderProgram, 'boneMatrices[1]'),
-    boneMatrix2: gl.getUniformLocation(shaderProgram, 'boneMatrices[2]'),
-    boneMatrix3: gl.getUniformLocation(shaderProgram, 'boneMatrices[3]'),
-    boneMatrix4: gl.getUniformLocation(shaderProgram, 'boneMatrices[4]'),
-    boneMatrix5: gl.getUniformLocation(shaderProgram, 'boneMatrices[5]'),
-    normalMatrix0: gl.getUniformLocation(shaderProgram, 'boneNormals[0]'),
-    normalMatrix1: gl.getUniformLocation(shaderProgram, 'boneNormals[1]'),
-    normalMatrix2: gl.getUniformLocation(shaderProgram, 'boneNormals[2]'),
-    normalMatrix3: gl.getUniformLocation(shaderProgram, 'boneNormals[3]'),
-    normalMatrix4: gl.getUniformLocation(shaderProgram, 'boneNormals[4]'),
-    normalMatrix5: gl.getUniformLocation(shaderProgram, 'boneNormals[5]')
+    mvMatrixUniform: gl.getUniformLocation(shaderProgram, 'uMVMatrix')
   }
+
+  for (var jointNum = 0; jointNum < numJoints; jointNum++) {
+    shaderObj['boneMatrix' + jointNum] = gl.getUniformLocation(shaderProgram, 'boneMatrices[' + jointNum + ']')
+    shaderObj['normalMatrix' + jointNum] = gl.getUniformLocation(shaderProgram, 'boneNormals[' + jointNum + ']')
+  }
+
+  return shaderObj
 }

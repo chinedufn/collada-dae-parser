@@ -2,7 +2,6 @@ var render = require('./render/render.js')
 var document = require('global/document')
 var loop = require('raf-loop')
 var loadModel = require('./3d-model/load-model.js')
-var initShaders = require('./shader/init-shader.js')
 var SS = require('solid-state')
 var animate = require('./animate/animate.js')
 var viewportResize = require('./viewport/viewport-resize.js')
@@ -29,7 +28,6 @@ function BlenderCubeCanvas () {
   gl.clearColor(0.0, 0.0, 0.0, 1.0)
   gl.enable(gl.DEPTH_TEST)
 
-  var shaderObject = initShaders(gl)
   initControls(AppState)
 
   var modelData = loadModel(gl, {
@@ -43,7 +41,7 @@ function BlenderCubeCanvas () {
     animate(AppState)
     // TODO: Pull out some of the animation happening in render
     // TODO: Clean up params
-    render(gl, modelData, shaderObject, dt, AppState.get())
+    render(gl, modelData, dt, AppState.get())
   }).start()
 
   return {
