@@ -71,9 +71,9 @@ function ParseLibraryAnimations (library_animations, jointBindPoses, visualScene
 }
 
 // TODO: Refactor. Depth first traversal might make all of this less hacky
-function getParentWorldMatrix (jointName, keyframe, jointRelationships, keyframeJointMatrices, accumulator) {
+function getParentWorldMatrix (jointName, keyframe, jointRelationships, keyframeJointMatrices) {
   // child -> parent -> parent -> ...
-  var jointMatrixTree = foo(jointName, keyframe, jointRelationships, keyframeJointMatrices, accumulator)
+  var jointMatrixTree = foo(jointName, keyframe, jointRelationships, keyframeJointMatrices)
   // TODO: Revisit this. Thrown in to pass tests. Maybe just return `jointMatrix`
   // when there aren't any parent matrices to factor in
   var worldMatrix = [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1]
