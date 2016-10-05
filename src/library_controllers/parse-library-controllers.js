@@ -1,4 +1,3 @@
-var transpose = require('gl-mat4/transpose')
 var mat4Multiply = require('gl-mat4/multiply')
 
 module.exports = ParseLibraryControllers
@@ -47,14 +46,11 @@ function ParseLibraryControllers (library_controllers) {
       mat4Multiply(bindPose, bindShapeMatrix, bindPose)
       jointBindPoses[jointName] = bindPose
     })
-
-    transpose(bindShapeMatrix, bindShapeMatrix)
   }
   // TODO: Should we also export the greatest number of joints for a vertex?
   // This might allow the consumer to use a shader that expects fewer joints
   // when skinning. i.e. mat4 vs mat3 or mat2 for weights
   return {
-    bindShapeMatrix: bindShapeMatrix,
     jointBindPoses: jointBindPoses,
     vertexJointWeights: parsedVertexJointWeights
   }
