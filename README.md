@@ -99,6 +99,8 @@ console.log(parsedCollada)
 - [ ] demo: allow zoom in, zoom out in demo
 - [ ] doc: Add a GIF of every test fixture animation and demo
 - [ ] doc: Documentation
+- [ ] warning: Throw descriptive error message if user attempts to export multiple geometries
+- [ ] warning: Somehow let the user know if their joints use non rigid transforms - until we actually support this
 
 - [ ] A separate package that uses collada-dae-parser to implement a stateless skeletal animation system
 
@@ -114,7 +116,6 @@ console.log(parsedCollada)
 ## See Also
 
 - [wavefront-obj-parser](https://github.com/chinedufn/wavefront-obj-parser)
-- 
 
 ## Credits
 
