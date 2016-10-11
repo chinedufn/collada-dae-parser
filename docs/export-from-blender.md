@@ -24,7 +24,7 @@ lorem ipsum
 
 *First select all of your meshes while in Object mode*
 
-![image](https://cloud.githubusercontent.com/assets/2099811/19274522/621af72a-8f9e-11e6-969f-6f51b2f45a4c.png)
+![image](https://cloud.githubusercontent.com/assets/2099811/19275194/ee841a00-8fa0-11e6-89a3-5f5edf67763b.png)
 
 *Then join them using `Ctrl` + `J`*
 
