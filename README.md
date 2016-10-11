@@ -11,9 +11,9 @@ collada-dae-parser [![npm version](https://badge.fury.io/js/collada-dae-parser.s
 
 ## What does it do?
 
-`collada-dae-parser` parses a [collada](https://www.khronos.org/collada/) file and outputs JSON. This is useful for displaying [skeletal animations](https://en.wikipedia.org/wiki/Skeletal_animation) in the browser. 
+`collada-dae-parser` parses a [collada](https://www.khronos.org/collada/) file and outputs JSON. This is useful for displaying [skeletal animations](https://en.wikipedia.org/wiki/Skeletal_animation) in the browser.
 
-`collada-dae-parser` is only concerned with giving you JSON. An animation system is outside of this modules scope.
+`collada-dae-parser` is only concerned with giving you JSON. An animation system is outside of this modules scope, but [skeletal-animation-system](https://github.com/chinedufn/skeleta-animation-system) could be a useful start.
 
 ## To Install
 
@@ -36,6 +36,13 @@ cd collada-dae-parser
 npm install
 npm run demo
 ```
+
+## Collada Support
+
+`collada-dae-parser` tries to be useful for WebGL games and interactive demos, but does not try to support the entire collada spec. If you're trying to parse a model
+that is not supported, `collada-dae-parser` will try to let you know how to tweak it.
+
+![image](https://cloud.githubusercontent.com/assets/2099811/19274200/62e11032-8f9d-11e6-8f99-d0528d2d5d77.png)
 
 ## CLI
 
@@ -65,6 +72,8 @@ Your collada file data. Not the filename, the file contents.
 
 #### Returned Object
 
+TODO: Document this
+
 ```js
 var parseDae = require('collada-dae-parser')
 var parsedCollada = parseDae(fs.readFileSync(fileName))
@@ -90,6 +99,7 @@ console.log(parsedCollada)
 - [x] src: Stop exporting bind shape matrix
 - [x] demo: fix normals in demo lighting
 - [x] src: Remove callback from API
+- [x] warning: Throw descriptive error message if user attempts to export multiple geometries
 - [ ] src / demo: add a textured demo model
 - [ ] src: rounding values. Currently lots of .999999 and 1.000001
 - [ ] src: All of the TODO: statements in code
@@ -99,7 +109,6 @@ console.log(parsedCollada)
 - [ ] demo: allow zoom in, zoom out in demo
 - [ ] doc: Add a GIF of every test fixture animation and demo
 - [ ] doc: Documentation
-- [ ] warning: Throw descriptive error message if user attempts to export multiple geometries
 - [ ] warning: Somehow let the user know if their joints use non rigid transforms - until we actually support this
 
 - [ ] A separate package that uses collada-dae-parser to implement a stateless skeletal animation system
@@ -116,6 +125,7 @@ console.log(parsedCollada)
 ## See Also
 
 - [wavefront-obj-parser](https://github.com/chinedufn/wavefront-obj-parser)
+- [skeletal-animation-system](https://github.com/chinedufn/skeleta-animation-system)
 
 ## Credits
 
