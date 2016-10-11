@@ -125,7 +125,7 @@ console.log(parsedCollada)
 ## See Also
 
 - [wavefront-obj-parser](https://github.com/chinedufn/wavefront-obj-parser)
-- [skeletal-animation-system](https://github.com/chinedufn/skeleta-animation-system)
+- [skeletal-animation-system](https://github.com/chinedufn/skeletal-animation-system)
 
 ## Credits
 
