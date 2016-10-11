@@ -1,6 +1,14 @@
+var MultipleMeshError = require('./multiple-mesh-error-message.js')
+
 module.exports = ParseLibraryGeometries
 
 function ParseLibraryGeometries (library_geometries) {
+  // We only support models with 1 geometry. If the model zero or
+  // multiple meshes we alert the user
+  if (library_geometries[0].geometry.length !== 1) {
+    throw new MultipleMeshError(library_geometries[0].geometry.length)
+  }
+
   var geometryMesh = library_geometries[0].geometry[0].mesh[0]
   var source = geometryMesh.source
 
