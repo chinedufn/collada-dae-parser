@@ -42,7 +42,7 @@ npm run demo
 `collada-dae-parser` tries to be useful for WebGL games and interactive demos, but does not try to support the entire collada spec. If you're trying to parse a model
 that is not supported, `collada-dae-parser` will try to let you know how to tweak it.
 
-![image](https://cloud.githubusercontent.com/assets/2099811/19274200/62e11032-8f9d-11e6-8f99-d0528d2d5d77.png)
+![image](https://cloud.githubusercontent.com/assets/2099811/19274522/621af72a-8f9e-11e6-969f-6f51b2f45a4c.png)
 
 ## CLI
 
