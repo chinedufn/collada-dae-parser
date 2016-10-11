@@ -18,6 +18,18 @@ lorem ipsum
 
 ![image](https://cloud.githubusercontent.com/assets/2099811/19255682/71e9e758-8f2e-11e6-840f-ccc43b95ea2f.png)
 
+## Multiple Meshes
+
+`collada-dae-parser` does not support files with multiple meshes. You should join your geometries in `Object mode` before exporting.
+
+*First select all of your meshes while in Object mode*
+
+![image](https://cloud.githubusercontent.com/assets/2099811/19274522/621af72a-8f9e-11e6-969f-6f51b2f45a4c.png)
+
+*Then join them using `Ctrl` + `J`*
+
+![image](https://cloud.githubusercontent.com/assets/2099811/19274869/b3d4ca04-8f9f-11e6-9148-6cabd81a9ed6.png)
+
 ## Skeletons with only Rigid Motions
 
 TODO ... explain this
