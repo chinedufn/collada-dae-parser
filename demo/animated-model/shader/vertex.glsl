@@ -19,12 +19,22 @@ uniform mat4 uPMatrix;
 uniform mat4 boneMatrices[32];
 uniform mat3 boneNormals[32];
 
+uniform vec4 boneRotQuaternions[32];
+uniform vec4 boneTransQuaternions[32];
+
 varying vec3 vLightWeighting;
 
 void main (void) {
   // Select joint matrix for this vertex
+
+  // TODO: Just store the indices instead of copying over the matrices
+  //  i.e. float array of indices instead of matrices
   mat4 jointMatrix[4];
   mat3 normalMatrix[4];
+
+  float rotQuaternion[4];
+  float transQuaternion[4];
+
   mat4 weightedJointMatrix;
   mat3 weightedNormalMatrix;
 
@@ -32,18 +42,27 @@ void main (void) {
     if (aJointIndex.x == float(i)) {
       jointMatrix[0] = boneMatrices[i];
       normalMatrix[0] = boneNormals[i];
+      rotQuaternion[0] = float(i);
+      transQuaternion[0] = float(i);
     }
     if (aJointIndex.y == float(i)) {
       jointMatrix[1] = boneMatrices[i];
       normalMatrix[1] = boneNormals[i];
+      rotQuaternion[1] = float(i);
+      transQuaternion[1] = float(i);
     }
     if (aJointIndex.z == float(i)) {
       jointMatrix[2] = boneMatrices[i];
       normalMatrix[2] = boneNormals[i];
+      // boneDualQuaternions[2] = boneDualQuaternions[i];
+      rotQuaternion[2] = float(i);
+      transQuaternion[2] = float(i);
     }
     if (aJointIndex.w == float(i)) {
       jointMatrix[3] = boneMatrices[i];
       normalMatrix[3] = boneNormals[i];
+      rotQuaternion[3] = float(i);
+      transQuaternion[3] = float(i);
     }
   }
 

@@ -19,7 +19,7 @@ function Render (gl, animatedModel, dt, state) {
     return selectedKeyframes
   }, {})
 
-  var interpolatedJoints = interpolateJoints(selectedKeyframes, dt, animatedModel.numJoints)
+  var interpolatedJointData = interpolateJoints(selectedKeyframes, dt, animatedModel.numJoints)
 
   gl.viewport(0, 0, state.viewport.width, state.viewport.height)
   gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
@@ -32,7 +32,9 @@ function Render (gl, animatedModel, dt, state) {
   var viewMatrix = makeInverse(cameraMatrix)
 
   animatedModel.draw({
-    interpolatedJoints: interpolatedJoints,
+    interpolatedJoints: interpolatedJointData.interpolatedJoints,
+    rotationQuats: interpolatedJointData.interpolatedRotQuaternions,
+    translationQuats: interpolatedJointData.interpolatedTransQuaternions,
     position: modelPosition,
     perspectiveMatrix: pMatrix,
     viewMatrix: viewMatrix,
