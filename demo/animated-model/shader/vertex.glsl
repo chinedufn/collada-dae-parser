@@ -80,10 +80,10 @@ void main (void) {
     rotQuaternion[2] * aJointWeight.z +
     rotQuaternion[3] * aJointWeight.w;
 
-  vec4 weightedTransQuats = rotQuaternion[0] * aJointWeight.x +
-    rotQuaternion[1] * aJointWeight.y +
-    rotQuaternion[2] * aJointWeight.z +
-    rotQuaternion[3] * aJointWeight.w;
+  vec4 weightedTransQuats = transQuaternion[0] * aJointWeight.x +
+    transQuaternion[1] * aJointWeight.y +
+    transQuaternion[2] * aJointWeight.z +
+    transQuaternion[3] * aJointWeight.w;
 
   // Normalize function
   vec4 normalizedRot;
@@ -102,10 +102,8 @@ void main (void) {
 
   // Normalize our dual quaternion
   //  equation: https://www.cs.utah.edu/~ladislav/kavan07skinning/kavan07skinning.pdf
-  weightedRotQuats = weightedRotQuats / normalizedRot;
-  weightedTransQuats = weightedTransQuats / normalizedRot;
-
-  vec4 rotQuatConjugate = vec4(-weightedRotQuats[0], -weightedRotQuats[1], -weightedRotQuats[2], weightedRotQuats[3]);
+  // weightedRotQuats = weightedRotQuats / normalizedRot;
+  // weightedTransQuats = weightedTransQuats / normalizedRot;
 
   float xR = weightedRotQuats[0];
   float yR = weightedRotQuats[1];
@@ -153,7 +151,7 @@ void main (void) {
   vLightWeighting = uAmbientColor + uDirectionalColor * directionalLightWeighting;
 
   // Blender uses a right handed coordinate system. We convert to left handed here
-  vec4 leftWorldSpace = weightedJointMatrix * vec4(aVertexPosition, 1.0);
+  vec4 leftWorldSpace = convertedMatrix * vec4(aVertexPosition, 1.0);
   y = leftWorldSpace.z;
   z = -leftWorldSpace.y;
   leftWorldSpace.y = y;
