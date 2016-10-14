@@ -61,7 +61,6 @@ function percentBetweenKeyframes (keyframes, dt, numJoints) {
   var interpolatedRotQuaternions = []
   var interpolatedTransQuaternions = []
 
-  // TODO: Don't require entire gl-matrix
   interpolatedJoints.forEach(function (joint) {
     var rotationMatrix = mat3FromMat4([], joint)
     var rotationQuat = quatFromMat3([], rotationMatrix)
