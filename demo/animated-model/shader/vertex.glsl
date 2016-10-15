@@ -86,24 +86,17 @@ void main (void) {
     transQuaternion[3] * aJointWeight.w;
 
   // Normalize function
-  vec4 normalizedRot;
+  float normalizedRot;
   float xRot = weightedRotQuats[0];
   float yRot = weightedRotQuats[1];
   float zRot = weightedRotQuats[2];
   float wRot = weightedRotQuats[3];
-  float lenRot = xRot * xRot + yRot * yRot + zRot * zRot + wRot * wRot;
-  if (lenRot > 0.0) {
-    lenRot = 1.0 / sqrt(lenRot);
-    normalizedRot[0] = xRot * lenRot;
-    normalizedRot[1] = yRot * lenRot;
-    normalizedRot[2] = zRot * lenRot;
-    normalizedRot[3] = wRot * lenRot;
-  }
+  normalizedRot = sqrt(xRot * xRot + yRot * yRot + zRot * zRot + wRot * wRot);
 
   // Normalize our dual quaternion
   //  equation: https://www.cs.utah.edu/~ladislav/kavan07skinning/kavan07skinning.pdf
-  // weightedRotQuats = weightedRotQuats / normalizedRot;
-  // weightedTransQuats = weightedTransQuats / normalizedRot;
+  weightedRotQuats = weightedRotQuats / normalizedRot;
+  weightedTransQuats = weightedTransQuats / normalizedRot;
 
   float xR = weightedRotQuats[0];
   float yR = weightedRotQuats[1];
