@@ -16,11 +16,11 @@ uniform mat4 uMVMatrix;
 uniform mat4 uPMatrix;
 
 // TODO: Generate this shader at runtime with proper num joints
-uniform mat4 boneMatrices[32];
-uniform mat3 boneNormals[32];
-
-uniform vec4 boneRotQuaternions[32];
-uniform vec4 boneTransQuaternions[32];
+// TODO: Stopped working on mobile when we had a combined array length of > a few dozen
+uniform mat4 boneMatrices[6];
+uniform mat3 boneNormals[6];
+uniform vec4 boneRotQuaternions[6];
+uniform vec4 boneTransQuaternions[6];
 
 varying vec3 vLightWeighting;
 
@@ -37,7 +37,7 @@ void main (void) {
   mat4 weightedJointMatrix;
   mat3 weightedNormalMatrix;
 
-  for (int i = 0; i < 32; i++) {
+  for (int i = 0; i < 6; i++) {
     if (aJointIndex.x == float(i)) {
       jointMatrix[0] = boneMatrices[i];
       normalMatrix[0] = boneNormals[i];
