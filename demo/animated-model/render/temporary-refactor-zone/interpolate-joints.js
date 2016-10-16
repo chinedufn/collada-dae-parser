@@ -4,7 +4,8 @@ var interpolate = require('mat4-interpolate')
 var mat3FromMat4 = require('gl-mat3/from-mat4')
 var quatMultiply = require('gl-quat/multiply')
 var quatFromMat3 = require('gl-quat/fromMat3')
-var vec4Scale = require('gl-vec4/scale')
+var quatScale = require('gl-quat/scale')
+var quatAdd = require('gl-quat/add')
 
 // TODO: This should not be responsible for maintaining a clock
 var animationClock = 0
@@ -62,22 +63,26 @@ function percentBetweenKeyframes (keyframes, dt, numJoints) {
   var interpolatedTransQuaternions = []
 
   // TODO: Just got dual quaternion skinning working! Code is a mess need to clean. Was throwing everything at the wall on this one..
+  // TODO: Don't convert keyframe matrices into dual quaternions every single frame. Only need to do it once
+  // TODO: Rename the variables
   interpolatedJoints.forEach(function (joint, index) {
+    // Create our lower keyframe dual quaternion
     joint = minJoints[index]
-    var joint2 = maxJoints[index]
     var rotationMatrix = mat3FromMat4([], joint)
     var rotationQuat = quatFromMat3([], rotationMatrix)
     var transVec = [joint[12], joint[13], joint[14], 0]
-    var transQuat = vec4Scale([], quatMultiply([], transVec, rotationQuat), 0.5)
+    var transQuat = quatScale([], quatMultiply([], transVec, rotationQuat), 0.5)
 
+    // Create our upper keyframe dual quaternion
+    var joint2 = maxJoints[index]
     var rotationMatrix2 = mat3FromMat4([], joint2)
     var rotationQuat2 = quatFromMat3([], rotationMatrix2)
     var transVec2 = [joint2[12], joint2[13], joint2[14], 0]
-    var transQuat2 = vec4Scale([], quatMultiply([], transVec2, rotationQuat2), 0.5)
+    var transQuat2 = quatScale([], quatMultiply([], transVec2, rotationQuat2), 0.5)
 
-    var vec4 = require('gl-quat')
-    rotationQuat = require('gl-quat/add')([], vec4.scale([], rotationQuat, 1 - percentBetweenKeyframes), vec4.scale([], rotationQuat2, percentBetweenKeyframes))
-    transQuat = require('gl-quat/add')([], vec4.scale([], transQuat, 1 - percentBetweenKeyframes), vec4.scale([], transQuat2, percentBetweenKeyframes))
+    // Interpolate our upper and lower keyframe dual quaternions using dual quaternion linear blending
+    rotationQuat = quatAdd([], quatScale([], rotationQuat, 1 - percentBetweenKeyframes), quatScale([], rotationQuat2, percentBetweenKeyframes))
+    transQuat = quatAdd([], quatScale([], transQuat, 1 - percentBetweenKeyframes), quatScale([], transQuat2, percentBetweenKeyframes))
 
     interpolatedRotQuaternions.push(rotationQuat)
     interpolatedTransQuaternions.push(transQuat)
