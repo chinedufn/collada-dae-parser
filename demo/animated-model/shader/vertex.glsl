@@ -29,75 +29,63 @@ void main (void) {
 
   // TODO: Just store the indices instead of copying over the matrices
   //  i.e. float array of indices instead of matrices
-  mat4 jointMatrix[4];
   mat3 normalMatrix[4];
   vec4 rotQuaternion[4];
   vec4 transQuaternion[4];
 
-  mat4 weightedJointMatrix;
   mat3 weightedNormalMatrix;
 
   for (int i = 0; i < 6; i++) {
     if (aJointIndex.x == float(i)) {
-      jointMatrix[0] = boneMatrices[i];
       normalMatrix[0] = boneNormals[i];
       rotQuaternion[0] = boneRotQuaternions[i];
       transQuaternion[0] = boneTransQuaternions[i];
     }
     if (aJointIndex.y == float(i)) {
-      jointMatrix[1] = boneMatrices[i];
       normalMatrix[1] = boneNormals[i];
       rotQuaternion[1] = boneRotQuaternions[i];
       transQuaternion[1] = boneTransQuaternions[i];
     }
     if (aJointIndex.z == float(i)) {
-      jointMatrix[2] = boneMatrices[i];
       normalMatrix[2] = boneNormals[i];
       rotQuaternion[2] = boneRotQuaternions[i];
       transQuaternion[2] = boneTransQuaternions[i];
     }
     if (aJointIndex.w == float(i)) {
-      jointMatrix[3] = boneMatrices[i];
       normalMatrix[3] = boneNormals[i];
       rotQuaternion[3] = boneRotQuaternions[i];
       transQuaternion[3] = boneTransQuaternions[i];
     }
   }
 
-  // `+=` wasn't working on some devices
-  weightedJointMatrix = jointMatrix[0] * aJointWeight.x +
-    jointMatrix[1] * aJointWeight.y +
-    jointMatrix[2] * aJointWeight.z +
-    jointMatrix[3] * aJointWeight.w;
-
+  // TODO: Replace with dual quaternion blending normal method
   weightedNormalMatrix = normalMatrix[0] * aJointWeight.x +
     normalMatrix[1] * aJointWeight.y +
     normalMatrix[2] * aJointWeight.z +
     normalMatrix[3] * aJointWeight.w;
 
+  // Blend our dual quaternion
   vec4 weightedRotQuats = rotQuaternion[0] * aJointWeight.x +
     rotQuaternion[1] * aJointWeight.y +
     rotQuaternion[2] * aJointWeight.z +
     rotQuaternion[3] * aJointWeight.w;
-
   vec4 weightedTransQuats = transQuaternion[0] * aJointWeight.x +
     transQuaternion[1] * aJointWeight.y +
     transQuaternion[2] * aJointWeight.z +
     transQuaternion[3] * aJointWeight.w;
 
-  // Normalize function
-  float normalizedRot;
+  // Normalize our dual quaternion
+  float magnitude;
   float xRot = weightedRotQuats[0];
   float yRot = weightedRotQuats[1];
   float zRot = weightedRotQuats[2];
   float wRot = weightedRotQuats[3];
-  normalizedRot = sqrt(xRot * xRot + yRot * yRot + zRot * zRot + wRot * wRot);
+  magnitude = sqrt(xRot * xRot + yRot * yRot + zRot * zRot + wRot * wRot);
+  weightedRotQuats = weightedRotQuats / magnitude;
+  weightedTransQuats = weightedTransQuats / magnitude;
 
-  // Normalize our dual quaternion
+  // Convert out dual quaternion in a 4x4 matrix
   //  equation: https://www.cs.utah.edu/~ladislav/kavan07skinning/kavan07skinning.pdf
-  weightedRotQuats = weightedRotQuats / normalizedRot;
-  weightedTransQuats = weightedTransQuats / normalizedRot;
-
   float xR = weightedRotQuats[0];
   float yR = weightedRotQuats[1];
   float zR = weightedRotQuats[2];

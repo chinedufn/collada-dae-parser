@@ -48,6 +48,7 @@ function drawModel (gl, modelData, opts) {
   }
 
   // Normal Matrices
+  // TODO: Don't calculate normals using matrices, use dual quats
   for (var q = 0; q < opts.numJoints; q++) {
     // TODO: better name
     var jointNormalMatrix = []
