@@ -61,12 +61,23 @@ function percentBetweenKeyframes (keyframes, dt, numJoints) {
   var interpolatedRotQuaternions = []
   var interpolatedTransQuaternions = []
 
-  interpolatedJoints.forEach(function (joint) {
+  // TODO: Just got dual quaternion skinning working! Code is a mess need to clean. Was throwing everything at the wall on this one..
+  interpolatedJoints.forEach(function (joint, index) {
+    joint = minJoints[index]
+    var joint2 = maxJoints[index]
     var rotationMatrix = mat3FromMat4([], joint)
     var rotationQuat = quatFromMat3([], rotationMatrix)
     var transVec = [joint[12], joint[13], joint[14], 0]
-
     var transQuat = vec4Scale([], quatMultiply([], transVec, rotationQuat), 0.5)
+
+    var rotationMatrix2 = mat3FromMat4([], joint2)
+    var rotationQuat2 = quatFromMat3([], rotationMatrix2)
+    var transVec2 = [joint2[12], joint2[13], joint2[14], 0]
+    var transQuat2 = vec4Scale([], quatMultiply([], transVec2, rotationQuat2), 0.5)
+
+    var vec4 = require('gl-quat')
+    rotationQuat = require('gl-quat/add')([], vec4.scale([], rotationQuat, 1 - percentBetweenKeyframes), vec4.scale([], rotationQuat2, percentBetweenKeyframes))
+    transQuat = require('gl-quat/add')([], vec4.scale([], transQuat, 1 - percentBetweenKeyframes), vec4.scale([], transQuat2, percentBetweenKeyframes))
 
     interpolatedRotQuaternions.push(rotationQuat)
     interpolatedTransQuaternions.push(transQuat)
