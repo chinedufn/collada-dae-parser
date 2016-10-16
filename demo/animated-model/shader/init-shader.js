@@ -54,6 +54,9 @@ function InitShaders (gl, opts) {
   for (var jointNum = 0; jointNum < numJoints; jointNum++) {
     shaderObj['boneMatrix' + jointNum] = gl.getUniformLocation(shaderProgram, 'boneMatrices[' + jointNum + ']')
     shaderObj['normalMatrix' + jointNum] = gl.getUniformLocation(shaderProgram, 'boneNormals[' + jointNum + ']')
+    // Split our dual quaternion into two vec4's since we can't use mat2x4 in WebGL
+    shaderObj['boneRotQuaternion' + jointNum] = gl.getUniformLocation(shaderProgram, 'boneRotQuaternions[' + jointNum + ']')
+    shaderObj['boneTransQuaternion' + jointNum] = gl.getUniformLocation(shaderProgram, 'boneTransQuaternions[' + jointNum + ']')
   }
 
   return shaderObj

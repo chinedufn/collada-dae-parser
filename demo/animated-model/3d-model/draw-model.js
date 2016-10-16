@@ -43,9 +43,12 @@ function drawModel (gl, modelData, opts) {
   // Vertex weight
   for (var jointNum = 0; jointNum < opts.numJoints; jointNum++) {
     gl.uniformMatrix4fv(modelData.shaderObj['boneMatrix' + jointNum], false, opts.interpolatedJoints[jointNum])
+    gl.uniform4fv(modelData.shaderObj['boneRotQuaternion' + jointNum], opts.rotationQuats[jointNum])
+    gl.uniform4fv(modelData.shaderObj['boneTransQuaternion' + jointNum], opts.translationQuats[jointNum])
   }
 
   // Normal Matrices
+  // TODO: Don't calculate normals using matrices, use dual quats
   for (var q = 0; q < opts.numJoints; q++) {
     // TODO: better name
     var jointNormalMatrix = []
