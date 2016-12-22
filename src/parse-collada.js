@@ -24,6 +24,7 @@ function ParseCollada (colladaXML) {
     var controllerData = parseLibraryControllers(result.COLLADA.library_controllers)
     if (controllerData.vertexJointWeights && Object.keys(controllerData.vertexJointWeights) .length > 0) {
       parsedObject.vertexJointWeights = controllerData.vertexJointWeights
+      parsedObject.jointNamePositionIndex = controllerData.jointNamePositionIndex
       jointBindPoses = controllerData.jointBindPoses
     }
   }

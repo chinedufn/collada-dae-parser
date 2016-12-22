@@ -41,10 +41,17 @@ function ParseLibraryControllers (library_controllers) {
     // ^ yes, but wait until we have a test file for it
     var jointBindPoses = {}
     var bindPoses = controller[0].skin[0].source[1].float_array[0]._.split(' ').map(Number)
+    // A way to look up each joint's index using it's name
+    // This is useful for creating bone groups using names
+    // but then easily converting them to their index within
+    // the collada-dae-parser data structure.
+    //  (collada-dae-parser uses index's and not names to store bone data)
+    var jointNamePositionIndex = {}
     orderedJointNames.forEach(function (jointName, index) {
       var bindPose = bindPoses.slice(16 * index, 16 * index + 16)
       mat4Multiply(bindPose, bindShapeMatrix, bindPose)
       jointBindPoses[jointName] = bindPose
+      jointNamePositionIndex[jointName] = index
     })
   }
   // TODO: Should we also export the greatest number of joints for a vertex?
@@ -52,6 +59,7 @@ function ParseLibraryControllers (library_controllers) {
   // when skinning. i.e. mat4 vs mat3 or mat2 for weights
   return {
     jointBindPoses: jointBindPoses,
+    jointNamePositionIndex: jointNamePositionIndex,
     vertexJointWeights: parsedVertexJointWeights
   }
 }

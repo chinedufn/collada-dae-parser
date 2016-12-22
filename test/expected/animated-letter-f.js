@@ -3,6 +3,7 @@
 // TODO: Add a gif of every model
 
 module.exports = {
+  jointNamePositionIndex: { Bone: 0, Bone_001: 1 },
   keyframes: {
     '0': [
       [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1],
