@@ -13,7 +13,7 @@ collada-dae-parser [![npm version](https://badge.fury.io/js/collada-dae-parser.s
 
 `collada-dae-parser` parses a [collada](https://www.khronos.org/collada/) file and outputs JSON. This is useful for displaying [skeletal animations](https://en.wikipedia.org/wiki/Skeletal_animation) in the browser.
 
-`collada-dae-parser` is only concerned with giving you JSON. An animation system is outside of this modules scope, but [skeletal-animation-system](https://github.com/chinedufn/skeleta-animation-system) could be a useful start.
+`collada-dae-parser` is only concerned with giving you JSON. An animation system is outside of this modules scope, but [skeletal-animation-system](https://github.com/chinedufn/skeletal-animation-system) could be a useful start.
 
 ## To Install
 
@@ -124,8 +124,9 @@ console.log(parsedCollada)
 
 ## See Also
 
-- [wavefront-obj-parser](https://github.com/chinedufn/wavefront-obj-parser)
+- [load-collada-dae](https://github.com/chinedufn/load-collada-dae)
 - [skeletal-animation-system](https://github.com/chinedufn/skeletal-animation-system)
+- [wavefront-obj-parser](https://github.com/chinedufn/wavefront-obj-parser)
 
 ## Credits
 
