@@ -80,6 +80,7 @@ var parsedCollada = parseDae(fs.readFileSync(fileName))
 console.log(parsedCollada)
 /*
   {
+    jointNamePositionIndex: {...},
     keyframes: {...},
     vertexNormalIndices: [...],
     vertexNormals: [...],
@@ -90,6 +91,54 @@ console.log(parsedCollada)
   }
 */
 ```
+
+##### jointNamePositionIndex
+
+Type: `Object`
+
+lorem ipsum
+
+##### keyframes
+
+Type: `Object`
+
+lorem ipsum
+
+##### vertexNormalIndices
+
+Type: `Array`
+
+lorem ipsum
+
+##### vertexNormals
+
+Type: `Array`
+
+lorem ipsum
+
+##### vertexPositionIndices
+
+Type: `Array`
+
+lorem ipsum
+
+##### vertexPositions
+
+Type: `Array`
+
+lorem ipsum
+
+##### vertexUVIndices
+
+Type: `Array`
+
+lorem ipsum
+
+##### vertexUVs
+
+Type: `Array`
+
+lorem ipsum
 
 ## TODO:
 
