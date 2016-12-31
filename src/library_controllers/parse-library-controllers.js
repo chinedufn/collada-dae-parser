@@ -36,11 +36,11 @@ function ParseLibraryControllers (library_controllers) {
     // Bind shape matrix (inverse bind matrix)
     var bindShapeMatrix = controller[0].skin[0].bind_shape_matrix[0].split(' ').map(Number)
 
-    // Joint bind poses
-    // TODO: Should we multiply in the bind shape matrix?
-    // ^ yes, but wait until we have a test file for it
+    // The matrices that transform each of our joints to their bind pose
     var jointBindPoses = {}
+
     var bindPoses = controller[0].skin[0].source[1].float_array[0]._.split(' ').map(Number)
+
     // A way to look up each joint's index using it's name
     // This is useful for creating bone groups using names
     // but then easily converting them to their index within
