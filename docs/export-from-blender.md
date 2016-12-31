@@ -30,6 +30,12 @@ lorem ipsum
 
 ![image](https://cloud.githubusercontent.com/assets/2099811/19274869/b3d4ca04-8f9f-11e6-9148-6cabd81a9ed6.png)
 
+## Control Joints
+
+lorem ipsum
+
+explain how to use `Bake Action`
+
 ## Skeletons with only Rigid Motions
 
 TODO ... explain this

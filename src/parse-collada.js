@@ -4,6 +4,7 @@ var parseLibraryVisualScenes = require('./library_visual_scenes/parse-visual-sce
 var parseLibraryControllers = require('./library_controllers/parse-library-controllers.js')
 var parseSkeletalAnimations = require('./library_animations/parse-skeletal-animations.js')
 var parseLocRotScaleAnim = require('./library_animations/parse-loc-rot-scale-anim.js')
+var validateNoControlBones = require('./validation/no-control-bones.js')
 
 module.exports = ParseCollada
 
@@ -26,6 +27,9 @@ function ParseCollada (colladaXML) {
       parsedObject.vertexJointWeights = controllerData.vertexJointWeights
       parsedObject.jointNamePositionIndex = controllerData.jointNamePositionIndex
       jointBindPoses = controllerData.jointBindPoses
+
+      // The parser only supports deformation bones. Control bones' affects must be baked in before exporting
+      validateNoControlBones(Object.keys(visualSceneData.jointRelationships), Object.keys(jointBindPoses))
     }
   }
 
