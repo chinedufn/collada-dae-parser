@@ -11,7 +11,7 @@ function noControlBones (allJointNames, deformationJointNames) {
   // We know that there are no control bones if the number of bones
   // matches the number of deformation bones. Otherwise we throw a
   // descriptive error
-  if (allJointNames.length !== deformationJointNames) {
+  if (allJointNames.length !== deformationJointNames.length) {
     // Let's find the control joint names so that we can report
     // them to the user
 
