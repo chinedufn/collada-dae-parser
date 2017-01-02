@@ -32,9 +32,31 @@ lorem ipsum
 
 ## Control Joints
 
-lorem ipsum
+`collada-dae-parser` does not support control bones such as pole targets, inverse kinematic bones or control bones.
 
-explain how to use `Bake Action`
+If you're rig uses control bones, you'll need to apply their effects onto your deformation joints before exporting your mesh.
+
+#### 1. Start from a copy file
+
+Begin by saving and working from a new copy of your model, since you'll be modifying your keyframes and rig before exporting.
+
+![armature with control joints](blender-export/screenshots/armature-with-control-bones.png)
+
+#### 2. Visual keyframes
+
+Go through all of your animation's keyframes, select all bones and insert a visual location rotation keyframe.
+
+This adds a keyframe to each joint that positions it exactly how you see it. Effectively baking the effects of
+your control bones into your deformation bones.
+
+![insert visual keyframes](blender-export/screenshots/insert-visual-key.png)
+
+#### 3. Delete control bones
+
+Once you've added your visual keyframes you can delete all of your control bones and verify that your
+animation still works. If so, you can export your collada file as usual.
+
+![delete control bones](blender-export/screenshots/delete-control-bones.png)
 
 ## Skeletons with only Rigid Motions
 
