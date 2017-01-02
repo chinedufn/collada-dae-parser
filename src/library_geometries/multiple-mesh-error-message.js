@@ -20,7 +20,7 @@ function generateMultipleMeshError (numMeshes) {
 
     Here's some documentation on how to do it in Blender:
 
-    https://github.com/chinedufn/collada-dae-parser/blob/master/docs/export-from-blender.md#multiple-meshes
+    https://github.com/chinedufn/collada-dae-parser/blob/master/docs/blender-export/blender-export.md#multiple-meshes
     `
   )
 }

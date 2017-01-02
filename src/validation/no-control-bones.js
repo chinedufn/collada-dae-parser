@@ -51,7 +51,7 @@ function noControlBones (allJointNames, deformationJointNames) {
 
       Here's some documentation on how to account for your control bones in Blender:
 
-        -> https://github.com/chinedufn/collada-dae-parser/blob/master/docs/export-from-blender.md#control-joints
+        -> https://github.com/chinedufn/collada-dae-parser/blob/master/docs/blender-export/blender-export.md#control-joints
       `
     )
   }
