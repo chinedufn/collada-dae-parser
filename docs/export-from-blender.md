@@ -58,6 +58,11 @@ animation still works. If so, you can export your collada file as usual.
 
 ![delete control bones](blender-export/screenshots/delete-control-bones.png)
 
+todo...
+
+- talk about not using inherit rotation while modeling since the collada exporter won't handle that properly
+- talk about making sure to remove all existing bone constraints after you finish adding visual keyframes
+
 ## Skeletons with only Rigid Motions
 
 TODO ... explain this
