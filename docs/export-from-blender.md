@@ -34,7 +34,7 @@ lorem ipsum
 
 `collada-dae-parser` does not support control bones such as pole targets, inverse kinematic bones or control bones.
 
-If you're rig uses control bones, you'll need to apply their effects onto your deformation joints before exporting your mesh.
+If your rig uses control bones, you'll need to apply their effects onto your deformation joints before exporting your mesh.
 
 #### 1. Start from a copy file
 
