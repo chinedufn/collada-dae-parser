@@ -44,24 +44,44 @@ Begin by saving and working from a new copy of your model, since you'll be modif
 
 #### 2. Visual keyframes
 
-Go through all of your animation's keyframes, select all bones and insert a visual location rotation keyframe.
+###### Duplicate constrained bones
+
+lorem ipsum... TODO:
+
+http://www.harkyman.com/2010/11/26/recording-ik-movement-into-fk-bones/
+
+###### Insert visual keyframes
+
+Insert a visual location rotation keyframe for all bones at each keyframe.
 
 This adds a keyframe to each joint that positions it exactly how you see it. Effectively baking the effects of
 your control bones into your deformation bones.
+
+More inserting visual keys will lead to a closer match to your original animation. TODO: explain
 
 ![insert visual keyframes](screenshots/insert-visual-key.png)
 
 #### 3. Delete control bones
 
 Once you've added your visual keyframes you can delete all of your control bones and verify that your
-animation still works. If so, you can export your collada file as usual.
+animation still works.
 
 ![delete control bones](screenshots/delete-control-bones.png)
 
-todo...
+#### 4. Delete constraints
 
-- talk about not using inherit rotation while modeling since the collada exporter won't handle that properly
-- talk about making sure to remove all existing bone constraints after you finish adding visual keyframes
+After all of your control / IK bones are deleted and you've verified that your animation still works you'll want to delete all of your bone constraints
+on your deformation bones
+
+##### 5. Export
+
+You can now export your collada file. If you run into a problem, please open an issue or PR!
+
+#### TODO...
+
+- don't using inherit rotation while modeling since the collada exporter won't handle that properly
+- video demonstrating dealing with constraints
+- summarize -> http://www.harkyman.com/2010/11/26/recording-ik-movement-into-fk-bones/
 
 ## Skeletons with only Rigid Motions
 
