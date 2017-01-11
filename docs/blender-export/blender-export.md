@@ -44,9 +44,15 @@ Begin by saving and working from a new copy of your model, since you'll be modif
 
 #### 2. Visual keyframes
 
+todo: explain why you can't just export IKs to collada
+
 ###### Duplicate constrained bones
 
-lorem ipsum... TODO:
+Duplicate all bones that have constraints or inverse kinematics.
+
+For any of the original bones are parented to one of their constraints, remove that parent.
+
+Add a bone constraint to each of your original bones to copy their new duplicated counterpart's transforms.
 
 http://www.harkyman.com/2010/11/26/recording-ik-movement-into-fk-bones/
 
@@ -57,7 +63,7 @@ Insert a visual location rotation keyframe for all bones at each keyframe.
 This adds a keyframe to each joint that positions it exactly how you see it. Effectively baking the effects of
 your control bones into your deformation bones.
 
-More inserting visual keys will lead to a closer match to your original animation. TODO: explain
+Inserting more visual keys will lead to a closer match to your original animation. TODO: explain
 
 ![insert visual keyframes](screenshots/insert-visual-key.png)
 
