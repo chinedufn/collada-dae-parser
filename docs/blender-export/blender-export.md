@@ -36,6 +36,8 @@ lorem ipsum
 
 If your rig uses control bones, you'll need to apply their effects onto your deformation joints before exporting your mesh.
 
+[tutorial on exporting IKs from blender](http://chinedufn.com/blender-export-iks-constraints)
+
 #### 1. Start from a copy file
 
 Begin by saving and working from a new copy of your model, since you'll be modifying your keyframes and rig before exporting.
