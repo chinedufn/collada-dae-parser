@@ -108,3 +108,13 @@ This changes your model to be scaled at `[1.0, 1.0, 1.0]` meaning that your expo
 lorem ipsum
 
 ![image](https://cloud.githubusercontent.com/assets/2099811/19255558/34e3cd0c-8f2d-11e6-8169-f93027cefdb2.png)
+
+## Combining actions
+
+lorem ipsum
+
+create a new action where you'll be combining all of them
+
+Add one keyframe to this new action
+
+Now you are able to copy and paste to this new action.. go through your other actions one by one and copy them into this new action `Ctrl-c` then `Ctrl-v`
