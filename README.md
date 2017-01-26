@@ -150,6 +150,7 @@ lorem ipsum
 - [x] demo: toggle between 2 animations
 - [x] src: Remove callback from API
 - [x] warning: Throw descriptive error message if user attempts to export multiple geometries
+- [x] A separate package that uses collada-dae-parser to implement a stateless skeletal animation system
 - [ ] src / demo: add a textured demo model
 - [ ] src: rounding values. Currently lots of .999999 and 1.000001
 - [ ] src: All of the TODO: statements in code
@@ -160,8 +161,7 @@ lorem ipsum
 - [ ] doc: Documentation
 - [ ] warning: Somehow let the user know if their joints use non rigid transforms - until we actually support this
 - [ ] warning: You didn't export a geometry. Link them to the documentation
-
-- [ ] A separate package that uses collada-dae-parser to implement a stateless skeletal animation system
+- [ ] research: Look into supporting library materials
 
 ## References
 
