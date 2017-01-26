@@ -10,15 +10,12 @@ uniform vec3 uAmbientColor;
 uniform vec3 uLightingDirection;
 uniform vec3 uDirectionalColor;
 
-uniform mat3 uNMatrix;
-
 uniform mat4 uMVMatrix;
 uniform mat4 uPMatrix;
 
 // TODO: Generate this shader at runtime with proper num joints
 // TODO: Stopped working on mobile when we had a combined array length of > a few dozen
 uniform mat4 boneMatrices[6];
-uniform mat3 boneNormals[6];
 uniform vec4 boneRotQuaternions[6];
 uniform vec4 boneTransQuaternions[6];
 
@@ -27,42 +24,31 @@ varying vec3 vLightWeighting;
 void main (void) {
   // Select joint matrix for this vertex
 
-  // TODO: Just store the indices instead of copying over the matrices
-  //  i.e. float array of indices instead of matrices
-  mat3 normalMatrix[4];
+  // TODO: Just store the indices instead of copying over the quaternions
+  //  i.e. float array of indices instead of vec4's
   vec4 rotQuaternion[4];
   vec4 transQuaternion[4];
 
-  mat3 weightedNormalMatrix;
-
+  // We loop through each joint to determine it's weighting against our current vertex
+  // We store up to four joint weights and use them to calculate our final position and normal
   for (int i = 0; i < 6; i++) {
     if (aJointIndex.x == float(i)) {
-      normalMatrix[0] = boneNormals[i];
       rotQuaternion[0] = boneRotQuaternions[i];
       transQuaternion[0] = boneTransQuaternions[i];
     }
     if (aJointIndex.y == float(i)) {
-      normalMatrix[1] = boneNormals[i];
       rotQuaternion[1] = boneRotQuaternions[i];
       transQuaternion[1] = boneTransQuaternions[i];
     }
     if (aJointIndex.z == float(i)) {
-      normalMatrix[2] = boneNormals[i];
       rotQuaternion[2] = boneRotQuaternions[i];
       transQuaternion[2] = boneTransQuaternions[i];
     }
     if (aJointIndex.w == float(i)) {
-      normalMatrix[3] = boneNormals[i];
       rotQuaternion[3] = boneRotQuaternions[i];
       transQuaternion[3] = boneTransQuaternions[i];
     }
   }
-
-  // TODO: Replace with dual quaternion blending normal method
-  weightedNormalMatrix = normalMatrix[0] * aJointWeight.x +
-    normalMatrix[1] * aJointWeight.y +
-    normalMatrix[2] * aJointWeight.z +
-    normalMatrix[3] * aJointWeight.w;
 
   // Blend our dual quaternion
   vec4 weightedRotQuats = rotQuaternion[0] * aJointWeight.x +
@@ -74,13 +60,12 @@ void main (void) {
     transQuaternion[2] * aJointWeight.z +
     transQuaternion[3] * aJointWeight.w;
 
-  // Normalize our dual quaternion
-  float magnitude;
+  // Normalize our dual quaternion (necessary for nlerp)
   float xRot = weightedRotQuats[0];
   float yRot = weightedRotQuats[1];
   float zRot = weightedRotQuats[2];
   float wRot = weightedRotQuats[3];
-  magnitude = sqrt(xRot * xRot + yRot * yRot + zRot * zRot + wRot * wRot);
+  float magnitude = sqrt(xRot * xRot + yRot * yRot + zRot * zRot + wRot * wRot);
   weightedRotQuats = weightedRotQuats / magnitude;
   weightedTransQuats = weightedTransQuats / magnitude;
 
@@ -119,8 +104,15 @@ void main (void) {
       1
       );
 
-  // Lighting
-  vec3 transformedNormal = weightedNormalMatrix * aVertexNormal;
+  // Transform our normal using our blended transformation matrix.
+  // We do not need to take the inverse transpose here since dual quaternions
+  // guarantee that we have a rigid transformation matrix.
+
+  // In other words, we know for a fact that there is no scale or shear,
+  // so we do not need to create an inverse transpose matrix to account for scale and shear
+  vec3 transformedNormal = (convertedMatrix * vec4(aVertexNormal, 0.0)).xyz;
+
+  // Swap our normal's y and z axis since Blender uses a right handed coordinate system
   float y;
   float z;
   y = transformedNormal.z;
