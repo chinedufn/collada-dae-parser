@@ -20,7 +20,11 @@ lorem ipsum
 
 ## Multiple Meshes
 
-`collada-dae-parser` does not support files with multiple meshes. You should join your geometries in `Object mode` before exporting.
+`collada-dae-parser` does not support files with multiple meshes.
+
+### Option 1: Joining Meshes
+
+You can join your geometries in `Object mode` before exporting.
 
 *First select all of your meshes while in Object mode*
 
@@ -29,6 +33,14 @@ lorem ipsum
 *Then join them using `Ctrl` + `J`*
 
 ![image](https://cloud.githubusercontent.com/assets/2099811/19274869/b3d4ca04-8f9f-11e6-9148-6cabd81a9ed6.png)
+
+### Option 2: Export Selection Only
+
+You can choose to only export your selected mesh
+
+![selected the mesh that you want](screenshots/torso-selected.png)
+
+![export selection only](screenshots/selection-only.png)
 
 ## Control Joints
 
