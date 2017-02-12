@@ -15,7 +15,6 @@ uniform mat4 uPMatrix;
 
 // TODO: Generate this shader at runtime with proper num joints
 // TODO: Stopped working on mobile when we had a combined array length of > a few dozen
-uniform mat4 boneMatrices[6];
 uniform vec4 boneRotQuaternions[6];
 uniform vec4 boneTransQuaternions[6];
 
