@@ -161,6 +161,7 @@ lorem ipsum
 - [ ] doc: Documentation
 - [ ] warning: Somehow let the user know if their joints use non rigid transforms - until we actually support this
 - [ ] warning: You didn't export a geometry. Link them to the documentation
+- [ ] warning: If the base model or armature's location, translation and scale aren't 1.0 let user know that we don't support that. They should apply location, translation and scale before exporting
 - [ ] research: Look into supporting library materials
 
 ## References
