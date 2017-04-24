@@ -21,8 +21,9 @@ function ParseCollada (colladaXML) {
   var visualSceneData = parseLibraryVisualScenes(result.COLLADA.library_visual_scenes)
 
   var jointBindPoses
+  var controllerData
   if (result.COLLADA.library_controllers) {
-    var controllerData = parseLibraryControllers(result.COLLADA.library_controllers)
+    controllerData = parseLibraryControllers(result.COLLADA.library_controllers)
     if (controllerData.vertexJointWeights && Object.keys(controllerData.vertexJointWeights) .length > 0) {
       parsedObject.vertexJointWeights = controllerData.vertexJointWeights
       parsedObject.jointNamePositionIndex = controllerData.jointNamePositionIndex
@@ -39,7 +40,7 @@ function ParseCollada (colladaXML) {
     if (Object.keys(parsedObject.keyframes).length === 0) {
       delete parsedObject.keyframes
     }
-    var keyframes = parseSkeletalAnimations(result.COLLADA.library_animations, jointBindPoses, visualSceneData)
+    var keyframes = parseSkeletalAnimations(result.COLLADA.library_animations, jointBindPoses, visualSceneData, controllerData.jointNamePositionIndex)
     if (Object.keys(keyframes).length > 0) {
       parsedObject.keyframes = keyframes
     }

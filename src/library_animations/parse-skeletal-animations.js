@@ -10,12 +10,11 @@ module.exports = parseLibraryAnimations
  * that apply to the entire mesh are handled in parse-loc-rot-scale.js
  * tl;dr if your model has animated bones/joints then that gets handled here
  *
- * TODO: parse interpolation
+ * TODO: parse interpolation? or just only support linear interpolation?
  * TODO: Don't hard code attribute location
- * TODO: Don't assume that joint animations are in order
  * TODO: Inefficient. use depth first traversal
  */
-function parseLibraryAnimations (library_animations, jointBindPoses, visualSceneData) {
+function parseLibraryAnimations (library_animations, jointBindPoses, visualSceneData, jointNamePositionIndex) {
   var animations = library_animations[0].animation
   var allKeyframes = {}
   var keyframeJointMatrices = {}
@@ -69,7 +68,7 @@ function parseLibraryAnimations (library_animations, jointBindPoses, visualScene
           return parseFloat(val.toFixed(6))
         })
 
-        allKeyframes[currentKeyframe].push(jointWorldMatrix)
+        allKeyframes[currentKeyframe][jointNamePositionIndex[animatedJointName]] = jointWorldMatrix
       })
     }
   })
