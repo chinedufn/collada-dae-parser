@@ -48,6 +48,14 @@ function ParseLibraryControllers (library_controllers) {
     //  (collada-dae-parser uses index's and not names to store bone data)
     var jointNamePositionIndex = {}
     orderedJointNames.forEach(function (jointName, index) {
+      // If we've already encountered this joint we skip it
+      // this is meant to handle an issue where Blender was
+      // exporting the same joint name twice for my right side bones that were
+      // duplicates of my original left side bones. Still not sure when/wju
+      // this happens. Must have done something strange. Doesn't happen to
+      // every model..
+      if (jointNamePositionIndex[jointName] || jointNamePositionIndex[jointName] === 0) { return }
+
       var bindPose = bindPoses.slice(16 * index, 16 * index + 16)
       mat4Multiply(bindPose, bindShapeMatrix, bindPose)
       jointBindPoses[jointName] = bindPose

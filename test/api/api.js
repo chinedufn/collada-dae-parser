@@ -24,6 +24,9 @@ var parentChildChildLetterFPath = path.resolve(__dirname, '../fixture/parent-chi
 var parentChildChildLetterFXML = fs.readFileSync(parentChildChildLetterFPath)
 var expectedParentChildChildF = require('../expected/parent-child-child-letter-f.js')
 
+var animatedLetterFSwappedAnimationOrderPath = path.resolve(__dirname, '../fixture/letter-f-animated-animation-order-switched.dae')
+var animatedLetterFSwappedAnimationOrderXML = fs.readFileSync(animatedLetterFSwappedAnimationOrderPath)
+
 test('Parse a default blender cube', function (t) {
   t.plan(1)
   var parsedCube = parseCollada(tbdcColladaXML)
@@ -53,3 +56,21 @@ test('Parse with parent -> child -> child joint relationship', function (t) {
   var parsedParentChildChildF = parseCollada(parentChildChildLetterFXML)
   t.deepEqual(parsedParentChildChildF, expectedParentChildChildF)
 })
+
+/**
+ * This is meant to handle an issue where Blender was
+ * exporting the same joint name twice for my right side bones that were
+ * duplicates of my original left side bones. Still not sure when/wju
+ * this happens. Must have done something strange. Doesn't happen to
+ * every model..
+ */
+test('Parse extra duplicated bone names at end of list', function (t) {
+  t.plan(1)
+  t.deepEqual(parseCollada(animatedLetterFSwappedAnimationOrderXML), expectedAnimatedLetterF)
+})
+
+/**
+ * This is meant to handle an issue where the library animations were
+ * not in the same order as defined in the library_controllers joints-array.
+ * We previously expected the same order, but that won't always be the case
+ */
