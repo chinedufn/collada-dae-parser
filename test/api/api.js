@@ -24,6 +24,7 @@ var parentChildChildLetterFPath = path.resolve(__dirname, '../fixture/parent-chi
 var parentChildChildLetterFXML = fs.readFileSync(parentChildChildLetterFPath)
 var expectedParentChildChildF = require('../expected/parent-child-child-letter-f.js')
 
+// Took the library_animations in animetedLetterFXML and switched their order
 var animatedLetterFSwappedAnimationOrderPath = path.resolve(__dirname, '../fixture/letter-f-animated-animation-order-switched.dae')
 var animatedLetterFSwappedAnimationOrderXML = fs.readFileSync(animatedLetterFSwappedAnimationOrderPath)
 
@@ -63,14 +64,13 @@ test('Parse with parent -> child -> child joint relationship', function (t) {
  * duplicates of my original left side bones. Still not sure when/wju
  * this happens. Must have done something strange. Doesn't happen to
  * every model..
- */
-test('Parse extra duplicated bone names at end of list', function (t) {
-  t.plan(1)
-  t.deepEqual(parseCollada(animatedLetterFSwappedAnimationOrderXML), expectedAnimatedLetterF)
-})
-
-/**
+ *
+ * We also test to make sure that switching the order of the joints in our library_animations doesn't break the parser
  * This is meant to handle an issue where the library animations were
  * not in the same order as defined in the library_controllers joints-array.
  * We previously expected the same order, but that won't always be the case
  */
+test('Parse extra duplicated bone names at end of list, and also test switching library_animations joint order', function (t) {
+  t.plan(1)
+  t.deepEqual(parseCollada(animatedLetterFSwappedAnimationOrderXML), expectedAnimatedLetterF)
+})
