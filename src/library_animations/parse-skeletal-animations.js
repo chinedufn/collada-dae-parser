@@ -14,7 +14,7 @@ module.exports = parseLibraryAnimations
  * TODO: Don't hard code attribute location
  * TODO: Inefficient. use depth first traversal
  */
-function parseLibraryAnimations (library_animations, jointBindPoses, visualSceneData, jointNamePositionIndex) {
+function parseLibraryAnimations (library_animations, jointInverseBindPoses, visualSceneData, jointNamePositionIndex) {
   var animations = library_animations[0].animation
   var allKeyframes = {}
   var keyframeJointMatrices = {}
@@ -58,7 +58,7 @@ function parseLibraryAnimations (library_animations, jointBindPoses, visualScene
         var jointWorldMatrix = getParentWorldMatrix(animatedJointName, currentKeyframe, jointRelationships, keyframeJointMatrices)
 
         // Multiply our joint's inverse bind matrix
-        mat4Multiply(jointWorldMatrix, jointBindPoses[animatedJointName], jointWorldMatrix)
+        mat4Multiply(jointWorldMatrix, jointInverseBindPoses[animatedJointName], jointWorldMatrix)
 
         // Turn our row major matrix into a column major matrix. OpenGL uses column major
         mat4Transpose(jointWorldMatrix, jointWorldMatrix)

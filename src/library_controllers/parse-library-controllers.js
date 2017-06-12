@@ -36,8 +36,10 @@ function ParseLibraryControllers (library_controllers) {
     // Bind shape matrix (inverse bind matrix)
     var bindShapeMatrix = controller[0].skin[0].bind_shape_matrix[0].split(' ').map(Number)
 
-    // The matrices that transform each of our joints to their bind pose
-    var jointBindPoses = {}
+    // The matrices that transforms each of our joints from world space to model space.
+    // You typically multiply this with all parent joint bind poses.
+    // We do this in `parse-skeletal-animations.js`
+    var jointInverseBindPoses = {}
 
     var bindPoses = controller[0].skin[0].source[1].float_array[0]._.split(' ').map(Number)
 
@@ -58,7 +60,7 @@ function ParseLibraryControllers (library_controllers) {
 
       var bindPose = bindPoses.slice(16 * index, 16 * index + 16)
       mat4Multiply(bindPose, bindShapeMatrix, bindPose)
-      jointBindPoses[jointName] = bindPose
+      jointInverseBindPoses[jointName] = bindPose
       jointNamePositionIndex[jointName] = index
     })
   }
@@ -66,7 +68,7 @@ function ParseLibraryControllers (library_controllers) {
   // This might allow the consumer to use a shader that expects fewer joints
   // when skinning. i.e. mat4 vs mat3 or mat2 for weights
   return {
-    jointBindPoses: jointBindPoses,
+    jointInverseBindPoses: jointInverseBindPoses,
     jointNamePositionIndex: jointNamePositionIndex,
     vertexJointWeights: parsedVertexJointWeights
   }
