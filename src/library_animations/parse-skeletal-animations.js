@@ -5,7 +5,7 @@ var mat4Transpose = require('gl-mat4/transpose')
 module.exports = parseLibraryAnimations
 
 /**
- * Parse skinned animations from the library_animations section of the collada file.
+ * Parse skinned animations from the libraryAnimations section of the collada file.
  * We only handle skinned animations here, regular location/rotation/scale animations
  * that apply to the entire mesh are handled in parse-loc-rot-scale.js
  * tl;dr if your model has animated bones/joints then that gets handled here
@@ -14,8 +14,8 @@ module.exports = parseLibraryAnimations
  * TODO: Don't hard code attribute location
  * TODO: Inefficient. use depth first traversal
  */
-function parseLibraryAnimations (library_animations, jointInverseBindPoses, visualSceneData, jointNamePositionIndex) {
-  var animations = library_animations[0].animation
+function parseLibraryAnimations (libraryAnimations, jointInverseBindPoses, visualSceneData, jointNamePositionIndex) {
+  var animations = libraryAnimations[0].animation
   var allKeyframes = {}
   var keyframeJointMatrices = {}
   var jointRelationships = visualSceneData.jointRelationships
