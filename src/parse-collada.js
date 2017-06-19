@@ -27,6 +27,7 @@ function ParseCollada (colladaXML) {
     if (controllerData.vertexJointWeights && Object.keys(controllerData.vertexJointWeights).length > 0) {
       parsedObject.vertexJointWeights = controllerData.vertexJointWeights
       parsedObject.jointNamePositionIndex = controllerData.jointNamePositionIndex
+      parsedObject.jointInverseBindPoses = controllerData.jointInverseBindPoses
       jointInverseBindPoses = controllerData.jointInverseBindPoses
 
       // The parser only supports deformation bones. Control bones' affects must be baked in before exporting

@@ -5,6 +5,7 @@
 // TODO: Add a gif of every model
 
 module.exports = {
+  jointInverseBindPoses: { 0: [ 1, 0, 0, -2.800068, 0, 0, 1, 0, 0, -1, 0, 0, 0, 0, 0, 1 ], 1: [ 1, 0, 0, 0.01319289, 0, 0, 1, 0, 0, -1, 0, 0, 0, 0, 0, 1 ] },
   jointNamePositionIndex: { Bone: 0, Bone_001: 1 },
   keyframes: {
     '0.04166662': [

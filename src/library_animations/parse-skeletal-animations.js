@@ -58,7 +58,7 @@ function parseLibraryAnimations (libraryAnimations, jointInverseBindPoses, visua
         var jointWorldMatrix = getParentWorldMatrix(animatedJointName, currentKeyframe, jointRelationships, keyframeJointMatrices)
 
         // Multiply our joint's inverse bind matrix
-        mat4Multiply(jointWorldMatrix, jointInverseBindPoses[animatedJointName], jointWorldMatrix)
+        mat4Multiply(jointWorldMatrix, jointInverseBindPoses[jointNamePositionIndex[animatedJointName]], jointWorldMatrix)
 
         // Turn our row major matrix into a column major matrix. OpenGL uses column major
         mat4Transpose(jointWorldMatrix, jointWorldMatrix)

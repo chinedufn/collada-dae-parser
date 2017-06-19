@@ -60,7 +60,7 @@ function ParseLibraryControllers (library_controllers) {
 
       var bindPose = bindPoses.slice(16 * index, 16 * index + 16)
       mat4Multiply(bindPose, bindShapeMatrix, bindPose)
-      jointInverseBindPoses[jointName] = bindPose
+      jointInverseBindPoses[index] = bindPose
       jointNamePositionIndex[jointName] = index
     })
   }
