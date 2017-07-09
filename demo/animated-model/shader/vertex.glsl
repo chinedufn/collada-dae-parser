@@ -21,43 +21,16 @@ uniform vec4 boneTransQuaternions[6];
 varying vec3 vLightWeighting;
 
 void main (void) {
-  // Select joint matrix for this vertex
-
-  // TODO: Just store the indices instead of copying over the quaternions
-  //  i.e. float array of indices instead of vec4's
-  vec4 rotQuaternion[4];
-  vec4 transQuaternion[4];
-
-  // We loop through each joint to determine it's weighting against our current vertex
-  // We store up to four joint weights and use them to calculate our final position and normal
-  for (int i = 0; i < 6; i++) {
-    if (aJointIndex.x == float(i)) {
-      rotQuaternion[0] = boneRotQuaternions[i];
-      transQuaternion[0] = boneTransQuaternions[i];
-    }
-    if (aJointIndex.y == float(i)) {
-      rotQuaternion[1] = boneRotQuaternions[i];
-      transQuaternion[1] = boneTransQuaternions[i];
-    }
-    if (aJointIndex.z == float(i)) {
-      rotQuaternion[2] = boneRotQuaternions[i];
-      transQuaternion[2] = boneTransQuaternions[i];
-    }
-    if (aJointIndex.w == float(i)) {
-      rotQuaternion[3] = boneRotQuaternions[i];
-      transQuaternion[3] = boneTransQuaternions[i];
-    }
-  }
-
   // Blend our dual quaternion
-  vec4 weightedRotQuats = rotQuaternion[0] * aJointWeight.x +
-    rotQuaternion[1] * aJointWeight.y +
-    rotQuaternion[2] * aJointWeight.z +
-    rotQuaternion[3] * aJointWeight.w;
-  vec4 weightedTransQuats = transQuaternion[0] * aJointWeight.x +
-    transQuaternion[1] * aJointWeight.y +
-    transQuaternion[2] * aJointWeight.z +
-    transQuaternion[3] * aJointWeight.w;
+  vec4 weightedRotQuats = boneRotQuaternions[int(aJointIndex.x)] * aJointWeight.x +
+    boneRotQuaternions[int(aJointIndex.y)] * aJointWeight.y +
+    boneRotQuaternions[int(aJointIndex.z)] * aJointWeight.z +
+    boneRotQuaternions[int(aJointIndex.w)] * aJointWeight.w;
+
+  vec4 weightedTransQuats = boneTransQuaternions[int(aJointIndex.x)] * aJointWeight.x +
+    boneTransQuaternions[int(aJointIndex.y)] * aJointWeight.y +
+    boneTransQuaternions[int(aJointIndex.z)] * aJointWeight.z +
+    boneTransQuaternions[int(aJointIndex.w)] * aJointWeight.w;
 
   // Normalize our dual quaternion (necessary for nlerp)
   float xRot = weightedRotQuats[0];
