@@ -81,6 +81,7 @@ console.log(parsedCollada)
 /*
   {
     jointNamePositionIndex: {...},
+    jointInverseBindPoses: {...},
     keyframes: {...},
     vertexNormalIndices: [...],
     vertexNormals: [...],
@@ -93,6 +94,12 @@ console.log(parsedCollada)
 ```
 
 ##### jointNamePositionIndex
+
+Type: `Object`
+
+lorem ipsum
+
+##### jointInverseBindPoses
 
 Type: `Object`
 
