@@ -18,7 +18,7 @@ function parseLibraryAnimations (libraryAnimations, jointInverseBindPoses, visua
   var animations = libraryAnimations[0].animation
   var allKeyframes = {}
   var keyframeJointMatrices = {}
-  var jointRelationships = visualSceneData.jointRelationships
+  var jointParents = visualSceneData.jointParents
   var armatureScale = visualSceneData.armatureScale
 
   // First pass.. get all the joint matrices
@@ -34,7 +34,7 @@ function parseLibraryAnimations (libraryAnimations, jointInverseBindPoses, visua
       currentKeyframes.forEach(function (_, keyframeIndex) {
         keyframeJointMatrices[currentKeyframes[keyframeIndex]] = keyframeJointMatrices[currentKeyframes[keyframeIndex]] || {}
         var currentJointMatrix = currentJointPoseMatrices.slice(16 * keyframeIndex, 16 * keyframeIndex + 16)
-        if (!jointRelationships[animatedJointName].parent) {
+        if (!jointParents[animatedJointName].parent) {
           // apply library visual scene transformations to top level parent joint(s)
           if (armatureScale) {
             mat4Scale(currentJointMatrix, currentJointMatrix, armatureScale)
@@ -55,7 +55,7 @@ function parseLibraryAnimations (libraryAnimations, jointInverseBindPoses, visua
         allKeyframes[currentKeyframes[keyframeIndex]] = allKeyframes[currentKeyframe] || []
 
         // Multiply by parent world matrix
-        var jointWorldMatrix = getParentWorldMatrix(animatedJointName, currentKeyframe, jointRelationships, keyframeJointMatrices)
+        var jointWorldMatrix = getParentWorldMatrix(animatedJointName, currentKeyframe, jointParents, keyframeJointMatrices)
 
         // Multiply our joint's inverse bind matrix
         mat4Multiply(jointWorldMatrix, jointInverseBindPoses[jointNamePositionIndex[animatedJointName]], jointWorldMatrix)
@@ -77,9 +77,9 @@ function parseLibraryAnimations (libraryAnimations, jointInverseBindPoses, visua
 }
 
 // TODO: Refactor. Depth first traversal might make all of this less hacky
-function getParentWorldMatrix (jointName, keyframe, jointRelationships, keyframeJointMatrices) {
+function getParentWorldMatrix (jointName, keyframe, jointParents, keyframeJointMatrices) {
   // child -> parent -> parent -> ...
-  var jointMatrixTree = foo(jointName, keyframe, jointRelationships, keyframeJointMatrices)
+  var jointMatrixTree = foo(jointName, keyframe, jointParents, keyframeJointMatrices)
   // TODO: Revisit this. Thrown in to pass tests. Maybe just return `jointMatrix`
   // when there aren't any parent matrices to factor in
   var worldMatrix = [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1]
@@ -91,11 +91,11 @@ function getParentWorldMatrix (jointName, keyframe, jointRelationships, keyframe
 }
 
 // TODO: Clean up... well.. at least it works now :sweat_smile:
-function foo (jointName, keyframe, jointRelationships, keyframeJointMatrices) {
+function foo (jointName, keyframe, jointParents, keyframeJointMatrices) {
   var jointMatrix = keyframeJointMatrices[keyframe][jointName]
-  var parentJointName = jointRelationships[jointName].parent
+  var parentJointName = jointParents[jointName].parent
   if (parentJointName) {
-    return [jointMatrix].concat(foo(parentJointName, keyframe, jointRelationships, keyframeJointMatrices))
+    return [jointMatrix].concat(foo(parentJointName, keyframe, jointParents, keyframeJointMatrices))
   }
   return [jointMatrix]
 }

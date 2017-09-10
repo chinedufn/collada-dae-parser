@@ -3,7 +3,7 @@ module.exports = ParseVisualScenes
 // TODO: Handle child joints. Maybe depth first traversal?
 function ParseVisualScenes (library_visual_scenes) {
   var visualScene = library_visual_scenes[0].visual_scene[0]
-  var parsedJoints = []
+  var parsedJoints = {}
 
   // Some .dae files will export a shrunken model. Here's how to scale it
   var armatureScale = null
@@ -25,14 +25,14 @@ function ParseVisualScenes (library_visual_scenes) {
   })
 
   return {
-    jointRelationships: parsedJoints,
+    jointParents: parsedJoints,
     armatureScale: armatureScale
   }
 }
 
 // Recursively parse child joints
 function parseJoints (node, parentJointName, accumulator) {
-  accumulator = accumulator || []
+  accumulator = accumulator || {}
   node.forEach(function (joint) {
     accumulator[joint.$.sid] = accumulator[joint.$.sid] || {}
     // The bind pose of the matrix. We don't make use of this right now, but you would

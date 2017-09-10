@@ -20,6 +20,18 @@ function ParseCollada (colladaXML) {
 
   var visualSceneData = parseLibraryVisualScenes(result.COLLADA.library_visual_scenes)
 
+  // The joint parents aren't actually joint parents so we get the joint parents..
+  // This lib needs a refactor indeed
+  // jointParents = {childBone: 'parentBone', anotherChild: 'anotherParent'}
+  var jointParents
+  if (Object.keys(visualSceneData.jointParents).length) {
+    jointParents = Object.keys(visualSceneData.jointParents)
+    .reduce(function (jointParents, jointName) {
+      jointParents[jointName] = visualSceneData.jointParents[jointName].parent
+      return jointParents
+    }, {})
+  }
+
   var jointInverseBindPoses
   var controllerData
   if (result.COLLADA.library_controllers) {
@@ -31,7 +43,7 @@ function ParseCollada (colladaXML) {
       jointInverseBindPoses = controllerData.jointInverseBindPoses
 
       // The parser only supports deformation bones. Control bones' affects must be baked in before exporting
-      validateNoControlBones(Object.keys(visualSceneData.jointRelationships), Object.keys(jointInverseBindPoses))
+      validateNoControlBones(Object.keys(visualSceneData.jointParents), Object.keys(jointInverseBindPoses))
     }
   }
 
@@ -52,6 +64,9 @@ function ParseCollada (colladaXML) {
   parsedObject.vertexNormals = parsedLibraryGeometries.vertexNormals
   parsedObject.vertexPositionIndices = parsedLibraryGeometries.vertexPositionIndices
   parsedObject.vertexPositions = parsedLibraryGeometries.vertexPositions
+  if (jointParents) {
+    parsedObject.jointParents = jointParents
+  }
   if (parsedLibraryGeometries.vertexUVs.length > 0) {
     parsedObject.vertexUVIndices = parsedLibraryGeometries.vertexUVIndices
     parsedObject.vertexUVs = parsedLibraryGeometries.vertexUVs
