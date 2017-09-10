@@ -27,7 +27,9 @@ function ParseCollada (colladaXML) {
   if (Object.keys(visualSceneData.jointParents).length) {
     jointParents = Object.keys(visualSceneData.jointParents)
     .reduce(function (jointParents, jointName) {
-      jointParents[jointName] = visualSceneData.jointParents[jointName].parent
+      // JSON.stringify {foo: undefined} = {}, os we replace undefined with null
+      // to make sure that we don't lose any keys
+      jointParents[jointName] = visualSceneData.jointParents[jointName].parent || null
       return jointParents
     }, {})
   }

@@ -43,6 +43,7 @@ test('Parse a default blender cube with an animation', function (t) {
 test('Parse two blender cubes animated with bones and skinning', function (t) {
   t.plan(1)
   var parsedSkeletonSkinnedCubes = parseCollada(skeletonSkinnedCubesXML)
+  console.log(parsedSkeletonSkinnedCubes.jointParents)
   t.deepEqual(parsedSkeletonSkinnedCubes, expectedSkinnedCube)
 })
 

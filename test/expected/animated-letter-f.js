@@ -5,7 +5,7 @@
 module.exports = {
   jointInverseBindPoses: { 0: [ 0.2406798, 0, 0, 0, 0, 0, 0.2406798, 0, 0, -0.2406798, 0, 0, 0, 0, 0, 1 ], 1: [ 0, -0.2406798, 0, 0, 0.2406798, 0, 0, 0, 0, 0, 0.2406798, -1, 0, 0, 0, 1 ] },
   jointNamePositionIndex: { Bone: 0, Bone_001: 1 },
-  jointParents: { Bone: undefined, Bone_001: 'Bone' },
+  jointParents: { Bone: null, Bone_001: 'Bone' },
   keyframes: {
     '0': [
       [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1],
