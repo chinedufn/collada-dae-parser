@@ -12,7 +12,7 @@ module.exports = parseLibraryAnimations
  *
  * TODO: parse interpolation? or just only support linear interpolation?
  * TODO: Don't hard code attribute location
- * TODO: Inefficient. use depth first traversal
+ * TODO: Make use of require('local-bone-to-world-bone')
  */
 function parseLibraryAnimations (libraryAnimations, jointInverseBindPoses, visualSceneData, jointNamePositionIndex) {
   var animations = libraryAnimations[0].animation
