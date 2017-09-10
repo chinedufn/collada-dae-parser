@@ -59,6 +59,12 @@ function ParseCollada (colladaXML) {
   return parsedObject
 }
 
+/**
+ * We used to use a different XML parsing library. This recursively transforms
+ * the data that we get from our new XML parser to match the old one. This is a
+ * stopgap measure until we get around to changing the keys that we look while we parse to
+ * the keys that the new parser expects
+ */
 function compactXML (res, xml) {
   var txt = Object.keys(xml.attributes).length === 0 && xml.children.length === 0
   var r = {}
