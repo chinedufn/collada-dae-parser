@@ -80,6 +80,7 @@ var parsedCollada = parseDae(fs.readFileSync(fileName))
 console.log(parsedCollada)
 /*
   {
+    armatureName: 'MyRig',
     jointNamePositionIndex: {...},
     jointInverseBindPoses: {...},
     keyframes: {...},
