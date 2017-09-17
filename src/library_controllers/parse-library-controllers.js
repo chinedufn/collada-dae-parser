@@ -5,7 +5,11 @@ module.exports = ParseLibraryControllers
 // TODO: Read  technique_commons instead of hard coding attribute locations
 function ParseLibraryControllers (library_controllers) {
   var controller = library_controllers[0].controller
+  var armatureName
   if (controller) {
+    // Get the name of the armature that this model is a child of
+    armatureName = controller[0].$.name
+
     // Number of vertexes that need weights
     // var numVertices = controller[0].skin[0].vertex_weights[0].$.count
 
@@ -70,6 +74,7 @@ function ParseLibraryControllers (library_controllers) {
   return {
     jointInverseBindPoses: jointInverseBindPoses,
     jointNamePositionIndex: jointNamePositionIndex,
-    vertexJointWeights: parsedVertexJointWeights
+    vertexJointWeights: parsedVertexJointWeights,
+    armatureName: armatureName
   }
 }

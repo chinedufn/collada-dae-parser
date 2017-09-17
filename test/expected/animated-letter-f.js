@@ -3,6 +3,7 @@
 // TODO: Add a gif of every model
 
 module.exports = {
+  armatureName: 'Armature',
   jointInverseBindPoses: { 0: [ 0.2406798, 0, 0, 0, 0, 0, 0.2406798, 0, 0, -0.2406798, 0, 0, 0, 0, 0, 1 ], 1: [ 0, -0.2406798, 0, 0, 0.2406798, 0, 0, 0, 0, 0, 0.2406798, -1, 0, 0, 0, 1 ] },
   jointNamePositionIndex: { Bone: 0, Bone_001: 1 },
   jointParents: { Bone: null, Bone_001: 'Bone' },

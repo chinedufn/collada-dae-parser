@@ -66,6 +66,9 @@ function ParseCollada (colladaXML) {
   parsedObject.vertexNormals = parsedLibraryGeometries.vertexNormals
   parsedObject.vertexPositionIndices = parsedLibraryGeometries.vertexPositionIndices
   parsedObject.vertexPositions = parsedLibraryGeometries.vertexPositions
+  if (controllerData.armatureName) {
+    parsedObject.armatureName = controllerData.armatureName
+  }
   if (jointParents) {
     parsedObject.jointParents = jointParents
   }
