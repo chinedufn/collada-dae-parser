@@ -12,21 +12,31 @@ function ParseLibraryGeometries (library_geometries) {
   var geometryMesh = library_geometries[0].geometry[0].mesh[0]
   var source = geometryMesh.source
 
+  var indexList = geometryMesh.polylist || geometryMesh.triangles || null
+  if (!indexList) {
+    console.error("Geometry must contain either 'polylist' or 'triangles' object.")
+    return false
+  }
+
+  // Get index list offsets for vertex data - vertex, normal, texcoord
+  var offsets = {}
+  indexList[0].input.forEach(function (input) {
+    offsets[input.$.semantic.toLowerCase()] = parseInt(input.$.offset)
+  })
+
   /* Vertex Positions, UVs, Normals */
-  var polylistIndices = geometryMesh.polylist[0].p[0].split(' ')
+  var polylistIndices = indexList[0].p[0].split(' ')
 
   var vertexNormalIndices = []
   var vertexPositionIndices = []
   var vertexUVIndices = []
-  // TODO: This is currently dependent on a certain vertex data order
-  // we should instead read this order from the .dae file
   polylistIndices.forEach(function (vertexIndex, positionInArray) {
-    if (positionInArray % source.length === 0) {
+    if (positionInArray % source.length === offsets.vertex) {
       vertexPositionIndices.push(Number(vertexIndex))
-    } else if (positionInArray % source.length === 1) {
+    } else if (positionInArray % source.length === offsets.normal) {
       vertexNormalIndices.push(Number(vertexIndex))
     }
-    if (positionInArray % source.length === 2) {
+    if (positionInArray % source.length === offsets.texcoord) {
       vertexUVIndices.push(Number(vertexIndex))
     }
   })
